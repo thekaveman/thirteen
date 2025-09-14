@@ -1,10 +1,12 @@
 import { log, runTests } from "./utils.js";
 import { deckTests } from "./test_deck.js";
 import { gameTests } from "./test_game.js";
+import { uiTests } from "./test_ui.js";
 
 const TEST_CONFIG = {
   Deck: deckTests,
   Game: gameTests,
+  UI: uiTests,
 };
 
 window.onload = () => {

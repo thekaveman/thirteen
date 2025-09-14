@@ -46,6 +46,10 @@ function renderPlayerHand(playerIndex, handDiv) {
   handDiv.innerHTML = `<h2>${text}</h2>`;
   gameState.playerHands[playerIndex].forEach((card) => {
     const cardSpan = createCardElement(card);
+    cardSpan.addEventListener("click", ui.handleCardClick);
+    if (gameState.selectedCards.some((selectedCard) => selectedCard.value === card.value)) {
+      cardSpan.classList.add("selected");
+    }
     handDiv.appendChild(cardSpan);
   });
 }
@@ -64,6 +68,23 @@ function renderPlayerHands(playersHandsDiv) {
     renderPlayerHand(i, playerHandDiv);
   });
 }
+
+/**
+ * Handles the click event on a card.
+ * @param {Event} event The click event.
+ */
+ui.handleCardClick = function (event) {
+  const card = JSON.parse(event.target.dataset.card);
+  const cardIndex = gameState.selectedCards.findIndex((c) => c.value === card.value);
+
+  if (cardIndex > -1) {
+    gameState.selectedCards.splice(cardIndex, 1);
+    event.target.classList.remove("selected");
+  } else {
+    gameState.selectedCards.push(card);
+    event.target.classList.add("selected");
+  }
+};
 
 /**
  * Renders the entire game state in the DOM.

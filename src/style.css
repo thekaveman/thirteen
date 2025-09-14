@@ -74,6 +74,13 @@ h2 {
   color: #b22222;
 }
 
+.card.selected {
+  background-color: #aaddff;
+  border-color: #337ab7;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
+  transform: translateY(-3px);
+}
+
 #controls {
   margin-top: 20px;
 }
