@@ -27,3 +27,5 @@ The goal of the MVP is to create the simplest possible, fully playable version o
   - Players can select cards and attempt to play them
   - The game validates moves and rejects invalid ones
   - The game correctly identifies the winner of a round and the winner of the game
+
+The source of truth: [Requirements](./.gemini/specs/requirements.md)
