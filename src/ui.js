@@ -98,9 +98,25 @@ ui.handleInvalidPlay = function () {
  * Handles the pass button click event.
  */
 ui.handlePassButtonClick = function () {
-  switchToNextPlayer();
+  if (gameState.playPile.length === 0) {
+    alert("You cannot pass on the first play of a round.");
+    return;
+  }
+
+  gameState.consecutivePasses++;
+  gameState.selectedCards = []; // Clear selected cards on pass
+
+  if (gameState.consecutivePasses >= gameState.numPlayers - 1) {
+    console.log(`Player ${gameState.lastPlayerToPlay + 1} wins round ${gameState.roundNumber}.`);
+    gameState.playPile = [];
+    gameState.consecutivePasses = 0;
+    gameState.currentPlayer = gameState.lastPlayerToPlay;
+    gameState.roundNumber++;
+  } else {
+    switchToNextPlayer();
+  }
+
   gameState.currentTurn++;
-  gameState.selectedCards = [];
   ui.render();
 };
 
@@ -132,6 +148,9 @@ ui.handleValidPlay = function () {
       currentPlayerHand.splice(cardIndex, 1);
     }
   });
+
+  gameState.consecutivePasses = 0;
+  gameState.lastPlayerToPlay = gameState.currentPlayer;
 
   // Clear selected cards
   gameState.selectedCards = [];

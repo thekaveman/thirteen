@@ -7,6 +7,9 @@ export const gameState = {
   currentPlayer: 0,
   currentTurn: 0,
   selectedCards: [],
+  consecutivePasses: 0,
+  lastPlayerToPlay: -1,
+  roundNumber: 1,
 };
 
 /**

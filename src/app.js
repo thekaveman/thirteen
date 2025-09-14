@@ -13,6 +13,7 @@ function startGame() {
   gameState.playerHands = deal(deck, gameState.numPlayers);
   gameState.playerHands.forEach(sortHand);
   gameState.currentPlayer = findStartingPlayer(gameState.playerHands);
+  gameState.lastPlayerToPlay = gameState.currentPlayer;
   ui.render();
 
   document.getElementById("play-button").addEventListener("click", ui.handlePlayButtonClick);
