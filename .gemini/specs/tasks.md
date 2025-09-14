@@ -26,21 +26,21 @@ _Goal: Create, shuffle, deal, and display text-based cards on the screen._
   - [x] Write a `createDeck()` function
   - [x] Write a `shuffleDeck(deck)` function
   - [x] Write a `deal(deck, numPlayers)` function that returns an array of hands
-- [ ] Rendering:
-  - [ ] In `index.html` create simple `<div>` for `player1-hand`, `player2-hand`, and `play-area`
-  - [ ] In `app.js` write a `render()` function that takes the game state and displays the hands and play area as text inside the `<div>`s
 
 ## 2: Core Gameplay Loop
 
 _Goal: Make the game playable for two humans in "hot-seat" mode._
 
-- [ ] Game state management
-  - [ ] Create a central `gameState` object to track `currentPlayer`, `currentTurn`, `playPile`, `playerHands`, etc.
-- [ ] Player interaction
-  - [ ] Implement card selection. When a player clicks on a card's text, it should be marked as "selected"
-  - [ ] Add "Play" and "Pass" buttons to `index.html`
-- [ ] Game logic engine
-  - [ ] Create the main validation function: `isValidPlay(selectedCards, playPile)`. This is the most complex part. It needs to check for all valid combinations and rules
+- [x] Game state management
+  - [x] Create a central `gameState` object to track `currentPlayer`, `currentTurn`, `playPile`, `playerHands`, etc.
+- [x] Player interaction
+  - [x] Implement card selection. When a player clicks on a card's text, it should be marked as "selected"
+- [x] Game logic engine
+  - [x] Create the main validation function: `isValidPlay(selectedCards, playPile)`. This is the most complex part. It needs to check for all valid combinations and rules
+- [ ] Rendering:
+  - [ ] In `index.html` create simple `<div>` for `player1-hand`, `player2-hand`, and `play-area`
+  - [ ] In `index.html` add "Play" and "Pass" buttons
+  - [ ] In `app.js` write a `render()` function that takes the game state and displays the hands and play area as text inside the `<div>`s
   - [ ] Hook up the "Play" button to call `isValidPlay()`: if valid, update the `gameState` and re-render; if invalid, give the user feedback (e.g., an alert)
   - [ ] Hook up the "Pass" button to update the `gameState`
 - [ ] Win conditions
