@@ -1,4 +1,4 @@
-import { gameState, switchToNextPlayer } from "./game.js";
+import { gameState, isValidPlay, switchToNextPlayer } from "./game.js";
 
 const ui = {};
 
@@ -87,6 +87,14 @@ ui.handleCardClick = function (event) {
 };
 
 /**
+ * Handles an invalid play.
+ */
+ui.handleInvalidPlay = function () {
+  console.warn("Invalid play", gameState.selectedCards);
+  alert("Invalid play");
+};
+
+/**
  * Handles the pass button click event.
  */
 ui.handlePassButtonClick = function () {
@@ -94,6 +102,43 @@ ui.handlePassButtonClick = function () {
   gameState.currentTurn++;
   gameState.selectedCards = [];
   ui.render();
+};
+
+/**
+ * Handles the play button click event.
+ */
+ui.handlePlayButtonClick = function () {
+  if (isValidPlay(gameState.selectedCards, gameState.playPile)) {
+    ui.handleValidPlay();
+  } else {
+    ui.handleInvalidPlay();
+  }
+  // Re-render the game
+  ui.render();
+};
+
+/**
+ * Handles a valid play.
+ */
+ui.handleValidPlay = function () {
+  // Move selected cards to play pile
+  gameState.playPile = [...gameState.selectedCards];
+
+  // Remove selected cards from player's hand
+  const currentPlayerHand = gameState.playerHands[gameState.currentPlayer];
+  gameState.selectedCards.forEach((selectedCard) => {
+    const cardIndex = currentPlayerHand.findIndex((card) => card.value === selectedCard.value);
+    if (cardIndex > -1) {
+      currentPlayerHand.splice(cardIndex, 1);
+    }
+  });
+
+  // Clear selected cards
+  gameState.selectedCards = [];
+
+  // Switch to next player
+  switchToNextPlayer();
+  gameState.currentTurn++;
 };
 
 /**

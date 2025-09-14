@@ -14,6 +14,8 @@ function startGame() {
   gameState.playerHands.forEach(sortHand);
   gameState.currentPlayer = findStartingPlayer(gameState.playerHands);
   ui.render();
+
+  document.getElementById("play-button").addEventListener("click", ui.handlePlayButtonClick);
   document.getElementById("pass-button").addEventListener("click", ui.handlePassButtonClick);
 }
 

@@ -41,7 +41,7 @@ _Goal: Make the game playable for two humans in "hot-seat" mode._
   - [x] In `index.html` create simple `<div>` for `player-hands` and `play-area`
   - [x] In `index.html` add "Play" and "Pass" buttons
   - [x] In `app.js` write a `render()` function that takes the game state and displays the hands and play area as text inside the `<div>`s
-  - [ ] Hook up the "Play" button to call `isValidPlay()`: if valid, update the `gameState` and re-render; if invalid, give the user feedback (e.g., an alert)
+  - [x] Hook up the "Play" button to call `isValidPlay()`: if valid, update the `gameState` and re-render; if invalid, give the user feedback (e.g., an alert)
   - [x] Hook up the "Pass" button to update the `gameState`
 - [ ] Win conditions
   - [ ] Implement logic for winning a round (when one player plays and the other passes), allowing the winner to start the next round
