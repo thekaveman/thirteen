@@ -1,5 +1,36 @@
 import { assert } from "./utils.js";
-import { gameState, findLowestCardInGame, findStartingPlayer, sortHand, switchToNextPlayer } from "../src/game.js";
+import {
+  allCardsHaveSameRank,
+  findLowestCardInGame,
+  findStartingPlayer,
+  gameState,
+  isConsecutivePairs,
+  isFourOfAKind,
+  isPair,
+  isSingle,
+  isStraight,
+  isTriple,
+  sortHand,
+  switchToNextPlayer,
+} from "../src/game.js";
+
+function test_allCardsHaveSameRank_returnsFalseForDifferentRank() {
+  const cards = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "K", suit: "♦", value: 45 },
+    { rank: "A", suit: "♣", value: 50 },
+  ];
+  assert(!allCardsHaveSameRank(cards), "Should return false for cards with different ranks");
+}
+
+function test_allCardsHaveSameRank_returnsTrueForSameRank() {
+  const cards = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "A", suit: "♦", value: 49 },
+    { rank: "A", suit: "♣", value: 50 },
+  ];
+  assert(allCardsHaveSameRank(cards), "Should return true for cards with the same rank");
+}
 
 function test_findLowestCardInGame_findsLowestCard() {
   const hands = [
@@ -33,6 +64,124 @@ function test_findStartingPlayer_findsPlayerWithLowestCard() {
 
 function test_gameState() {}
 
+function test_isConsecutivePairs_returnsFalseForNotConsecutivePairs() {
+  const cards = [
+    { rank: "3", suit: "♠", value: 0 },
+    { rank: "3", suit: "♦", value: 1 },
+    { rank: "4", suit: "♣", value: 4 },
+    { rank: "4", suit: "♥", value: 5 },
+    { rank: "6", suit: "♠", value: 12 },
+    { rank: "6", suit: "♦", value: 13 },
+  ];
+  assert(!isConsecutivePairs(cards), "Should return false for non-consecutive pairs");
+}
+
+function test_isConsecutivePairs_returnsTrueForConsecutivePairs() {
+  const cards = [
+    { rank: "3", suit: "♠", value: 0 },
+    { rank: "3", suit: "♦", value: 1 },
+    { rank: "4", suit: "♣", value: 4 },
+    { rank: "4", suit: "♥", value: 5 },
+    { rank: "5", suit: "♠", value: 8 },
+    { rank: "5", suit: "♦", value: 9 },
+  ];
+  assert(isConsecutivePairs(cards), "Should return true for consecutive pairs");
+}
+
+function test_isFourOfAKind_returnsFalseForNotFourOfAKind() {
+  const cards = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "K", suit: "♠", value: 47 },
+    { rank: "Q", suit: "♠", value: 46 },
+    { rank: "J", suit: "♠", value: 45 },
+  ];
+  assert(!isFourOfAKind(cards), "Should return false for four different cards");
+}
+
+function test_isFourOfAKind_returnsTrueForFourOfAKind() {
+  const cards = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "A", suit: "♦", value: 49 },
+    { rank: "A", suit: "♣", value: 50 },
+    { rank: "A", suit: "♥", value: 51 },
+  ];
+  assert(isFourOfAKind(cards), "Should return true for a four of a kind");
+}
+
+function test_isPair_returnsFalseForNotPair() {
+  const cards = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "K", suit: "♠", value: 47 },
+  ];
+  assert(!isPair(cards), "Should return false for two different cards");
+}
+
+function test_isPair_returnsTrueForPair() {
+  const cards = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "A", suit: "♦", value: 49 },
+  ];
+  assert(isPair(cards), "Should return true for a pair");
+}
+
+function test_isSingle_returnsFalseForNotSingle() {
+  const cards = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "K", suit: "♠", value: 47 },
+  ];
+  assert(!isSingle(cards), "Should return false for more than one card");
+}
+
+function test_isSingle_returnsTrueForSingle() {
+  const cards = [{ rank: "A", suit: "♠", value: 48 }];
+  assert(isSingle(cards), "Should return true for a single card");
+}
+
+function test_isStraight_returnsFalseForNotStraight() {
+  const cards = [
+    { rank: "3", suit: "♠", value: 0 },
+    { rank: "5", suit: "♦", value: 9 },
+    { rank: "6", suit: "♣", value: 14 },
+  ];
+  assert(!isStraight(cards), "Should return false for a non-straight");
+}
+
+function test_isStraight_returnsFalseForStraightWith2() {
+  const cards = [
+    { rank: "K", suit: "♠", value: 44 },
+    { rank: "A", suit: "♦", value: 49 },
+    { rank: "2", suit: "♣", value: 51 },
+  ];
+  assert(!isStraight(cards), "Should return false for a straight with a 2");
+}
+
+function test_isStraight_returnsTrueForStraight() {
+  const cards = [
+    { rank: "3", suit: "♠", value: 0 },
+    { rank: "4", suit: "♦", value: 5 },
+    { rank: "5", suit: "♣", value: 10 },
+  ];
+  assert(isStraight(cards), "Should return true for a straight");
+}
+
+function test_isTriple_returnsFalseForNotTriple() {
+  const cards = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "K", suit: "♠", value: 47 },
+    { rank: "Q", suit: "♠", value: 46 },
+  ];
+  assert(!isTriple(cards), "Should return false for three different cards");
+}
+
+function test_isTriple_returnsTrueForTriple() {
+  const cards = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "A", suit: "♦", value: 49 },
+    { rank: "A", suit: "♣", value: 50 },
+  ];
+  assert(isTriple(cards), "Should return true for a triple");
+}
+
 function test_sortHand_sortsHandByValue() {
   const hand = [
     { rank: "A", suit: "♠", value: 48 },
@@ -57,9 +206,24 @@ function test_switchToNextPlayer_switchesPlayer() {
 }
 
 export const gameTests = [
+  test_allCardsHaveSameRank_returnsFalseForDifferentRank,
+  test_allCardsHaveSameRank_returnsTrueForSameRank,
   test_findLowestCardInGame_findsLowestCard,
   test_findStartingPlayer_findsPlayerWithLowestCard,
   test_gameState,
+  test_isConsecutivePairs_returnsFalseForNotConsecutivePairs,
+  test_isConsecutivePairs_returnsTrueForConsecutivePairs,
+  test_isFourOfAKind_returnsFalseForNotFourOfAKind,
+  test_isFourOfAKind_returnsTrueForFourOfAKind,
+  test_isPair_returnsFalseForNotPair,
+  test_isPair_returnsTrueForPair,
+  test_isSingle_returnsFalseForNotSingle,
+  test_isSingle_returnsTrueForSingle,
+  test_isStraight_returnsFalseForNotStraight,
+  test_isStraight_returnsFalseForStraightWith2,
+  test_isStraight_returnsTrueForStraight,
+  test_isTriple_returnsFalseForNotTriple,
+  test_isTriple_returnsTrueForTriple,
   test_sortHand_sortsHandByValue,
   test_switchToNextPlayer_switchesPlayer,
 ];
