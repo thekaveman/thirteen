@@ -4,6 +4,7 @@ import {
   findLowestCardInGame,
   findStartingPlayer,
   gameState,
+  getCombinationType,
   isConsecutivePairs,
   isFourOfAKind,
   isPair,
@@ -63,6 +64,55 @@ function test_findStartingPlayer_findsPlayerWithLowestCard() {
 }
 
 function test_gameState() {}
+
+function test_getCombinationType_returnsCorrectType() {
+  let cards = [{ rank: "A", suit: "♠", value: 48 }];
+  assert(getCombinationType(cards) === "single", "Should return single");
+
+  cards = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "A", suit: "♦", value: 49 },
+  ];
+  assert(getCombinationType(cards) === "pair", "Should return pair");
+
+  cards = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "A", suit: "♦", value: 49 },
+    { rank: "A", suit: "♣", value: 50 },
+  ];
+  assert(getCombinationType(cards) === "triple", "Should return triple");
+
+  cards = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "A", suit: "♦", value: 49 },
+    { rank: "A", suit: "♣", value: 50 },
+    { rank: "A", suit: "♥", value: 51 },
+  ];
+  assert(getCombinationType(cards) === "four_of_a_kind", "Should return four_of_a_kind");
+
+  cards = [
+    { rank: "3", suit: "♠", value: 0 },
+    { rank: "4", suit: "♦", value: 5 },
+    { rank: "5", suit: "♣", value: 10 },
+  ];
+  assert(getCombinationType(cards) === "straight", "Should return straight");
+
+  cards = [
+    { rank: "3", suit: "♠", value: 0 },
+    { rank: "3", suit: "♦", value: 1 },
+    { rank: "4", suit: "♣", value: 4 },
+    { rank: "4", suit: "♥", value: 5 },
+    { rank: "5", suit: "♠", value: 8 },
+    { rank: "5", suit: "♦", value: 9 },
+  ];
+  assert(getCombinationType(cards) === "consecutive_pairs", "Should return consecutive_pairs");
+
+  cards = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "K", suit: "♠", value: 47 },
+  ];
+  assert(getCombinationType(cards) === "invalid", "Should return invalid");
+}
 
 function test_isConsecutivePairs_returnsFalseForNotConsecutivePairs() {
   const cards = [
@@ -211,6 +261,7 @@ export const gameTests = [
   test_findLowestCardInGame_findsLowestCard,
   test_findStartingPlayer_findsPlayerWithLowestCard,
   test_gameState,
+  test_getCombinationType_returnsCorrectType,
   test_isConsecutivePairs_returnsFalseForNotConsecutivePairs,
   test_isConsecutivePairs_returnsTrueForConsecutivePairs,
   test_isFourOfAKind_returnsFalseForNotFourOfAKind,

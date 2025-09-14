@@ -1,4 +1,4 @@
-import { RANKS } from "./constants.js";
+import { COMBINATION_TYPES, RANKS } from "./constants.js";
 
 export const gameState = {
   numPlayers: 2,
@@ -60,6 +60,21 @@ export function findStartingPlayer(hands) {
   }
 
   return startingPlayer;
+}
+
+/**
+ * Determines the combination type of a set of cards.
+ * @param {Array<object>} cards The cards to check.
+ * @returns {string} The combination type.
+ */
+export function getCombinationType(cards) {
+  if (isSingle(cards)) return COMBINATION_TYPES.SINGLE;
+  if (isPair(cards)) return COMBINATION_TYPES.PAIR;
+  if (isTriple(cards)) return COMBINATION_TYPES.TRIPLE;
+  if (isStraight(cards)) return COMBINATION_TYPES.STRAIGHT;
+  if (isConsecutivePairs(cards)) return COMBINATION_TYPES.CONSECUTIVE_PAIRS;
+  if (isFourOfAKind(cards)) return COMBINATION_TYPES.FOUR_OF_A_KIND;
+  return COMBINATION_TYPES.INVALID;
 }
 
 /**
