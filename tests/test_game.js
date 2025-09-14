@@ -5,6 +5,8 @@ import {
   findStartingPlayer,
   gameState,
   getCombinationType,
+  isBombForPairOfTwos,
+  isBombForSingleTwo,
   isConsecutivePairs,
   isFourOfAKind,
   isPair,
@@ -112,6 +114,93 @@ function test_getCombinationType_returnsCorrectType() {
     { rank: "K", suit: "♠", value: 47 },
   ];
   assert(getCombinationType(cards) === "invalid", "Should return invalid");
+}
+
+function test_isBombForPairOfTwos_returnsFalseForOtherCombinations() {
+  const single = [{ rank: "A", suit: "♠", value: 48 }];
+  const pair = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "A", suit: "♦", value: 49 },
+  ];
+  const triple = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "A", suit: "♦", value: 49 },
+    { rank: "A", suit: "♣", value: 50 },
+  ];
+  const straight = [
+    { rank: "3", suit: "♠", value: 0 },
+    { rank: "4", suit: "♦", value: 5 },
+    { rank: "5", suit: "♣", value: 10 },
+  ];
+  const fourOfAKind = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "A", suit: "♦", value: 49 },
+    { rank: "A", suit: "♣", value: 50 },
+    { rank: "A", suit: "♥", value: 51 },
+  ];
+  assert(!isBombForPairOfTwos(single), "Should return false for a single");
+  assert(!isBombForPairOfTwos(pair), "Should return false for a pair");
+  assert(!isBombForPairOfTwos(triple), "Should return false for a triple");
+  assert(!isBombForPairOfTwos(straight), "Should return false for a straight");
+  assert(!isBombForPairOfTwos(fourOfAKind), "Should return false for a four of a kind");
+}
+
+function test_isBombForPairOfTwos_returnsTrueForFourConsecutivePairs() {
+  const cards = [
+    { rank: "3", suit: "♠", value: 0 },
+    { rank: "3", suit: "♦", value: 1 },
+    { rank: "4", suit: "♣", value: 4 },
+    { rank: "4", suit: "♥", value: 5 },
+    { rank: "5", suit: "♠", value: 8 },
+    { rank: "5", suit: "♦", value: 9 },
+    { rank: "6", suit: "♠", value: 12 },
+    { rank: "6", suit: "♦", value: 13 },
+  ];
+  assert(isBombForPairOfTwos(cards), "Should return true for four consecutive pairs");
+}
+
+function test_isBombForSingleTwo_returnsFalseForOtherCombinations() {
+  const single = [{ rank: "A", suit: "♠", value: 48 }];
+  const pair = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "A", suit: "♦", value: 49 },
+  ];
+  const triple = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "A", suit: "♦", value: 49 },
+    { rank: "A", suit: "♣", value: 50 },
+  ];
+  const straight = [
+    { rank: "3", suit: "♠", value: 0 },
+    { rank: "4", suit: "♦", value: 5 },
+    { rank: "5", suit: "♣", value: 10 },
+  ];
+  assert(!isBombForSingleTwo(single), "Should return false for a single");
+  assert(!isBombForSingleTwo(pair), "Should return false for a pair");
+  assert(!isBombForSingleTwo(triple), "Should return false for a triple");
+  assert(!isBombForSingleTwo(straight), "Should return false for a straight");
+}
+
+function test_isBombForSingleTwo_returnsTrueForFourOfAKind() {
+  const cards = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "A", suit: "♦", value: 49 },
+    { rank: "A", suit: "♣", value: 50 },
+    { rank: "A", suit: "♥", value: 51 },
+  ];
+  assert(isBombForSingleTwo(cards), "Should return true for four of a kind");
+}
+
+function test_isBombForSingleTwo_returnsTrueForThreeConsecutivePairs() {
+  const cards = [
+    { rank: "3", suit: "♠", value: 0 },
+    { rank: "3", suit: "♦", value: 1 },
+    { rank: "4", suit: "♣", value: 4 },
+    { rank: "4", suit: "♥", value: 5 },
+    { rank: "5", suit: "♠", value: 8 },
+    { rank: "5", suit: "♦", value: 9 },
+  ];
+  assert(isBombForSingleTwo(cards), "Should return true for three consecutive pairs");
 }
 
 function test_isConsecutivePairs_returnsFalseForNotConsecutivePairs() {
@@ -262,6 +351,11 @@ export const gameTests = [
   test_findStartingPlayer_findsPlayerWithLowestCard,
   test_gameState,
   test_getCombinationType_returnsCorrectType,
+  test_isBombForPairOfTwos_returnsFalseForOtherCombinations,
+  test_isBombForPairOfTwos_returnsTrueForFourConsecutivePairs,
+  test_isBombForSingleTwo_returnsFalseForOtherCombinations,
+  test_isBombForSingleTwo_returnsTrueForFourOfAKind,
+  test_isBombForSingleTwo_returnsTrueForThreeConsecutivePairs,
   test_isConsecutivePairs_returnsFalseForNotConsecutivePairs,
   test_isConsecutivePairs_returnsTrueForConsecutivePairs,
   test_isFourOfAKind_returnsFalseForNotFourOfAKind,

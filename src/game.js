@@ -78,6 +78,37 @@ export function getCombinationType(cards) {
 }
 
 /**
+ * Checks if a combination of cards is a bomb that can beat a pair of 2s.
+ * A bomb against a pair of 2s is four consecutive pairs.
+ * @param {Array<object>} cards The cards to check.
+ * @returns {boolean} True if the cards form a bomb that beats a pair of 2s.
+ */
+export function isBombForPairOfTwos(cards) {
+  const combinationType = getCombinationType(cards);
+  if (combinationType === COMBINATION_TYPES.CONSECUTIVE_PAIRS && cards.length === 8) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Checks if a combination of cards is a bomb that can beat a single 2.
+ * A bomb against a single 2 is either a four-of-a-kind or three consecutive pairs.
+ * @param {Array<object>} cards The cards to check.
+ * @returns {boolean} True if the cards form a bomb that beats a single 2.
+ */
+export function isBombForSingleTwo(cards) {
+  const combinationType = getCombinationType(cards);
+  if (combinationType === COMBINATION_TYPES.FOUR_OF_A_KIND) {
+    return true;
+  }
+  if (combinationType === COMBINATION_TYPES.CONSECUTIVE_PAIRS && cards.length === 6) {
+    return true;
+  }
+  return false;
+}
+
+/**
  * Checks if a combination is consecutive pairs.
  * @param {Array<object>} cards The cards to check.
  * @returns {boolean} True if the combination is consecutive pairs.
