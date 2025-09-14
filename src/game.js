@@ -194,6 +194,59 @@ export function isTriple(cards) {
 }
 
 /**
+ * Checks if a play is valid according to the game rules.
+ * @param {Array<object>} selectedCards The cards the player has selected.
+ * @param {Array<object>} playPile The cards currently in the play pile.
+ * @returns {boolean} True if the play is valid.
+ */
+export function isValidPlay(selectedCards, playPile) {
+  const combinationType = getCombinationType(selectedCards);
+  if (combinationType === COMBINATION_TYPES.INVALID) {
+    return false;
+  }
+
+  const playPileCombinationType = getCombinationType(playPile);
+
+  // Bomb logic
+  if (playPile.length > 0 && playPile[0].rank === "2") {
+    if (playPileCombinationType === COMBINATION_TYPES.SINGLE && isBombForSingleTwo(selectedCards)) {
+      return true;
+    }
+    if (playPileCombinationType === COMBINATION_TYPES.PAIR && isBombForPairOfTwos(selectedCards)) {
+      return true;
+    }
+  }
+
+  // Consecutive pairs are only valid as bombs, which is handled above.
+  // Any other attempted use of consecutive pairs is invalid.
+  if (combinationType === COMBINATION_TYPES.CONSECUTIVE_PAIRS) {
+    return false;
+  }
+
+  // Standard play validation
+  if (playPile.length === 0) {
+    if (gameState.currentTurn === 0) {
+      const lowestCard = findLowestCardInGame(gameState.playerHands);
+      return selectedCards.some((card) => card.value === lowestCard.value);
+    }
+    return true;
+  }
+
+  if (combinationType !== playPileCombinationType) {
+    return false;
+  }
+
+  if (selectedCards.length !== playPile.length) {
+    return false;
+  }
+
+  const highestSelectedCard = selectedCards.reduce((max, card) => (card.value > max.value ? card : max));
+  const highestPlayPileCard = playPile.reduce((max, card) => (card.value > max.value ? card : max));
+
+  return highestSelectedCard.value > highestPlayPileCard.value;
+}
+
+/**
  * Sorts a player's hand by card value.
  * @param {Array<object>} hand The hand to sort.
  */
