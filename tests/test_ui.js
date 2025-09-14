@@ -16,4 +16,23 @@ function test_handleCardClick_selectsAndDeselectsCard() {
   assert(gameState.selectedCards.length === 0, "Should deselect the card");
 }
 
-export const uiTests = [test_handleCardClick_selectsAndDeselectsCard];
+function test_handlePassButtonClick_switchesPlayerAndClearsSelectedCards() {
+  const originalRender = ui.render;
+  ui.render = () => {};
+
+  gameState.currentPlayer = 0;
+  gameState.numPlayers = 2;
+  gameState.selectedCards = [{ rank: "A", suit: "♠", value: 48 }];
+
+  ui.handlePassButtonClick();
+
+  assert(gameState.currentPlayer === 1, "Should switch to the next player");
+  assert(gameState.selectedCards.length === 0, "Should clear selected cards");
+
+  ui.render = originalRender;
+}
+
+export const uiTests = [
+  test_handleCardClick_selectsAndDeselectsCard,
+  test_handlePassButtonClick_switchesPlayerAndClearsSelectedCards,
+];

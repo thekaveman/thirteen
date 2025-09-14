@@ -1,4 +1,4 @@
-import { gameState } from "./game.js";
+import { gameState, switchToNextPlayer } from "./game.js";
 
 const ui = {};
 
@@ -84,6 +84,16 @@ ui.handleCardClick = function (event) {
     gameState.selectedCards.push(card);
     event.target.classList.add("selected");
   }
+};
+
+/**
+ * Handles the pass button click event.
+ */
+ui.handlePassButtonClick = function () {
+  switchToNextPlayer();
+  gameState.currentTurn++;
+  gameState.selectedCards = [];
+  ui.render();
 };
 
 /**
