@@ -19,13 +19,13 @@ This is an actionable checklist. Complete the tasks in order.
 
 _Goal: Create, shuffle, deal, and display text-based cards on the screen._
 
-- [ ] Data structures:
-  - [ ] In `app.js`, define a way to represent a card (e.g., `const card = { rank: 'K', suit: '♥', value: 13 };`)
-  - [ ] Define a standard 52-card deck as an array of these card objects.
-- [ ] Core functions:
-  - [ ] Write a `createDeck()` function
-  - [ ] Write a `shuffleDeck(deck)` function
-  - [ ] Write a `deal(deck, numPlayers)` function that returns an array of hands
+- [x] Data structures:
+  - [x] In `app.js`, define a way to represent a card (e.g., `const card = { rank: 'K', suit: '♥', value: 13 };`)
+  - [x] Define a standard 52-card deck as an array of these card objects.
+- [x] Core functions:
+  - [x] Write a `createDeck()` function
+  - [x] Write a `shuffleDeck(deck)` function
+  - [x] Write a `deal(deck, numPlayers)` function that returns an array of hands
 - [ ] Rendering:
   - [ ] In `index.html` create simple `<div>` for `player1-hand`, `player2-hand`, and `play-area`
   - [ ] In `app.js` write a `render()` function that takes the game state and displays the hands and play area as text inside the `<div>`s

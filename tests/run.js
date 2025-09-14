@@ -1,6 +1,9 @@
 import { log, runTests } from "./utils.js";
+import { deckTests } from "./test_deck.js";
 
-const TEST_CONFIG = {};
+const TEST_CONFIG = {
+  Deck: deckTests,
+};
 
 window.onload = () => {
   log("Running tests");
