@@ -29,3 +29,7 @@ The goal of the MVP is to create the simplest possible, fully playable version o
   - The game correctly identifies the winner of a round and the winner of the game
 
 The source of truth: [Requirements](./.gemini/specs/requirements.md)
+
+## Development Phases & Tasks
+
+An ordered list of tasks: [Tasks](./.gemini/specs/tasks.md)
