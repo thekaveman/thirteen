@@ -4,11 +4,11 @@ This is an actionable checklist. Complete the tasks in order.
 
 ## 0: Project Setup
 
-- [ ] Create `src/` folder for all subsequent source code files
-- [ ] Create `index.html` file for the game board
-- [ ] Create `style.css` file for basic layout and text styling
-- [ ] Create `app.js` file for all game logic
-- [ ] Link the CSS file and the app JS file in `index.html`
+- [x] Create `src/` folder for all game source code files
+- [x] Create `index.html` file for the game board
+- [x] Create `style.css` file for basic layout and text styling
+- [x] Create `app.js` file for all game logic
+- [x] Link the CSS file and the app JS file in `index.html`
 - [ ] Create `test.html` file for running the tests
 - [ ] Create `tests.js` file for all test code
 - [ ] Link the CSS file and both JS files in `test.html`
