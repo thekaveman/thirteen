@@ -9,9 +9,11 @@ This is an actionable checklist. Complete the tasks in order.
 - [x] Create `style.css` file for basic layout and text styling
 - [x] Create `app.js` file for all game logic
 - [x] Link the CSS file and the app JS file in `index.html`
-- [ ] Create `test.html` file for running the tests
-- [ ] Create `tests.js` file for all test code
-- [ ] Link the CSS file and both JS files in `test.html`
+- [x] Create `tests/` folder for all game source code files
+- [x] Create `index.html` file for running the tests
+- [x] Create `run.js` file for the tests entrypoint
+- [x] Create `utils.js` with `assert` and `runTests` functions
+- [x] Link the JS file in `index.html`
 
 ## 1: The Foundation (Data & Display)
 
