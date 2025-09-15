@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thirteen</title>
+    <meta property="og:title" content="Thirteen - The Card Game" />
+    <meta property="og:description" content="A web-based version of the popular card game Thirteen (Tiến Lên)." />
+    <meta property="og:image" content="icon.png" />
+    <meta property="og:type" content="website" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Thirteen</h1>
+      <img src="logo.png" alt="Thirteen card game logo" class="logo" />
+      <p class="subtitle">The Card Game</p>
+    </header>
+    <div id="game-board">
+      <div id="play-area"></div>
+      <div id="players-hands"></div>
+      <div id="controls">
+        <button id="play-button">Play</button>
+        <button id="pass-button">Pass</button>
+        <button id="new-game-button" style="display: none">New Game</button>
+      </div>
+    </div>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
