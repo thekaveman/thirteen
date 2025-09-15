@@ -134,6 +134,7 @@ function test_handlePlayButtonClick_updatesGameStateOnValidPlay() {
   gameState.playPile = [];
   gameState.currentTurn = 1;
   gameState.consecutivePasses = 1; // Should be reset
+  gameState.gameOver = false; // Ensure game is not over initially
 
   ui.handlePlayButtonClick();
 
@@ -141,9 +142,10 @@ function test_handlePlayButtonClick_updatesGameStateOnValidPlay() {
   assert(gameState.playPile.length === 1, "Should add card to play pile");
   assert(gameState.playPile[0].value === 4, "Should add correct card to play pile");
   assert(gameState.selectedCards.length === 0, "Should clear selected cards");
-  assert(gameState.currentPlayer === 1, "Should switch to the next player");
+  assert(gameState.currentPlayer === 0, "Current player should remain the winner");
   assert(gameState.consecutivePasses === 0, "Should reset consecutive passes");
   assert(gameState.lastPlayerToPlay === 0, "Should set the last player to play");
+  assert(gameState.gameOver === true, "Should set gameOver to true when player wins");
 
   ui.render = originalRender;
 }

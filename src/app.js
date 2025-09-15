@@ -10,6 +10,7 @@ function startGame() {
   log(`New game started`);
 
   resetGame();
+  ui.toggleNewGameButton(false);
 
   const deck = createDeck();
   shuffleDeck(deck);
@@ -19,8 +20,14 @@ function startGame() {
   gameState.lastPlayerToPlay = gameState.currentPlayer;
   ui.render();
 
-  document.getElementById("play-button").addEventListener("click", ui.handlePlayButtonClick);
+  document.getElementById("play-button").addEventListener("click", () => {
+    ui.handlePlayButtonClick();
+    if (gameState.gameOver) {
+      ui.toggleNewGameButton(true);
+    }
+  });
   document.getElementById("pass-button").addEventListener("click", ui.handlePassButtonClick);
+  document.getElementById("new-game-button").addEventListener("click", startGame);
 }
 
 startGame();

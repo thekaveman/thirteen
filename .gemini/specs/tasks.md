@@ -43,11 +43,11 @@ _Goal: Make the game playable for two humans in "hot-seat" mode._
   - [x] In `app.js` write a `render()` function that takes the game state and displays the hands and play area as text inside the `<div>`s
   - [x] Hook up the "Play" button to call `isValidPlay()`: if valid, update the `gameState` and re-render; if invalid, give the user feedback (e.g., an alert)
   - [x] Hook up the "Pass" button to update the `gameState`
-- [ ] Win conditions
+- [x] Win conditions
   - [x] Implement logic for winning a round (when one player plays and the other passes), allowing the winner to start the next round
-  - [ ] After each valid play, check if the current player's hand is empty. If so, declare them the winner of the game
-- [ ] New game
-  - [ ] After the end of a game, a `New Game` button should be displayed; clicking this button resets the `gameState` and starts over from the beginning
+  - [x] After each valid play, check if the current player's hand is empty. If so, declare them the winner of the game
+- [x] New game
+  - [x] After the end of a game, a `New Game` button should be displayed; clicking this button resets the `gameState` and starts over from the beginning
 
 ## 3: The First Opponent (Basic AI)
 

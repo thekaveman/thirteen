@@ -41,7 +41,9 @@ function renderPlayArea(playAreaDiv) {
 function renderPlayerHand(playerIndex, handDiv) {
   let text = `Player ${playerIndex + 1}`;
 
-  if (gameState.currentPlayer === playerIndex) {
+  if (gameState.gameOver && gameState.playerHands[playerIndex].length === 0) {
+    text += " (Winner!)";
+  } else if (gameState.currentPlayer === playerIndex) {
     text += " (Your Turn)";
   }
   handDiv.innerHTML = `<h2>${text}</h2>`;
@@ -69,6 +71,17 @@ function renderPlayerHands(playersHandsDiv) {
     renderPlayerHand(i, playerHandDiv);
   });
 }
+
+/**
+ * Toggles the visibility of the new game button.
+ * @param {boolean} show True to show the button, false to hide it.
+ */
+ui.toggleNewGameButton = function (show) {
+  const newGameButton = document.getElementById("new-game-button");
+  if (newGameButton) {
+    newGameButton.style.display = show ? "block" : "none";
+  }
+};
 
 /**
  * Handles the click event on a card.

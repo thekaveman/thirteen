@@ -294,6 +294,12 @@ export function playCards() {
     }
   });
 
+  // Check for win condition
+  if (currentPlayerHand.length === 0) {
+    log(`Player ${gameState.currentPlayer + 1} wins the game!`);
+    gameState.gameOver = true;
+  }
+
   gameState.consecutivePasses = 0;
   gameState.lastPlayerToPlay = gameState.currentPlayer;
 
@@ -301,7 +307,9 @@ export function playCards() {
   gameState.selectedCards = [];
 
   // Switch to next player
-  switchToNextPlayer();
+  if (!gameState.gameOver) {
+    switchToNextPlayer();
+  }
   gameState.currentTurn++;
 }
 
