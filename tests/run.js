@@ -15,6 +15,14 @@ window.onload = () => {
 
   const body = document.getElementById("root");
 
+  const lastRun = document.getElementById("last-run");
+  lastRun.textContent = new Date().toLocaleString();
+
+  const rerunButton = document.getElementById("rerun-button");
+  rerunButton.addEventListener("click", () => {
+    window.location.reload();
+  });
+
   for (const [name, tests] of Object.entries(TEST_CONFIG)) {
     log("Running tests: " + name);
     const heading = document.createElement("h2");
