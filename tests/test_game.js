@@ -361,6 +361,15 @@ function test_isValidPlay_consecutivePairsCannotBeatLowerConsecutivePairs() {
   assert(!isValidPlay(selectedCards, playPile), "Consecutive pairs should not beat lower consecutive pairs");
 }
 
+function test_isValidPlay_disallowsPlayingCardsNotInOwnHand() {
+  gameState.currentPlayer = 0;
+  gameState.playerHands = [[{ rank: "3", suit: "♠", value: 0 }], [{ rank: "4", suit: "♠", value: 4 }]];
+  const selectedCards = [{ rank: "4", suit: "♠", value: 4 }]; // Card from player 1's hand
+  const playPile = [];
+
+  assert(!isValidPlay(selectedCards, playPile), "Should not allow playing cards not in current player's hand");
+}
+
 function test_isValidPlay_firstTurnMustPlayLowestCard() {
   const selectedCards = [{ rank: "4", suit: "♠", value: 4 }];
   const playPile = [];
@@ -691,6 +700,7 @@ export const gameTests = [
   test_isValidPlay_allowsSingleCardOnEmptyPile,
   test_isValidPlay_cannotStartRoundWithConsecutivePairs,
   test_isValidPlay_consecutivePairsCannotBeatLowerConsecutivePairs,
+  test_isValidPlay_disallowsPlayingCardsNotInOwnHand,
   test_isValidPlay_firstTurnMustPlayLowestCard,
   test_isValidPlay_fourConsecutivePairsBeatsPairOf2s,
   test_isValidPlay_fourOfAKindBeatsLowerFourOfAKind,

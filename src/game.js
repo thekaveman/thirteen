@@ -205,6 +205,14 @@ export function isTriple(cards) {
  * @returns {boolean} True if the play is valid.
  */
 export function isValidPlay(selectedCards, playPile) {
+  // Check if all selected cards are in the current player's hand
+  const currentPlayerHand = gameState.playerHands[gameState.currentPlayer];
+  for (const selectedCard of selectedCards) {
+    if (!currentPlayerHand.some(card => card.rank === selectedCard.rank && card.suit === selectedCard.suit)) {
+      return false;
+    }
+  }
+
   const combinationType = getCombinationType(selectedCards);
   if (combinationType === COMBINATION_TYPES.INVALID) {
     return false;
