@@ -250,6 +250,60 @@ export function isValidPlay(selectedCards, playPile) {
 }
 
 /**
+ * Handles a player passing their turn.
+ * @returns {boolean} True if the pass was successful, false otherwise (e.g., cannot pass on first play).
+ */
+export function passTurn() {
+  if (gameState.playPile.length === 0) {
+    console.warn("Cannot pass on the first play of a round.");
+    return false;
+  }
+
+  gameState.consecutivePasses++;
+  gameState.selectedCards = []; // Clear selected cards on pass
+
+  if (gameState.consecutivePasses >= gameState.numPlayers - 1) {
+    console.log(`Player ${gameState.lastPlayerToPlay + 1} wins round ${gameState.roundNumber}.`);
+    gameState.playPile = [];
+    gameState.consecutivePasses = 0;
+    gameState.currentPlayer = gameState.lastPlayerToPlay;
+    gameState.roundNumber++;
+  } else {
+    switchToNextPlayer();
+  }
+
+  gameState.currentTurn++;
+  return true;
+}
+
+/**
+ * Handles a valid play, updating the game state.
+ */
+export function playCards() {
+  // Move selected cards to play pile
+  gameState.playPile = [...gameState.selectedCards];
+
+  // Remove selected cards from player's hand
+  const currentPlayerHand = gameState.playerHands[gameState.currentPlayer];
+  gameState.selectedCards.forEach((selectedCard) => {
+    const cardIndex = currentPlayerHand.findIndex((card) => card.value === selectedCard.value);
+    if (cardIndex > -1) {
+      currentPlayerHand.splice(cardIndex, 1);
+    }
+  });
+
+  gameState.consecutivePasses = 0;
+  gameState.lastPlayerToPlay = gameState.currentPlayer;
+
+  // Clear selected cards
+  gameState.selectedCards = [];
+
+  // Switch to next player
+  switchToNextPlayer();
+  gameState.currentTurn++;
+}
+
+/**
  * Sorts a player's hand by card value.
  * @param {Array<object>} hand The hand to sort.
  */

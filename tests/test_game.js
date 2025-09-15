@@ -14,6 +14,8 @@ import {
   isStraight,
   isTriple,
   isValidPlay,
+  passTurn,
+  playCards,
   sortHand,
   switchToNextPlayer,
 } from "../src/game.js";
@@ -573,6 +575,69 @@ function test_isValidPlay_tripleBeatsLowerTriple() {
   assert(isValidPlay(selectedCards, playPile), "Higher triple should beat lower triple");
 }
 
+function test_passTurn_endsRoundCorrectly() {
+  gameState.numPlayers = 3;
+  gameState.currentPlayer = 2; // Player 3 is passing
+  gameState.lastPlayerToPlay = 1; // Player 2 was the last to play
+  gameState.consecutivePasses = 1; // Player 1 already passed
+  gameState.roundNumber = 1;
+  gameState.playPile = [{ rank: "A", suit: "♠", value: 48 }];
+
+  passTurn();
+
+  assert(gameState.playPile.length === 0, "endsRoundCorrectly: Should clear the play pile");
+  assert(gameState.consecutivePasses === 0, "endsRoundCorrectly: Should reset consecutive passes");
+  assert(gameState.currentPlayer === 1, "endsRoundCorrectly: Should set the current player to the round winner");
+  assert(gameState.roundNumber === 2, "endsRoundCorrectly: Should increment the round number");
+}
+
+function test_passTurn_firstPlayOfRound() {
+  gameState.playPile = []; // Empty play pile indicates the start of a round
+  const originalState = { ...gameState };
+
+  const passSuccessful = passTurn();
+
+  assert(!passSuccessful, "Should return false when passing on the first play of a round");
+  assert(gameState.currentPlayer === originalState.currentPlayer, "Should not change current player");
+  assert(gameState.consecutivePasses === originalState.consecutivePasses, "Should not change consecutive passes");
+}
+
+function test_passTurn_incrementsPassesAndSwitchesPlayer() {
+  gameState.numPlayers = 3;
+  gameState.currentPlayer = 0;
+  gameState.consecutivePasses = 0;
+  gameState.playPile = [{ rank: "3", suit: "♠", value: 0 }]; // Not the first play
+  gameState.selectedCards = [{ rank: "A", suit: "♠", value: 48 }];
+
+  const passSuccessful = passTurn();
+
+  assert(passSuccessful, "Should return true when pass is successful");
+  assert(gameState.currentPlayer === 1, "Should switch to the next player");
+  assert(gameState.selectedCards.length === 0, "Should clear selected cards");
+  assert(gameState.consecutivePasses === 1, "Should increment consecutive passes");
+}
+
+function test_playCards_updatesGameState() {
+  gameState.currentPlayer = 0;
+  gameState.numPlayers = 2;
+  const cardToPlay = { rank: "4", suit: "♠", value: 4 };
+  gameState.playerHands = [[cardToPlay], []];
+  gameState.selectedCards = [cardToPlay];
+  gameState.playPile = [];
+  gameState.currentTurn = 1;
+  gameState.consecutivePasses = 1; // Should be reset
+
+  playCards();
+
+  assert(gameState.playerHands[0].length === 0, "Should remove card from player's hand");
+  assert(gameState.playPile.length === 1, "Should add card to play pile");
+  assert(gameState.playPile[0].value === 4, "Should add correct card to play pile");
+  assert(gameState.selectedCards.length === 0, "Should clear selected cards");
+  assert(gameState.currentPlayer === 0, "Current player should remain the winner");
+  assert(gameState.consecutivePasses === 0, "Should reset consecutive passes");
+  assert(gameState.lastPlayerToPlay === 0, "Should set the last player to play");
+}
+
 function test_sortHand_sortsHandByValue() {
   const hand = [
     { rank: "A", suit: "♠", value: 48 },
@@ -641,6 +706,10 @@ export const gameTests = [
   test_isValidPlay_straightBeatsLowerStraight,
   test_isValidPlay_threeConsecutivePairsBeatsSingle2,
   test_isValidPlay_tripleBeatsLowerTriple,
+  test_passTurn_endsRoundCorrectly,
+  test_passTurn_firstPlayOfRound,
+  test_passTurn_incrementsPassesAndSwitchesPlayer,
+  test_playCards_updatesGameState,
   test_sortHand_sortsHandByValue,
   test_switchToNextPlayer_switchesPlayer,
 ];

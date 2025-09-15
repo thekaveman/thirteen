@@ -1,4 +1,4 @@
-import { gameState, isValidPlay, switchToNextPlayer } from "./game.js";
+import { gameState, isValidPlay, passTurn, playCards } from "./game.js";
 
 const ui = {};
 
@@ -98,25 +98,10 @@ ui.handleInvalidPlay = function () {
  * Handles the pass button click event.
  */
 ui.handlePassButtonClick = function () {
-  if (gameState.playPile.length === 0) {
+  const passSuccessful = passTurn();
+  if (!passSuccessful) {
     alert("You cannot pass on the first play of a round.");
-    return;
   }
-
-  gameState.consecutivePasses++;
-  gameState.selectedCards = []; // Clear selected cards on pass
-
-  if (gameState.consecutivePasses >= gameState.numPlayers - 1) {
-    console.log(`Player ${gameState.lastPlayerToPlay + 1} wins round ${gameState.roundNumber}.`);
-    gameState.playPile = [];
-    gameState.consecutivePasses = 0;
-    gameState.currentPlayer = gameState.lastPlayerToPlay;
-    gameState.roundNumber++;
-  } else {
-    switchToNextPlayer();
-  }
-
-  gameState.currentTurn++;
   ui.render();
 };
 
@@ -125,39 +110,12 @@ ui.handlePassButtonClick = function () {
  */
 ui.handlePlayButtonClick = function () {
   if (isValidPlay(gameState.selectedCards, gameState.playPile)) {
-    ui.handleValidPlay();
+    playCards();
   } else {
     ui.handleInvalidPlay();
   }
   // Re-render the game
   ui.render();
-};
-
-/**
- * Handles a valid play.
- */
-ui.handleValidPlay = function () {
-  // Move selected cards to play pile
-  gameState.playPile = [...gameState.selectedCards];
-
-  // Remove selected cards from player's hand
-  const currentPlayerHand = gameState.playerHands[gameState.currentPlayer];
-  gameState.selectedCards.forEach((selectedCard) => {
-    const cardIndex = currentPlayerHand.findIndex((card) => card.value === selectedCard.value);
-    if (cardIndex > -1) {
-      currentPlayerHand.splice(cardIndex, 1);
-    }
-  });
-
-  gameState.consecutivePasses = 0;
-  gameState.lastPlayerToPlay = gameState.currentPlayer;
-
-  // Clear selected cards
-  gameState.selectedCards = [];
-
-  // Switch to next player
-  switchToNextPlayer();
-  gameState.currentTurn++;
 };
 
 /**
