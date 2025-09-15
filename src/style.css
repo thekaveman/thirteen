@@ -32,7 +32,8 @@ h2 {
 
 #players-hands {
   display: flex;
-  justify-content: space-around;
+  flex-direction: column;
+  align-items: center;
   width: 100%;
   max-width: 1200px;
   gap: 20px;
@@ -45,6 +46,8 @@ h2 {
   border-radius: 8px;
   background-color: #f9f9f9;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 400px;
 }
 
 .player-hand.current {
@@ -63,6 +66,8 @@ h2 {
   font-size: 1.2em;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease-in-out;
+  width: 40px;
+  text-align: center;
 }
 
 .card:hover {
@@ -130,13 +135,12 @@ button:hover {
   }
 
   #players-hands {
-    flex-direction: column;
-    align-items: center;
+    flex-direction: row;
+    justify-content: space-around;
   }
 
   .player-hand {
-    width: 90%;
-    max-width: 400px;
+    min-width: 200px;
   }
 
   .card {
