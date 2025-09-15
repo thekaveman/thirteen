@@ -11,6 +11,7 @@ export const gameState = {
   consecutivePasses: 0,
   lastPlayerToPlay: -1,
   roundNumber: 1,
+  gameOver: false,
 };
 
 /**
@@ -302,6 +303,21 @@ export function playCards() {
   // Switch to next player
   switchToNextPlayer();
   gameState.currentTurn++;
+}
+
+/**
+ * Resets the game state to its initial values.
+ */
+export function resetGame() {
+  gameState.playerHands = [];
+  gameState.playPile = [];
+  gameState.currentPlayer = 0;
+  gameState.currentTurn = 0;
+  gameState.selectedCards = [];
+  gameState.consecutivePasses = 0;
+  gameState.lastPlayerToPlay = -1;
+  gameState.roundNumber = 1;
+  gameState.gameOver = false;
 }
 
 /**

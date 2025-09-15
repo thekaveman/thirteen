@@ -626,6 +626,7 @@ function test_playCards_updatesGameState() {
   gameState.playPile = [];
   gameState.currentTurn = 1;
   gameState.consecutivePasses = 1; // Should be reset
+  gameState.gameOver = false; // Ensure game is not over initially
 
   playCards();
 
@@ -636,6 +637,7 @@ function test_playCards_updatesGameState() {
   assert(gameState.currentPlayer === 0, "Current player should remain the winner");
   assert(gameState.consecutivePasses === 0, "Should reset consecutive passes");
   assert(gameState.lastPlayerToPlay === 0, "Should set the last player to play");
+  assert(gameState.gameOver === true, "Should set gameOver to true when player wins");
 }
 
 function test_sortHand_sortsHandByValue() {
