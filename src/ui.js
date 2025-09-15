@@ -67,6 +67,9 @@ function renderPlayerHands(playersHandsDiv) {
     const playerHandDiv = document.createElement("div");
     playerHandDiv.id = `player${i}-hand`;
     playerHandDiv.classList.add("player-hand");
+    if (i === gameState.currentPlayer) {
+      playerHandDiv.classList.add("current");
+    }
     playersHandsDiv.appendChild(playerHandDiv);
     renderPlayerHand(i, playerHandDiv);
   });
