@@ -1,4 +1,5 @@
 import { COMBINATION_TYPES, RANKS } from "./constants.js";
+import { log } from "./utils.js";
 
 export const gameState = {
   numPlayers: 2,
@@ -255,7 +256,7 @@ export function isValidPlay(selectedCards, playPile) {
  */
 export function passTurn() {
   if (gameState.playPile.length === 0) {
-    console.warn("Cannot pass on the first play of a round.");
+    log("Cannot pass on the first play of a round.");
     return false;
   }
 
@@ -263,7 +264,7 @@ export function passTurn() {
   gameState.selectedCards = []; // Clear selected cards on pass
 
   if (gameState.consecutivePasses >= gameState.numPlayers - 1) {
-    console.log(`Player ${gameState.lastPlayerToPlay + 1} wins round ${gameState.roundNumber}.`);
+    log(`Player ${gameState.lastPlayerToPlay + 1} wins round ${gameState.roundNumber}.`);
     gameState.playPile = [];
     gameState.consecutivePasses = 0;
     gameState.currentPlayer = gameState.lastPlayerToPlay;

@@ -1,4 +1,5 @@
 import { gameState, isValidPlay, passTurn, playCards } from "./game.js";
+import { log } from "./utils.js";
 
 const ui = {};
 
@@ -90,7 +91,7 @@ ui.handleCardClick = function (event) {
  * Handles an invalid play.
  */
 ui.handleInvalidPlay = function () {
-  console.warn("Invalid play", gameState.selectedCards);
+  log("Invalid play", gameState.selectedCards);
   alert("Invalid play");
 };
 

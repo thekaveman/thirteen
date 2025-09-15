@@ -4,10 +4,6 @@ export function assert(condition, message) {
   }
 }
 
-export function log(message) {
-  console.log(`${new Date()}: ${message}`);
-}
-
 export function runTests(tests, results) {
   results.innerHTML = "";
 

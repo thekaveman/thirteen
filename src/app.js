@@ -1,12 +1,13 @@
 import { createDeck, shuffleDeck, deal } from "./deck.js";
 import { gameState, findStartingPlayer, sortHand } from "./game.js";
 import ui from "./ui.js";
+import { log } from "./utils.js";
 
 /**
  * Starts the game.
  */
 function startGame() {
-  console.log(`${new Date()}: New game started`);
+  log(`New game started`);
 
   const deck = createDeck();
   shuffleDeck(deck);

@@ -1,4 +1,5 @@
-import { log, runTests } from "./utils.js";
+import { log } from "../src/utils.js";
+import { runTests } from "./utils.js";
 import { deckTests } from "./test_deck.js";
 import { gameTests } from "./test_game.js";
 import { uiTests } from "./test_ui.js";
