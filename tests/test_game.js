@@ -575,6 +575,18 @@ function test_isValidPlay_returnsFalseForLowerRankSingle() {
   assert(!isValidPlay(selectedCards, playPile), "Should return false for lower rank single");
 }
 
+function test_isValidPlay_selectionOrderDoesNotMatter() {
+  const selectedCards = [
+    { rank: "5", suit: "♣", value: 10 },
+    { rank: "3", suit: "♠", value: 0 },
+    { rank: "4", suit: "♦", value: 5 },
+  ];
+  gameState.currentPlayer = 0;
+  gameState.playerHands = [selectedCards];
+  const playPile = [];
+  assert(isValidPlay(selectedCards, playPile), "Card selection order should not matter");
+}
+
 function test_isValidPlay_straightBeatsLowerStraight() {
   const selectedCards = [
     { rank: "4", suit: "♠", value: 4 },
@@ -753,6 +765,7 @@ export const gameTests = [
   test_isValidPlay_pairBeatsLowerPair,
   test_isValidPlay_playMustBeSameCombinationType,
   test_isValidPlay_returnsFalseForLowerRankSingle,
+  test_isValidPlay_selectionOrderDoesNotMatter,
   test_isValidPlay_straightBeatsLowerStraight,
   test_isValidPlay_threeConsecutivePairsBeatsSingle2,
   test_isValidPlay_tripleBeatsLowerTriple,
