@@ -125,18 +125,31 @@ ui.render = function () {
 };
 
 /**
+ * Renders cards to a target element.
+ * @param {Array<object>} card The array of cards.
+ * @param {HTMLElement} targetElement The element in which to render.
+ * @param {Function} preRender An optional function to run on each card element before rendering.
+ */
+ui.renderCardsContainer = function (cards, targetElement, preRender = null) {
+  const cardsContainer = document.createElement("div");
+  cardsContainer.classList.add("cards-container");
+  targetElement.appendChild(cardsContainer);
+
+  cards.forEach((card) => {
+    const cardSpan = ui.createCardElement(card);
+    if (preRender != null) {
+      preRender(cardSpan);
+    }
+    cardsContainer.appendChild(cardSpan);
+  });
+};
+
+/**
  * Renders the play area in the DOM.
  */
 ui.renderPlayArea = function () {
   ui.gameContent.innerHTML = `<h2>Play Area (Round ${gameState.roundNumber})</h2>`;
-  const cardsContainer = document.createElement("div");
-  cardsContainer.classList.add("cards-container");
-  ui.gameContent.appendChild(cardsContainer);
-
-  gameState.playPile.forEach((card) => {
-    const cardSpan = ui.createCardElement(card);
-    cardsContainer.appendChild(cardSpan);
-  });
+  ui.renderCardsContainer(gameState.playPile, ui.gameContent);
 };
 
 /**
@@ -164,20 +177,16 @@ ui.renderPlayerHand = function (playerIndex, handDiv) {
   roundsWonEl.textContent = `Rounds won: ${gameState.roundsWon[playerIndex]}`;
   handDiv.appendChild(roundsWonEl);
 
-  const cardsContainer = document.createElement("div");
-  cardsContainer.classList.add("cards-container");
-  handDiv.appendChild(cardsContainer);
-
-  gameState.playerHands[playerIndex].forEach((card) => {
-    const cardSpan = ui.createCardElement(card);
+  const preRender = function (cardSpan) {
     if (playerIndex === gameState.currentPlayer) {
       cardSpan.addEventListener("click", ui.handleCardClick);
     }
     if (gameState.selectedCards.some((selectedCard) => selectedCard.value === card.value)) {
       cardSpan.classList.add("selected");
     }
-    cardsContainer.appendChild(cardSpan);
-  });
+  };
+
+  ui.renderCardsContainer(gameState.playerHands[playerIndex], handDiv, preRender);
 };
 
 /**
