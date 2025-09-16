@@ -85,6 +85,16 @@ export function getCombinationType(cards) {
 }
 
 /**
+ * Determines if the given hand contains the given card.
+ * @param {Array<object>} hand The hand to check.
+ * @param {object} card The card to check.
+ * @returns {boolean} True if the hand contains the card.
+ */
+export function handContainsCard(hand, card) {
+  return hand.some((handCard) => handCard.rank === card.rank && handCard.suit === card.suit);
+}
+
+/**
  * Checks if a combination of cards is a bomb that can beat a pair of 2s.
  * A bomb against a pair of 2s is four consecutive pairs.
  * @param {Array<object>} cards The cards to check.

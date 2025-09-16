@@ -1,4 +1,4 @@
-import { gameState, isValidPlay, passTurn, playCards } from "./game.js";
+import { gameState, handContainsCard, isValidPlay, passTurn, playCards } from "./game.js";
 import { log } from "./utils.js";
 
 const ui = {};
@@ -61,6 +61,14 @@ ui.createCardElement = function (card) {
  */
 ui.handleCardClick = function (event) {
   const card = JSON.parse(event.target.dataset.card);
+
+  // Check if the clicked card belongs to the current player's hand
+  const currentPlayerHand = gameState.playerHands[gameState.currentPlayer];
+  if (!handContainsCard(currentPlayerHand, card)) {
+    // If the card does not belong to the current player, do nothing
+    return;
+  }
+
   const cardIndex = gameState.selectedCards.findIndex((c) => c.value === card.value);
 
   if (cardIndex > -1) {
