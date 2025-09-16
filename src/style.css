@@ -3,6 +3,7 @@ body {
   background-color: #f0f0f0;
   padding: 0;
   margin: 0;
+  padding-bottom: 70px;
 }
 
 header {
@@ -121,9 +122,22 @@ h2 {
 }
 
 #controls {
-  margin-top: 20px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #f0f0f0;
+  padding: 10px;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
   display: flex;
-  gap: 10px;
+  justify-content: space-around;
+  gap: 0;
+}
+
+#controls button {
+  flex: 1;
+  margin: 0 5px;
 }
 
 button {
@@ -174,6 +188,23 @@ button:disabled,
 
 /* Responsive Design */
 @media (min-width: 768px) {
+  body {
+    padding-bottom: 0;
+  }
+
+  #controls {
+    position: static;
+    margin-top: 20px;
+    gap: 10px;
+    box-shadow: none;
+    justify-content: center;
+  }
+
+  #controls button {
+    flex: none;
+    margin: 0;
+  }
+
   #play-area {
     width: 90%;
   }
