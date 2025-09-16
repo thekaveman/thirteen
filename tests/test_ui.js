@@ -11,6 +11,41 @@ function test_createCardElement() {
   assert(cardElement.dataset.card === JSON.stringify(card), "Should have the card data attribute");
 }
 
+function test_handleCardClick_preventsSelectionOfOtherPlayersCards() {
+  // Setup initial game state
+  gameState.currentPlayer = 0;
+  gameState.numPlayers = 2;
+  gameState.playerHands = [
+    [{ rank: "3", suit: "♠", value: 0 }], // Player 0's hand
+    [{ rank: "4", suit: "♦", value: 1 }], // Player 1's hand
+  ];
+  gameState.selectedCards = [];
+
+  // Mock DOM elements for player hands and cards
+  const player0HandDiv = document.createElement("div");
+  player0HandDiv.id = "player0-hand";
+  const player1HandDiv = document.createElement("div");
+  player1HandDiv.id = "player1-hand";
+
+  // Render hands to attach event listeners
+  ui.renderPlayerHand(0, player0HandDiv);
+  ui.renderPlayerHand(1, player1HandDiv);
+
+  // Simulate clicking a card from Player 1's hand (not current player)
+  const otherPlayerCardElement = player1HandDiv.querySelector(".card");
+  const otherPlayerCard = JSON.parse(otherPlayerCardElement.dataset.card);
+  const event = { target: otherPlayerCardElement };
+
+  ui.handleCardClick(event);
+
+  // Assertions
+  assert(gameState.selectedCards.length === 0, "Should not select card from other player's hand");
+  assert(!otherPlayerCardElement.classList.contains("selected"), "Other player's card should not have 'selected' class");
+
+  // Clean up
+  gameState.selectedCards = [];
+}
+
 function test_handleCardClick_selectsAndDeselectsCard() {
   const tmp = document.createElement(`div`);
   const card = { rank: "A", suit: "♠", value: 48 };
@@ -245,6 +280,7 @@ function test_updateButtonStates_gameNotOver() {
 export const uiTests = [
   test_createCardElement,
   test_handleCardClick_selectsAndDeselectsCard,
+  test_handleCardClick_preventsSelectionOfOtherPlayersCards,
   test_handleInvalidPlay_showsAlert,
   test_handlePassButtonClick_endsRoundCorrectly,
   test_handlePassButtonClick_firstPlayOfRound,

@@ -121,7 +121,9 @@ ui.renderPlayerHand = function (playerIndex, handDiv) {
 
   gameState.playerHands[playerIndex].forEach((card) => {
     const cardSpan = ui.createCardElement(card);
-    cardSpan.addEventListener("click", ui.handleCardClick);
+    if (playerIndex === gameState.currentPlayer) {
+      cardSpan.addEventListener("click", ui.handleCardClick);
+    }
     if (gameState.selectedCards.some((selectedCard) => selectedCard.value === card.value)) {
       cardSpan.classList.add("selected");
     }
