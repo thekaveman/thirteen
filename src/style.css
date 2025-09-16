@@ -186,6 +186,31 @@ button:disabled,
   display: block;
 }
 
+#game-messages {
+  text-align: center;
+  padding: 10px;
+  margin: 10px auto;
+  line-height: 1.5rem;
+  border-radius: 5px;
+  font-weight: bold;
+  max-width: 800px;
+  min-height: 25px;
+}
+
+#game-messages.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+  display: block;
+}
+
+#game-messages.info {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+  display: block;
+}
+
 /* Responsive Design */
 @media (min-width: 768px) {
   body {

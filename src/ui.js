@@ -11,6 +11,32 @@ ui.playButton = document.getElementById("play-button");
 ui.passButton = document.getElementById("pass-button");
 ui.newGameButton = document.getElementById("new-game-button");
 
+let messageTimeout;
+
+/**
+ * Displays a message to the user.
+ * @param {string} message The message to display.
+ * @param {string} type The type of message (e.g., "error", "info").
+ */
+ui.displayMessage = function (message, type) {
+  console.log(`displayMessage: ${message}, type: ${type}`);
+  ui.gameMessages.textContent = message;
+  ui.gameMessages.classList.add(type);
+  clearTimeout(messageTimeout);
+  messageTimeout = setTimeout(() => {
+    ui.clearMessage();
+  }, 3000); // Clear message after 3 seconds
+};
+
+/**
+ * Clears the displayed message.
+ */
+ui.clearMessage = function () {
+  console.log("clearMessage called");
+  ui.gameMessages.textContent = "";
+  ui.gameMessages.className = "";
+};
+
 /**
  * Creates a card element.
  * @param {object} card The card object.
@@ -51,16 +77,17 @@ ui.handleCardClick = function (event) {
  */
 ui.handleInvalidPlay = function () {
   log("Invalid play", gameState.selectedCards);
-  alert("Invalid play");
+  ui.displayMessage("Invalid play", "error");
 };
 
 /**
  * Handles the pass button click event.
  */
 ui.handlePassButtonClick = function () {
+  ui.clearMessage();
   const passSuccessful = passTurn();
   if (!passSuccessful) {
-    alert("You cannot pass on the first play of a round.");
+    ui.displayMessage("You cannot pass on the first play of a round.", "error");
   }
   ui.render();
 };
@@ -69,12 +96,12 @@ ui.handlePassButtonClick = function () {
  * Handles the play button click event.
  */
 ui.handlePlayButtonClick = function () {
+  ui.clearMessage();
   if (isValidPlay(gameState.selectedCards, gameState.playPile)) {
     playCards();
   } else {
     ui.handleInvalidPlay();
   }
-  // Re-render the game
   ui.render();
 };
 
