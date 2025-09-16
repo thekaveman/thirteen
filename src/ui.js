@@ -76,17 +76,6 @@ function renderPlayerHands(playersHandsDiv) {
 }
 
 /**
- * Toggles the visibility of the new game button.
- * @param {boolean} show True to show the button, false to hide it.
- */
-ui.toggleNewGameButton = function (show) {
-  const newGameButton = document.getElementById("new-game-button");
-  if (newGameButton) {
-    newGameButton.style.display = show ? "block" : "none";
-  }
-};
-
-/**
  * Handles the click event on a card.
  * @param {Event} event The click event.
  */
@@ -144,6 +133,26 @@ ui.render = function () {
 
   renderPlayerHands(playersHandsDiv);
   renderPlayArea(playAreaDiv);
+  ui.updateButtonStates();
+};
+
+/**
+ * Updates the state of the play, pass, and new game buttons.
+ */
+ui.updateButtonStates = function () {
+  const playButton = document.getElementById("play-button");
+  const passButton = document.getElementById("pass-button");
+  const newGameButton = document.getElementById("new-game-button");
+
+  if (gameState.gameOver) {
+    playButton.disabled = true;
+    passButton.disabled = true;
+    newGameButton.style.display = "block";
+  } else {
+    playButton.disabled = false;
+    passButton.disabled = false;
+    newGameButton.style.display = "none";
+  }
 };
 
 export default ui;

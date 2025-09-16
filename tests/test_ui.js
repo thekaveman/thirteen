@@ -150,6 +150,32 @@ function test_handlePlayButtonClick_updatesGameStateOnValidPlay() {
   ui.render = originalRender;
 }
 
+function test_updateButtonStates_gameOver() {
+  gameState.gameOver = true;
+  ui.updateButtonStates();
+
+  const playButton = document.getElementById("play-button");
+  const passButton = document.getElementById("pass-button");
+  const newGameButton = document.getElementById("new-game-button");
+
+  assert(playButton.disabled, "Play button should be disabled");
+  assert(passButton.disabled, "Pass button should be disabled");
+  assert(newGameButton.style.display === "block", "New game button should be visible");
+}
+
+function test_updateButtonStates_gameNotOver() {
+  gameState.gameOver = false;
+  ui.updateButtonStates();
+
+  const playButton = document.getElementById("play-button");
+  const passButton = document.getElementById("pass-button");
+  const newGameButton = document.getElementById("new-game-button");
+
+  assert(!playButton.disabled, "Play button should be enabled");
+  assert(!passButton.disabled, "Pass button should be enabled");
+  assert(newGameButton.style.display === "none", "New game button should be hidden");
+}
+
 export const uiTests = [
   test_handleCardClick_selectsAndDeselectsCard,
   test_handleInvalidPlay_showsAlert,
@@ -158,4 +184,6 @@ export const uiTests = [
   test_handlePassButtonClick_incrementsPassesAndSwitchesPlayer,
   test_handlePlayButtonClick_callsInvalidPlayHandler,
   test_handlePlayButtonClick_updatesGameStateOnValidPlay,
+  test_updateButtonStates_gameOver,
+  test_updateButtonStates_gameNotOver,
 ];

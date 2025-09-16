@@ -144,6 +144,15 @@ button:hover {
   border-color: #008cba;
 }
 
+button:disabled,
+#play-button:disabled,
+#pass-button:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  border-color: #cccccc;
+}
+
 .logo {
   width: 150px;
   margin: 0 auto;
