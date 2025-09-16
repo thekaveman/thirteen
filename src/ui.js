@@ -109,6 +109,11 @@ ui.renderPlayerHand = function (playerIndex, handDiv) {
   }
   handDiv.innerHTML = `<h2>${text}</h2>`;
 
+  const gamesWonEl = document.createElement("p");
+  gamesWonEl.classList.add("games-won");
+  gamesWonEl.textContent = `Games won: ${gameState.gamesWon[playerIndex]}`;
+  handDiv.appendChild(gamesWonEl);
+
   const roundsWonEl = document.createElement("p");
   roundsWonEl.classList.add("rounds-won");
   roundsWonEl.textContent = `Rounds won: ${gameState.roundsWon[playerIndex]}`;

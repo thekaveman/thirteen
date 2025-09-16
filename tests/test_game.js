@@ -797,6 +797,19 @@ function test_switchToNextPlayer_switchesPlayer() {
   assert(gameState.currentPlayer === 1, "Should switch to the next player");
 }
 
+function test_playCards_updatesGamesWon() {
+  gameState.currentPlayer = 0;
+  gameState.numPlayers = 2;
+  const cardToPlay = { rank: "4", suit: "♠", value: 4 };
+  gameState.playerHands = [[cardToPlay], []];
+  gameState.selectedCards = [cardToPlay];
+  gameState.gamesWon = [0, 0];
+
+  playCards();
+
+  assert(gameState.gamesWon[0] === 1, "Should increment games won for the winner");
+}
+
 export const gameTests = [
   test_allCardsHaveSameRank_returnsFalseForDifferentRank,
   test_allCardsHaveSameRank_returnsTrueForSameRank,
@@ -850,6 +863,7 @@ export const gameTests = [
   test_passTurn_firstPlayOfRound,
   test_passTurn_incrementsPassesAndSwitchesPlayer,
   test_playCards_updatesGameState,
+  test_playCards_updatesGamesWon,
   test_resetGame,
   test_sortHand_sortsHandByValue,
   test_switchToNextPlayer_switchesPlayer,

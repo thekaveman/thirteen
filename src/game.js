@@ -12,6 +12,7 @@ export const gameState = {
   lastPlayerToPlay: -1,
   roundNumber: 1,
   roundsWon: [],
+  gamesWon: [],
   gameOver: false,
 };
 
@@ -309,6 +310,7 @@ export function playCards() {
   // Check for win condition
   if (currentPlayerHand.length === 0) {
     log(`Player ${gameState.currentPlayer + 1} wins the game!`);
+    gameState.gamesWon[gameState.currentPlayer]++;
     gameState.gameOver = true;
   }
 
@@ -338,6 +340,9 @@ export function resetGame() {
   gameState.lastPlayerToPlay = -1;
   gameState.roundNumber = 1;
   gameState.roundsWon = new Array(gameState.numPlayers).fill(0);
+  if (gameState.gamesWon.length === 0) {
+    gameState.gamesWon = new Array(gameState.numPlayers).fill(0);
+  }
   gameState.gameOver = false;
 }
 

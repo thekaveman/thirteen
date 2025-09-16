@@ -161,7 +161,7 @@ function test_handlePlayButtonClick_updatesGameStateOnValidPlay() {
   ui.render = originalRender;
 }
 
-function test_render_displaysRoundInfo() {
+function test_render_displaysGameInfo() {
   const playArea = document.getElementById("play-area");
   const playersHands = document.getElementById("players-hands");
   playArea.innerHTML = "";
@@ -169,6 +169,7 @@ function test_render_displaysRoundInfo() {
 
   gameState.roundNumber = 5;
   gameState.roundsWon = [2, 3];
+  gameState.gamesWon = [1, 0];
   gameState.playerHands = [[], []];
   ui.render();
 
@@ -177,10 +178,42 @@ function test_render_displaysRoundInfo() {
   const player1Hand = document.getElementById("player0-hand");
   const player1RoundsWon = player1Hand.querySelector(".rounds-won");
   assert(player1RoundsWon.textContent === "Rounds won: 2", "Should display player 1 rounds won");
+  const player1GamesWon = player1Hand.querySelector(".games-won");
+  assert(player1GamesWon.textContent === "Games won: 1", "Should display player 1 games won");
 
   const player2Hand = document.getElementById("player1-hand");
   const player2RoundsWon = player2Hand.querySelector(".rounds-won");
   assert(player2RoundsWon.textContent === "Rounds won: 3", "Should display player 2 rounds won");
+  const player2GamesWon = player2Hand.querySelector(".games-won");
+  assert(player2GamesWon.textContent === "Games won: 0", "Should display player 2 games won");
+}
+
+function test_renderPlayArea_clearsAreaBeforeRendering() {
+  const playArea = document.getElementById("play-area");
+  playArea.innerHTML = "<p>Some content</p>";
+  gameState.playPile = [];
+  gameState.roundNumber = 1;
+  ui.renderPlayArea(playArea);
+  assert(playArea.innerHTML === "<h2>Play Area (Round 1)</h2>", "Should clear the play area before rendering");
+}
+
+function test_renderPlayerHand_rendersCards() {
+  const playerHandDiv = document.createElement("div");
+  gameState.playerHands = [[{ rank: "A", suit: "♠", value: 48 }]];
+  gameState.roundsWon = [0];
+  gameState.gamesWon = [0];
+  ui.renderPlayerHand(0, playerHandDiv);
+  const cardElement = playerHandDiv.querySelector(".card");
+  assert(cardElement, "Should render a card element");
+}
+
+function test_renderPlayerHands_rendersCorrectNumberOfHands() {
+  const playersHandsDiv = document.getElementById("players-hands");
+  playersHandsDiv.innerHTML = "";
+  gameState.playerHands = [[], [], []];
+  ui.renderPlayerHands(playersHandsDiv);
+  const playerHandElements = playersHandsDiv.querySelectorAll(".player-hand");
+  assert(playerHandElements.length === 3, "Should render the correct number of player hands");
 }
 
 function test_updateButtonStates_gameOver() {
@@ -209,15 +242,6 @@ function test_updateButtonStates_gameNotOver() {
   assert(newGameButton.style.display === "none", "New game button should be hidden");
 }
 
-function test_renderPlayArea_clearsAreaBeforeRendering() {
-  const playArea = document.getElementById("play-area");
-  playArea.innerHTML = "<p>Some content</p>";
-  gameState.playPile = [];
-  gameState.roundNumber = 1;
-  ui.renderPlayArea(playArea);
-  assert(playArea.innerHTML === "<h2>Play Area (Round 1)</h2>", "Should clear the play area before rendering");
-}
-
 export const uiTests = [
   test_createCardElement,
   test_handleCardClick_selectsAndDeselectsCard,
@@ -227,8 +251,10 @@ export const uiTests = [
   test_handlePassButtonClick_incrementsPassesAndSwitchesPlayer,
   test_handlePlayButtonClick_callsInvalidPlayHandler,
   test_handlePlayButtonClick_updatesGameStateOnValidPlay,
-  test_render_displaysRoundInfo,
+  test_render_displaysGameInfo,
   test_renderPlayArea_clearsAreaBeforeRendering,
+  test_renderPlayerHand_rendersCards,
+  test_renderPlayerHands_rendersCorrectNumberOfHands,
   test_updateButtonStates_gameOver,
   test_updateButtonStates_gameNotOver,
 ];
