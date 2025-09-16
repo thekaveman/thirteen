@@ -161,6 +161,28 @@ function test_handlePlayButtonClick_updatesGameStateOnValidPlay() {
   ui.render = originalRender;
 }
 
+function test_render_displaysRoundInfo() {
+  const playArea = document.getElementById("play-area");
+  const playersHands = document.getElementById("players-hands");
+  playArea.innerHTML = "";
+  playersHands.innerHTML = "";
+
+  gameState.roundNumber = 5;
+  gameState.roundsWon = [2, 3];
+  gameState.playerHands = [[], []];
+  ui.render();
+
+  assert(playArea.innerHTML.includes("Round 5"), "Should display the current round number");
+
+  const player1Hand = document.getElementById("player0-hand");
+  const player1RoundsWon = player1Hand.querySelector(".rounds-won");
+  assert(player1RoundsWon.textContent === "Rounds won: 2", "Should display player 1 rounds won");
+
+  const player2Hand = document.getElementById("player1-hand");
+  const player2RoundsWon = player2Hand.querySelector(".rounds-won");
+  assert(player2RoundsWon.textContent === "Rounds won: 3", "Should display player 2 rounds won");
+}
+
 function test_updateButtonStates_gameOver() {
   gameState.gameOver = true;
   ui.updateButtonStates();
@@ -191,8 +213,9 @@ function test_renderPlayArea_clearsAreaBeforeRendering() {
   const playArea = document.getElementById("play-area");
   playArea.innerHTML = "<p>Some content</p>";
   gameState.playPile = [];
+  gameState.roundNumber = 1;
   ui.renderPlayArea(playArea);
-  assert(playArea.innerHTML === "<h2>Play Area</h2>", "Should clear the play area before rendering");
+  assert(playArea.innerHTML === "<h2>Play Area (Round 1)</h2>", "Should clear the play area before rendering");
 }
 
 export const uiTests = [
@@ -204,6 +227,7 @@ export const uiTests = [
   test_handlePassButtonClick_incrementsPassesAndSwitchesPlayer,
   test_handlePlayButtonClick_callsInvalidPlayHandler,
   test_handlePlayButtonClick_updatesGameStateOnValidPlay,
+  test_render_displaysRoundInfo,
   test_renderPlayArea_clearsAreaBeforeRendering,
   test_updateButtonStates_gameOver,
   test_updateButtonStates_gameNotOver,

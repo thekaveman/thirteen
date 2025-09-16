@@ -82,6 +82,8 @@ function test_gameState() {
   assert(gameState.consecutivePasses === 0, "Initial consecutivePasses should be 0");
   assert(gameState.lastPlayerToPlay === -1, "Initial lastPlayerToPlay should be -1");
   assert(gameState.roundNumber === 1, "Initial roundNumber should be 1");
+  assert(Array.isArray(gameState.roundsWon), "Initial roundsWon should be an array");
+  assert(gameState.roundsWon.length === 0, "Initial roundsWon should be empty");
   assert(gameState.gameOver === false, "Initial gameOver should be false");
 }
 
@@ -676,6 +678,7 @@ function test_passTurn_endsRoundCorrectly() {
   gameState.lastPlayerToPlay = 1; // Player 2 was the last to play
   gameState.consecutivePasses = 1; // Player 1 already passed
   gameState.roundNumber = 1;
+  gameState.roundsWon = [0, 0, 0];
   gameState.playPile = [{ rank: "A", suit: "♠", value: 48 }];
 
   passTurn();
@@ -684,6 +687,7 @@ function test_passTurn_endsRoundCorrectly() {
   assert(gameState.consecutivePasses === 0, "endsRoundCorrectly: Should reset consecutive passes");
   assert(gameState.currentPlayer === 1, "endsRoundCorrectly: Should set the current player to the round winner");
   assert(gameState.roundNumber === 2, "endsRoundCorrectly: Should increment the round number");
+  assert(gameState.roundsWon[1] === 1, "endsRoundCorrectly: Should increment the rounds won for the winner");
 }
 
 function test_passTurn_firstPlayOfRound() {
@@ -745,6 +749,7 @@ function test_resetGame() {
   gameState.consecutivePasses = 1;
   gameState.lastPlayerToPlay = 0;
   gameState.roundNumber = 2;
+  gameState.roundsWon = [1, 0, 0];
   gameState.gameOver = true;
 
   resetGame();
@@ -760,6 +765,12 @@ function test_resetGame() {
   assert(gameState.consecutivePasses === 0, "Reset consecutivePasses should be 0");
   assert(gameState.lastPlayerToPlay === -1, "Reset lastPlayerToPlay should be -1");
   assert(gameState.roundNumber === 1, "Reset roundNumber should be 1");
+  assert(Array.isArray(gameState.roundsWon), "Reset roundsWon should be an array");
+  assert(gameState.roundsWon.length === 3, "Reset roundsWon should have the correct length");
+  assert(
+    gameState.roundsWon.every((r) => r === 0),
+    "Reset roundsWon should all be 0"
+  );
   assert(gameState.gameOver === false, "Reset gameOver should be false");
 }
 

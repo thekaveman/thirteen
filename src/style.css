@@ -71,6 +71,12 @@ h2 {
   background-color: #eaf2fa;
 }
 
+.rounds-won {
+  font-size: 0.9em;
+  color: #666;
+  margin-bottom: 10px;
+}
+
 .card {
   display: inline-block;
   padding: 8px 12px;

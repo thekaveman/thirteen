@@ -87,7 +87,7 @@ ui.render = function () {
  * @param {HTMLElement} playAreaDiv The div element for the play area.
  */
 ui.renderPlayArea = function (playAreaDiv) {
-  playAreaDiv.innerHTML = "<h2>Play Area</h2>";
+  playAreaDiv.innerHTML = `<h2>Play Area (Round ${gameState.roundNumber})</h2>`;
   gameState.playPile.forEach((card) => {
     const cardSpan = ui.createCardElement(card);
     playAreaDiv.appendChild(cardSpan);
@@ -108,6 +108,11 @@ ui.renderPlayerHand = function (playerIndex, handDiv) {
     text += " (Your Turn)";
   }
   handDiv.innerHTML = `<h2>${text}</h2>`;
+
+  const roundsWonEl = document.createElement("p");
+  roundsWonEl.classList.add("rounds-won");
+  roundsWonEl.textContent = `Rounds won: ${gameState.roundsWon[playerIndex]}`;
+  handDiv.appendChild(roundsWonEl);
 
   gameState.playerHands[playerIndex].forEach((card) => {
     const cardSpan = ui.createCardElement(card);
