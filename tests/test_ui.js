@@ -2,6 +2,50 @@ import { assert } from "./utils.js";
 import { gameState } from "../src/game.js";
 import ui from "../src/ui.js";
 
+function test_createCardElement() {
+  const card = { rank: "A", suit: "♠", value: 48 };
+  const cardElement = ui.createCardElement(card);
+  assert(cardElement.textContent === "A♠ ", "Should create a card element with the correct text content");
+  assert(cardElement.classList.contains("card"), "Should have the card class");
+  assert(cardElement.classList.contains("black"), "Should have the black class for a spade");
+  assert(cardElement.dataset.card === JSON.stringify(card), "Should have the card data attribute");
+}
+
+function test_handleCardClick_preventsSelectionOfOtherPlayersCards() {
+  // Setup initial game state
+  gameState.currentPlayer = 0;
+  gameState.numPlayers = 2;
+  gameState.playerHands = [
+    [{ rank: "3", suit: "♠", value: 0 }], // Player 0's hand
+    [{ rank: "4", suit: "♦", value: 1 }], // Player 1's hand
+  ];
+  gameState.selectedCards = [];
+
+  // Mock DOM elements for player hands and cards
+  const player0HandDiv = document.createElement("div");
+  player0HandDiv.id = "player0-hand";
+  const player1HandDiv = document.createElement("div");
+  player1HandDiv.id = "player1-hand";
+
+  // Render hands to attach event listeners
+  ui.renderPlayerHand(0, player0HandDiv);
+  ui.renderPlayerHand(1, player1HandDiv);
+
+  // Simulate clicking a card from Player 1's hand (not current player)
+  const otherPlayerCardElement = player1HandDiv.querySelector(".card");
+  const otherPlayerCard = JSON.parse(otherPlayerCardElement.dataset.card);
+  const event = { target: otherPlayerCardElement };
+
+  ui.handleCardClick(event);
+
+  // Assertions
+  assert(gameState.selectedCards.length === 0, "Should not select card from other player's hand");
+  assert(!otherPlayerCardElement.classList.contains("selected"), "Other player's card should not have 'selected' class");
+
+  // Clean up
+  gameState.selectedCards = [];
+}
+
 function test_handleCardClick_selectsAndDeselectsCard() {
   const tmp = document.createElement(`div`);
   const card = { rank: "A", suit: "♠", value: 48 };
@@ -110,6 +154,8 @@ function test_handlePlayButtonClick_callsInvalidPlayHandler() {
   };
 
   // Set up an invalid game state to make isValidPlay return false.
+  gameState.numPlayers = 2;
+  gameState.playerHands = [[], []];
   gameState.selectedCards = [{ rank: "3", suit: "♠", value: 0 }];
   gameState.playPile = [{ rank: "A", suit: "♠", value: 48 }];
 
@@ -150,12 +196,101 @@ function test_handlePlayButtonClick_updatesGameStateOnValidPlay() {
   ui.render = originalRender;
 }
 
+function test_render_displaysGameInfo() {
+  const playArea = document.getElementById("play-area");
+  const playersHands = document.getElementById("players-hands");
+  playArea.innerHTML = "";
+  playersHands.innerHTML = "";
+
+  gameState.roundNumber = 5;
+  gameState.roundsWon = [2, 3];
+  gameState.gamesWon = [1, 0];
+  gameState.playerHands = [[], []];
+  ui.render();
+
+  assert(playArea.innerHTML.includes("Round 5"), "Should display the current round number");
+
+  const player1Hand = document.getElementById("player0-hand");
+  const player1RoundsWon = player1Hand.querySelector(".rounds-won");
+  assert(player1RoundsWon.textContent === "Rounds won: 2", "Should display player 1 rounds won");
+  const player1GamesWon = player1Hand.querySelector(".games-won");
+  assert(player1GamesWon.textContent === "Games won: 1", "Should display player 1 games won");
+
+  const player2Hand = document.getElementById("player1-hand");
+  const player2RoundsWon = player2Hand.querySelector(".rounds-won");
+  assert(player2RoundsWon.textContent === "Rounds won: 3", "Should display player 2 rounds won");
+  const player2GamesWon = player2Hand.querySelector(".games-won");
+  assert(player2GamesWon.textContent === "Games won: 0", "Should display player 2 games won");
+}
+
+function test_renderPlayArea_clearsAreaBeforeRendering() {
+  const playArea = document.getElementById("play-area");
+  playArea.innerHTML = "<p>Some content</p>";
+  gameState.playPile = [];
+  gameState.roundNumber = 1;
+  ui.renderPlayArea(playArea);
+  assert(playArea.innerHTML === "<h2>Play Area (Round 1)</h2>", "Should clear the play area before rendering");
+}
+
+function test_renderPlayerHand_rendersCards() {
+  const playerHandDiv = document.createElement("div");
+  gameState.playerHands = [[{ rank: "A", suit: "♠", value: 48 }]];
+  gameState.roundsWon = [0];
+  gameState.gamesWon = [0];
+  ui.renderPlayerHand(0, playerHandDiv);
+  const cardElement = playerHandDiv.querySelector(".card");
+  assert(cardElement, "Should render a card element");
+}
+
+function test_renderPlayerHands_rendersCorrectNumberOfHands() {
+  const playersHandsDiv = document.getElementById("players-hands");
+  playersHandsDiv.innerHTML = "";
+  gameState.playerHands = [[], [], []];
+  ui.renderPlayerHands(playersHandsDiv);
+  const playerHandElements = playersHandsDiv.querySelectorAll(".player-hand");
+  assert(playerHandElements.length === 3, "Should render the correct number of player hands");
+}
+
+function test_updateButtonStates_gameOver() {
+  gameState.gameOver = true;
+  ui.updateButtonStates();
+
+  const playButton = document.getElementById("play-button");
+  const passButton = document.getElementById("pass-button");
+  const newGameButton = document.getElementById("new-game-button");
+
+  assert(playButton.disabled, "Play button should be disabled");
+  assert(passButton.disabled, "Pass button should be disabled");
+  assert(newGameButton.style.display === "block", "New game button should be visible");
+}
+
+function test_updateButtonStates_gameNotOver() {
+  gameState.gameOver = false;
+  ui.updateButtonStates();
+
+  const playButton = document.getElementById("play-button");
+  const passButton = document.getElementById("pass-button");
+  const newGameButton = document.getElementById("new-game-button");
+
+  assert(!playButton.disabled, "Play button should be enabled");
+  assert(!passButton.disabled, "Pass button should be enabled");
+  assert(newGameButton.style.display === "none", "New game button should be hidden");
+}
+
 export const uiTests = [
+  test_createCardElement,
   test_handleCardClick_selectsAndDeselectsCard,
+  test_handleCardClick_preventsSelectionOfOtherPlayersCards,
   test_handleInvalidPlay_showsAlert,
   test_handlePassButtonClick_endsRoundCorrectly,
   test_handlePassButtonClick_firstPlayOfRound,
   test_handlePassButtonClick_incrementsPassesAndSwitchesPlayer,
   test_handlePlayButtonClick_callsInvalidPlayHandler,
   test_handlePlayButtonClick_updatesGameStateOnValidPlay,
+  test_render_displaysGameInfo,
+  test_renderPlayArea_clearsAreaBeforeRendering,
+  test_renderPlayerHand_rendersCards,
+  test_renderPlayerHands_rendersCorrectNumberOfHands,
+  test_updateButtonStates_gameOver,
+  test_updateButtonStates_gameNotOver,
 ];

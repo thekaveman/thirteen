@@ -3,6 +3,7 @@ body {
   background-color: #f0f0f0;
   padding: 0;
   margin: 0;
+  padding-bottom: 70px;
 }
 
 header {
@@ -13,13 +14,13 @@ header {
 }
 
 h1 {
-  font-size: 2.5em;
+  font-size: 2em;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   margin: 0;
 }
 
 .subtitle {
-  font-size: 1.5em;
+  font-size: 1.2em;
   margin: 0;
 }
 
@@ -39,7 +40,7 @@ h2 {
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 8px;
-  min-height: 50px;
+  min-height: 125px;
   width: 95%;
   max-width: 800px;
   background-color: white;
@@ -64,11 +65,25 @@ h2 {
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
   width: 90%;
   max-width: 400px;
+  min-height: 250px;
 }
 
 .player-hand.current {
   border: 2px solid #337ab7;
   background-color: #eaf2fa;
+}
+
+.games-won {
+  font-size: 1.1em;
+  color: #333;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.rounds-won {
+  font-size: 0.9em;
+  color: #666;
+  margin-bottom: 10px;
 }
 
 .card {
@@ -108,9 +123,22 @@ h2 {
 }
 
 #controls {
-  margin-top: 20px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: #f0f0f0;
+  padding: 10px;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
   display: flex;
-  gap: 10px;
+  justify-content: space-around;
+  gap: 0;
+}
+
+#controls button {
+  flex: 1;
+  margin: 0 5px;
 }
 
 button {
@@ -144,14 +172,40 @@ button:hover {
   border-color: #008cba;
 }
 
+button:disabled,
+#play-button:disabled,
+#pass-button:disabled {
+  background-color: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  border-color: #cccccc;
+}
+
 .logo {
-  width: 150px;
+  width: 100px;
   margin: 0 auto;
   display: block;
 }
 
 /* Responsive Design */
 @media (min-width: 768px) {
+  body {
+    padding-bottom: 0;
+  }
+
+  #controls {
+    position: static;
+    margin-top: 20px;
+    gap: 10px;
+    box-shadow: none;
+    justify-content: center;
+  }
+
+  #controls button {
+    flex: none;
+    margin: 0;
+  }
+
   #play-area {
     width: 90%;
   }
@@ -163,6 +217,7 @@ button:hover {
 
   .player-hand {
     min-width: 200px;
+    min-height: 350px;
   }
 
   .card {
@@ -171,6 +226,14 @@ button:hover {
   }
 
   .logo {
-    width: 200px;
+    width: 150px;
+  }
+
+  h1 {
+    font-size: 2.5em;
+  }
+
+  .subtitle {
+    font-size: 1.5em;
   }
 }

@@ -11,6 +11,8 @@ export const gameState = {
   consecutivePasses: 0,
   lastPlayerToPlay: -1,
   roundNumber: 1,
+  roundsWon: [],
+  gamesWon: [],
   gameOver: false,
 };
 
@@ -276,6 +278,7 @@ export function passTurn() {
 
   if (gameState.consecutivePasses >= gameState.numPlayers - 1) {
     log(`Player ${gameState.lastPlayerToPlay + 1} wins round ${gameState.roundNumber}.`);
+    gameState.roundsWon[gameState.lastPlayerToPlay]++;
     gameState.playPile = [];
     gameState.consecutivePasses = 0;
     gameState.currentPlayer = gameState.lastPlayerToPlay;
@@ -307,6 +310,7 @@ export function playCards() {
   // Check for win condition
   if (currentPlayerHand.length === 0) {
     log(`Player ${gameState.currentPlayer + 1} wins the game!`);
+    gameState.gamesWon[gameState.currentPlayer]++;
     gameState.gameOver = true;
   }
 
@@ -335,6 +339,10 @@ export function resetGame() {
   gameState.consecutivePasses = 0;
   gameState.lastPlayerToPlay = -1;
   gameState.roundNumber = 1;
+  gameState.roundsWon = new Array(gameState.numPlayers).fill(0);
+  if (gameState.gamesWon.length === 0) {
+    gameState.gamesWon = new Array(gameState.numPlayers).fill(0);
+  }
   gameState.gameOver = false;
 }
 
