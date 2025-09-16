@@ -197,10 +197,8 @@ function test_handlePlayButtonClick_updatesGameStateOnValidPlay() {
 }
 
 function test_render_displaysGameInfo() {
-  const playArea = document.getElementById("play-area");
-  const playersHands = document.getElementById("players-hands");
-  playArea.innerHTML = "";
-  playersHands.innerHTML = "";
+  ui.playArea.innerHTML = "";
+  ui.playersHands.innerHTML = "";
 
   gameState.roundNumber = 5;
   gameState.roundsWon = [2, 3];
@@ -208,28 +206,27 @@ function test_render_displaysGameInfo() {
   gameState.playerHands = [[], []];
   ui.render();
 
-  assert(playArea.innerHTML.includes("Round 5"), "Should display the current round number");
+  assert(ui.gameContent.innerHTML.includes("Round 5"), "Should display the current round number");
 
-  const player1Hand = document.getElementById("player0-hand");
+  const player1Hand = ui.playersHands.querySelector("#player0-hand");
   const player1RoundsWon = player1Hand.querySelector(".rounds-won");
   assert(player1RoundsWon.textContent === "Rounds won: 2", "Should display player 1 rounds won");
   const player1GamesWon = player1Hand.querySelector(".games-won");
   assert(player1GamesWon.textContent === "Games won: 1", "Should display player 1 games won");
 
-  const player2Hand = document.getElementById("player1-hand");
+  const player2Hand = ui.playersHands.querySelector("#player1-hand");
   const player2RoundsWon = player2Hand.querySelector(".rounds-won");
   assert(player2RoundsWon.textContent === "Rounds won: 3", "Should display player 2 rounds won");
   const player2GamesWon = player2Hand.querySelector(".games-won");
   assert(player2GamesWon.textContent === "Games won: 0", "Should display player 2 games won");
 }
 
-function test_renderPlayArea_clearsAreaBeforeRendering() {
-  const playArea = document.getElementById("play-area");
-  playArea.innerHTML = "<p>Some content</p>";
+function test_renderPlayArea_clearsGameContentBeforeRendering() {
+  ui.gameContent.innerHTML = "<p>Some content</p>";
   gameState.playPile = [];
   gameState.roundNumber = 1;
-  ui.renderPlayArea(playArea);
-  assert(playArea.innerHTML === "<h2>Play Area (Round 1)</h2>", "Should clear the play area before rendering");
+  ui.renderPlayArea();
+  assert(ui.gameContent.innerHTML === "<h2>Play Area (Round 1)</h2>", "Should clear the play area before rendering");
 }
 
 function test_renderPlayerHand_rendersCards() {
@@ -243,11 +240,10 @@ function test_renderPlayerHand_rendersCards() {
 }
 
 function test_renderPlayerHands_rendersCorrectNumberOfHands() {
-  const playersHandsDiv = document.getElementById("players-hands");
-  playersHandsDiv.innerHTML = "";
+  ui.playersHands.innerHTML = "";
   gameState.playerHands = [[], [], []];
-  ui.renderPlayerHands(playersHandsDiv);
-  const playerHandElements = playersHandsDiv.querySelectorAll(".player-hand");
+  ui.renderPlayerHands();
+  const playerHandElements = ui.playersHands.querySelectorAll(".player-hand");
   assert(playerHandElements.length === 3, "Should render the correct number of player hands");
 }
 
@@ -255,26 +251,18 @@ function test_updateButtonStates_gameOver() {
   gameState.gameOver = true;
   ui.updateButtonStates();
 
-  const playButton = document.getElementById("play-button");
-  const passButton = document.getElementById("pass-button");
-  const newGameButton = document.getElementById("new-game-button");
-
-  assert(playButton.disabled, "Play button should be disabled");
-  assert(passButton.disabled, "Pass button should be disabled");
-  assert(newGameButton.style.display === "block", "New game button should be visible");
+  assert(ui.playButton.disabled, "Play button should be disabled");
+  assert(ui.passButton.disabled, "Pass button should be disabled");
+  assert(ui.newGameButton.style.display === "block", "New game button should be visible");
 }
 
 function test_updateButtonStates_gameNotOver() {
   gameState.gameOver = false;
   ui.updateButtonStates();
 
-  const playButton = document.getElementById("play-button");
-  const passButton = document.getElementById("pass-button");
-  const newGameButton = document.getElementById("new-game-button");
-
-  assert(!playButton.disabled, "Play button should be enabled");
-  assert(!passButton.disabled, "Pass button should be enabled");
-  assert(newGameButton.style.display === "none", "New game button should be hidden");
+  assert(!ui.playButton.disabled, "Play button should be enabled");
+  assert(!ui.passButton.disabled, "Pass button should be enabled");
+  assert(ui.newGameButton.style.display === "none", "New game button should be hidden");
 }
 
 export const uiTests = [

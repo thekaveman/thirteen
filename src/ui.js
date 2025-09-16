@@ -3,6 +3,14 @@ import { log } from "./utils.js";
 
 const ui = {};
 
+ui.gameMessages = document.getElementById("game-messages");
+ui.playersHands = document.getElementById("players-hands");
+ui.playArea = document.getElementById("play-area");
+ui.gameContent = document.getElementById("game-content");
+ui.playButton = document.getElementById("play-button");
+ui.passButton = document.getElementById("pass-button");
+ui.newGameButton = document.getElementById("new-game-button");
+
 /**
  * Creates a card element.
  * @param {object} card The card object.
@@ -74,23 +82,19 @@ ui.handlePlayButtonClick = function () {
  * Renders the entire game state in the DOM.
  */
 ui.render = function () {
-  const playersHandsDiv = document.getElementById("players-hands");
-  const playAreaDiv = document.getElementById("play-area");
-
-  ui.renderPlayerHands(playersHandsDiv);
-  ui.renderPlayArea(playAreaDiv);
+  ui.renderPlayerHands();
+  ui.renderPlayArea();
   ui.updateButtonStates();
 };
 
 /**
  * Renders the play area in the DOM.
- * @param {HTMLElement} playAreaDiv The div element for the play area.
  */
-ui.renderPlayArea = function (playAreaDiv) {
-  playAreaDiv.innerHTML = `<h2>Play Area (Round ${gameState.roundNumber})</h2>`;
+ui.renderPlayArea = function () {
+  ui.gameContent.innerHTML = `<h2>Play Area (Round ${gameState.roundNumber})</h2>`;
   gameState.playPile.forEach((card) => {
     const cardSpan = ui.createCardElement(card);
-    playAreaDiv.appendChild(cardSpan);
+    ui.gameContent.appendChild(cardSpan);
   });
 };
 
@@ -133,10 +137,9 @@ ui.renderPlayerHand = function (playerIndex, handDiv) {
 
 /**
  * Renders all player hands in the DOM.
- * @param {HTMLElement} playersHandsDiv The div element to render the hands in.
  */
-ui.renderPlayerHands = function (playersHandsDiv) {
-  playersHandsDiv.innerHTML = ""; // Clear the hands
+ui.renderPlayerHands = function () {
+  ui.playersHands.innerHTML = ""; // Clear the hands
   gameState.playerHands.forEach((hand, i) => {
     const playerHandDiv = document.createElement("div");
     playerHandDiv.id = `player${i}-hand`;
@@ -144,7 +147,7 @@ ui.renderPlayerHands = function (playersHandsDiv) {
     if (i === gameState.currentPlayer) {
       playerHandDiv.classList.add("current");
     }
-    playersHandsDiv.appendChild(playerHandDiv);
+    ui.playersHands.appendChild(playerHandDiv);
     ui.renderPlayerHand(i, playerHandDiv);
   });
 };
@@ -153,18 +156,14 @@ ui.renderPlayerHands = function (playersHandsDiv) {
  * Updates the state of the play, pass, and new game buttons.
  */
 ui.updateButtonStates = function () {
-  const playButton = document.getElementById("play-button");
-  const passButton = document.getElementById("pass-button");
-  const newGameButton = document.getElementById("new-game-button");
-
   if (gameState.gameOver) {
-    playButton.disabled = true;
-    passButton.disabled = true;
-    newGameButton.style.display = "block";
+    ui.playButton.disabled = true;
+    ui.passButton.disabled = true;
+    ui.newGameButton.style.display = "block";
   } else {
-    playButton.disabled = false;
-    passButton.disabled = false;
-    newGameButton.style.display = "none";
+    ui.playButton.disabled = false;
+    ui.passButton.disabled = false;
+    ui.newGameButton.style.display = "none";
   }
 };
 
