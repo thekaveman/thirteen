@@ -119,8 +119,8 @@ ui.handlePlayButtonClick = function () {
  * Renders the entire game state in the DOM.
  */
 ui.render = function () {
-  ui.renderPlayerHands();
   ui.renderPlayArea();
+  ui.renderPlayerHands();
   ui.updateButtonStates();
 };
 
@@ -129,9 +129,13 @@ ui.render = function () {
  */
 ui.renderPlayArea = function () {
   ui.gameContent.innerHTML = `<h2>Play Area (Round ${gameState.roundNumber})</h2>`;
+  const cardsContainer = document.createElement("div");
+  cardsContainer.classList.add("cards-container");
+  ui.gameContent.appendChild(cardsContainer);
+
   gameState.playPile.forEach((card) => {
     const cardSpan = ui.createCardElement(card);
-    ui.gameContent.appendChild(cardSpan);
+    cardsContainer.appendChild(cardSpan);
   });
 };
 
@@ -160,6 +164,10 @@ ui.renderPlayerHand = function (playerIndex, handDiv) {
   roundsWonEl.textContent = `Rounds won: ${gameState.roundsWon[playerIndex]}`;
   handDiv.appendChild(roundsWonEl);
 
+  const cardsContainer = document.createElement("div");
+  cardsContainer.classList.add("cards-container");
+  handDiv.appendChild(cardsContainer);
+
   gameState.playerHands[playerIndex].forEach((card) => {
     const cardSpan = ui.createCardElement(card);
     if (playerIndex === gameState.currentPlayer) {
@@ -168,7 +176,7 @@ ui.renderPlayerHand = function (playerIndex, handDiv) {
     if (gameState.selectedCards.some((selectedCard) => selectedCard.value === card.value)) {
       cardSpan.classList.add("selected");
     }
-    handDiv.appendChild(cardSpan);
+    cardsContainer.appendChild(cardSpan);
   });
 };
 

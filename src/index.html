@@ -12,17 +12,19 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <header>
-      <h1>Thirteen</h1>
-      <img src="logo.png" alt="Thirteen card game logo" class="logo" />
-      <p class="subtitle">The Card Game</p>
-    </header>
-    <div id="game-board">
-      <div id="play-area">
-        <div id="game-content"></div>
-        <div id="game-messages"></div>
+    <div id="game-container">
+      <header>
+        <h1>Thirteen</h1>
+        <img src="logo.png" alt="Thirteen card game logo" class="logo" />
+        <p class="subtitle">The Card Game</p>
+      </header>
+      <div id="game-messages"></div>
+      <div id="game-board">
+        <div id="play-area">
+          <div id="game-content"></div>
+        </div>
+        <div id="players-hands"></div>
       </div>
-      <div id="players-hands"></div>
       <div id="controls">
         <button id="play-button">Play</button>
         <button id="pass-button">Pass</button>

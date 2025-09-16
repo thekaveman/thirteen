@@ -1,9 +1,19 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   font-family: sans-serif;
   background-color: #f0f0f0;
-  padding: 0;
-  margin: 0;
-  padding-bottom: 70px;
+}
+
+#game-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 header {
@@ -11,6 +21,7 @@ header {
   padding: 1em 0;
   text-align: center;
   color: white;
+  flex-shrink: 0;
 }
 
 h1 {
@@ -33,6 +44,7 @@ h2 {
   flex-direction: column;
   align-items: center;
   padding: 10px;
+  flex-grow: 1;
 }
 
 #play-area {
@@ -40,11 +52,14 @@ h2 {
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 8px;
-  min-height: 125px;
-  width: 95%;
+  width: 100%;
   max-width: 800px;
   background-color: white;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#play-area .cards-container {
+  justify-content: flex-start;
 }
 
 #players-hands {
@@ -58,14 +73,13 @@ h2 {
 
 .player-hand {
   flex: 1;
-  padding: 15px;
   border: 1px solid #ccc;
   border-radius: 8px;
   background-color: #f9f9f9;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-  width: 90%;
-  max-width: 400px;
-  min-height: 250px;
+  width: 95%;
+  max-width: 800px;
+  padding: 10px;
 }
 
 .player-hand.current {
@@ -78,27 +92,38 @@ h2 {
   color: #333;
   font-weight: bold;
   margin-bottom: 10px;
+  padding: 0 15px;
 }
 
 .rounds-won {
   font-size: 0.9em;
   color: #666;
   margin-bottom: 10px;
+  padding: 0 15px;
+}
+
+.cards-container {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: center;
+  overflow-x: auto;
+  padding: 15px;
 }
 
 .card {
   display: inline-block;
-  padding: 8px 12px;
+  padding: 5px 8px;
   margin: 5px;
   border: 1px solid #ccc;
   border-radius: 8px;
   background-color: white;
   cursor: pointer;
-  font-size: 1.2em;
+  font-size: 1em;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease-in-out;
   width: 40px;
   text-align: center;
+  margin-left: -20px;
 }
 
 .card:hover {
@@ -119,25 +144,26 @@ h2 {
   color: white;
   border-color: #007bff;
   box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
-  transform: translateY(-3px);
+  transform: translateY(-10px);
 }
 
 #controls {
   position: fixed;
   bottom: 0;
-  width: 100%;
+  left: 0;
+  right: 0;
   background-color: #f0f0f0;
   padding: 10px;
   box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   display: flex;
   justify-content: space-around;
-  gap: 0;
+  gap: 10px;
 }
 
 #controls button {
   flex: 1;
-  margin: 0 5px;
+  margin: 0;
 }
 
 button {
@@ -194,59 +220,53 @@ button:disabled,
   border-radius: 5px;
   font-weight: bold;
   max-width: 800px;
-  min-height: 25px;
+  width: 95%;
+  height: 50px;
+  visibility: hidden;
 }
 
 #game-messages.error {
   background-color: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
-  display: block;
+  visibility: visible;
 }
 
 #game-messages.info {
   background-color: #d4edda;
   color: #155724;
   border: 1px solid #c3e6cb;
-  display: block;
+  visibility: visible;
 }
 
-/* Responsive Design */
 @media (min-width: 768px) {
   body {
     padding-bottom: 0;
   }
 
-  #controls {
-    position: static;
-    margin-top: 20px;
-    gap: 10px;
-    box-shadow: none;
-    justify-content: center;
-  }
-
-  #controls button {
-    flex: none;
-    margin: 0;
-  }
-
-  #play-area {
-    width: 90%;
-  }
-
   #players-hands {
     flex-direction: row;
-    justify-content: space-around;
   }
 
   .player-hand {
-    min-width: 200px;
-    min-height: 350px;
+    padding: 15px;
+    width: 45%;
+  }
+
+  .cards-container {
+    flex-wrap: wrap;
+    overflow-x: visible;
+    padding: 0;
   }
 
   .card {
     font-size: 1.2em;
     padding: 10px 15px;
+    margin-left: 5px;
+  }
+
+  .card.selected {
+    transform: translateY(-3px);
   }
 
   .logo {
@@ -259,5 +279,33 @@ button:disabled,
 
   .subtitle {
     font-size: 1.5em;
+  }
+}
+
+@media (min-width: 1024px) {
+  #game-board {
+    flex-grow: initial;
+  }
+
+  .player-hand {
+    max-width: 550px;
+    height: 280px;
+  }
+
+  #controls {
+    position: static;
+    box-shadow: none;
+    justify-content: center;
+    gap: 10px;
+    width: auto;
+    padding: 0;
+    margin-top: 20px;
+    z-index: auto;
+    bottom: auto;
+  }
+
+  #controls button {
+    flex: none;
+    margin: 0 5px;
   }
 }
