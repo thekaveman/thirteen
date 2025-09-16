@@ -1,0 +1,40 @@
+name: Run tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_call:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        id: tests
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee test-results.log
+        continue-on-error: true
+
+      - name: Add test results to job summary
+        run: cat test-results.log >> $GITHUB_STEP_SUMMARY
+
+      - name: Check test results
+        if: steps.tests.outcome == 'failure'
+        run: exit 1

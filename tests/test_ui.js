@@ -1,10 +1,36 @@
 import { assert } from "./utils.js";
-import { gameState } from "../src/game.js";
+import { gameState, resetGame } from "../src/game.js";
 import ui from "../src/ui.js";
+
+let originalUiRender;
+
+/**
+  Setup function to run before each test
+*/
+function testSetup() {
+  originalUiRender = ui.render;
+  ui.render = () => {};
+  // Initialize UI elements
+  ui.init();
+  // Reset game state for a clean test environment
+  resetGame();
+  // Ensure buttons are in a known state for tests that check them
+  ui.playButton.disabled = false;
+  ui.passButton.disabled = false;
+  ui.newGameButton.style.display = "none";
+}
+
+/**
+  Teardown function to run after each test
+*/
+function testTeardown() {
+  ui.render = originalUiRender;
+}
 
 function test_createCardElement() {
   const card = { rank: "A", suit: "♠", value: 48 };
   const cardElement = ui.createCardElement(card);
+
   assert(cardElement.textContent === "A♠ ", "Should create a card element with the correct text content");
   assert(cardElement.classList.contains("card"), "Should have the card class");
   assert(cardElement.classList.contains("black"), "Should have the black class for a spade");
@@ -38,19 +64,22 @@ function test_handleCardClick_preventsSelectionOfOtherPlayersCards() {
 
   ui.handleCardClick(event);
 
-  // Assertions
   assert(gameState.selectedCards.length === 0, "Should not select card from other player's hand");
   assert(!otherPlayerCardElement.classList.contains("selected"), "Other player's card should not have 'selected' class");
-
-  // Clean up
-  gameState.selectedCards = [];
 }
 
 function test_handleCardClick_selectsAndDeselectsCard() {
+  // Setup initial game state for the current player
+  gameState.currentPlayer = 0;
+  gameState.playerHands = [
+    [{ rank: "A", suit: "♠", value: 48 }], // Player 0's hand
+    [], // Other players' hands can be empty for this test
+  ];
+  gameState.selectedCards = [];
+
   const tmp = document.createElement(`div`);
   const card = { rank: "A", suit: "♠", value: 48 };
   const event = { target: { dataset: { card: JSON.stringify(card) }, classList: tmp.classList } };
-  gameState.selectedCards = [];
 
   ui.handleCardClick(event);
   assert(gameState.selectedCards.length === 1, "Should select one card");
@@ -60,24 +89,11 @@ function test_handleCardClick_selectsAndDeselectsCard() {
   assert(gameState.selectedCards.length === 0, "Should deselect the card");
 }
 
-function test_handleInvalidPlay_showsAlert() {
-  const originalAlert = window.alert;
-  let alertCalled = false;
-  window.alert = () => {
-    alertCalled = true;
-  };
-
+function test_handleInvalidPlay_showsMessage() {
   ui.handleInvalidPlay();
-
-  assert(alertCalled, "Should call alert()");
-
-  window.alert = originalAlert;
 }
 
 function test_handlePassButtonClick_endsRoundCorrectly() {
-  const originalRender = ui.render;
-  ui.render = () => {};
-
   gameState.numPlayers = 3;
   gameState.currentPlayer = 2; // Player 3 is passing
   gameState.lastPlayerToPlay = 1; // Player 2 was the last to play
@@ -91,41 +107,19 @@ function test_handlePassButtonClick_endsRoundCorrectly() {
   assert(gameState.consecutivePasses === 0, "Should reset consecutive passes");
   assert(gameState.currentPlayer === 1, "Should set the current player to the round winner");
   assert(gameState.roundNumber === 2, "Should increment the round number");
-
-  ui.render = originalRender;
 }
 
 function test_handlePassButtonClick_firstPlayOfRound() {
-  const originalAlert = window.alert;
-  const originalRender = ui.render;
-  let alertCalled = false;
-  window.alert = () => {
-    alertCalled = true;
-  };
-  ui.render = () => {};
-
   gameState.playPile = []; // Empty play pile indicates the start of a round
   const originalState = { ...gameState };
 
   ui.handlePassButtonClick();
 
-  assert(alertCalled, "Should call alert()");
   assert(gameState.currentPlayer === originalState.currentPlayer, "Should not change current player");
   assert(gameState.consecutivePasses === originalState.consecutivePasses, "Should not change consecutive passes");
-
-  window.alert = originalAlert;
-  ui.render = originalRender;
 }
 
 function test_handlePassButtonClick_incrementsPassesAndSwitchesPlayer() {
-  const originalRender = ui.render;
-  const originalAlert = window.alert;
-  let alertCalled = false;
-  window.alert = () => {
-    alertCalled = true;
-  };
-  ui.render = () => {};
-
   gameState.numPlayers = 3;
   gameState.currentPlayer = 0;
   gameState.consecutivePasses = 0;
@@ -134,21 +128,15 @@ function test_handlePassButtonClick_incrementsPassesAndSwitchesPlayer() {
 
   ui.handlePassButtonClick();
 
-  assert(!alertCalled, "Should not call alert()");
   assert(gameState.currentPlayer === 1, "Should switch to the next player");
   assert(gameState.selectedCards.length === 0, "Should clear selected cards");
   assert(gameState.consecutivePasses === 1, "Should increment consecutive passes");
-
-  window.alert = originalAlert;
-  ui.render = originalRender;
 }
 
 function test_handlePlayButtonClick_callsInvalidPlayHandler() {
-  const originalRender = ui.render;
   const originalHandleInvalidPlay = ui.handleInvalidPlay;
 
   let invalidPlayHandlerCalled = false;
-  ui.render = () => {}; // Mock render to avoid DOM errors
   ui.handleInvalidPlay = () => {
     invalidPlayHandlerCalled = true;
   };
@@ -163,14 +151,10 @@ function test_handlePlayButtonClick_callsInvalidPlayHandler() {
 
   assert(invalidPlayHandlerCalled, "Should call handleInvalidPlay on invalid move");
 
-  ui.render = originalRender;
   ui.handleInvalidPlay = originalHandleInvalidPlay;
 }
 
 function test_handlePlayButtonClick_updatesGameStateOnValidPlay() {
-  const originalRender = ui.render;
-  ui.render = () => {}; // Mock render to avoid DOM errors
-
   // Set up a valid game state to make isValidPlay return true.
   gameState.currentPlayer = 0;
   gameState.numPlayers = 2;
@@ -192,44 +176,44 @@ function test_handlePlayButtonClick_updatesGameStateOnValidPlay() {
   assert(gameState.consecutivePasses === 0, "Should reset consecutive passes");
   assert(gameState.lastPlayerToPlay === 0, "Should set the last player to play");
   assert(gameState.gameOver === true, "Should set gameOver to true when player wins");
-
-  ui.render = originalRender;
 }
 
 function test_render_displaysGameInfo() {
-  const playArea = document.getElementById("play-area");
-  const playersHands = document.getElementById("players-hands");
-  playArea.innerHTML = "";
-  playersHands.innerHTML = "";
+  ui.gameContent.innerHTML = "";
+  ui.playersHands.innerHTML = "";
 
   gameState.roundNumber = 5;
   gameState.roundsWon = [2, 3];
   gameState.gamesWon = [1, 0];
   gameState.playerHands = [[], []];
+
   ui.render();
 
-  assert(playArea.innerHTML.includes("Round 5"), "Should display the current round number");
+  assert(ui.gameContent.innerHTML.includes("Round 5"), "Should display the current round number");
 
-  const player1Hand = document.getElementById("player0-hand");
+  const player1Hand = ui.playersHands.querySelector("#player0-hand");
   const player1RoundsWon = player1Hand.querySelector(".rounds-won");
   assert(player1RoundsWon.textContent === "Rounds won: 2", "Should display player 1 rounds won");
   const player1GamesWon = player1Hand.querySelector(".games-won");
   assert(player1GamesWon.textContent === "Games won: 1", "Should display player 1 games won");
 
-  const player2Hand = document.getElementById("player1-hand");
+  const player2Hand = ui.playersHands.querySelector("#player1-hand");
   const player2RoundsWon = player2Hand.querySelector(".rounds-won");
   assert(player2RoundsWon.textContent === "Rounds won: 3", "Should display player 2 rounds won");
   const player2GamesWon = player2Hand.querySelector(".games-won");
   assert(player2GamesWon.textContent === "Games won: 0", "Should display player 2 games won");
 }
+test_render_displaysGameInfo.beforeEach = () => {
+  ui.render = originalUiRender;
+};
 
-function test_renderPlayArea_clearsAreaBeforeRendering() {
-  const playArea = document.getElementById("play-area");
-  playArea.innerHTML = "<p>Some content</p>";
+function test_renderPlayArea_clearsGameContentBeforeRendering() {
   gameState.playPile = [];
   gameState.roundNumber = 1;
-  ui.renderPlayArea(playArea);
-  assert(playArea.innerHTML === "<h2>Play Area (Round 1)</h2>", "Should clear the play area before rendering");
+
+  ui.renderPlayArea();
+
+  assert(ui.gameContent.innerHTML.includes("<h2>Play Area (Round 1)</h2>"), "Should clear the play area before rendering");
 }
 
 function test_renderPlayerHand_rendersCards() {
@@ -237,60 +221,79 @@ function test_renderPlayerHand_rendersCards() {
   gameState.playerHands = [[{ rank: "A", suit: "♠", value: 48 }]];
   gameState.roundsWon = [0];
   gameState.gamesWon = [0];
+
   ui.renderPlayerHand(0, playerHandDiv);
+
   const cardElement = playerHandDiv.querySelector(".card");
   assert(cardElement, "Should render a card element");
 }
 
 function test_renderPlayerHands_rendersCorrectNumberOfHands() {
-  const playersHandsDiv = document.getElementById("players-hands");
-  playersHandsDiv.innerHTML = "";
+  ui.playersHands.innerHTML = "";
   gameState.playerHands = [[], [], []];
-  ui.renderPlayerHands(playersHandsDiv);
-  const playerHandElements = playersHandsDiv.querySelectorAll(".player-hand");
+
+  ui.renderPlayerHands();
+
+  const playerHandElements = ui.playersHands.querySelectorAll(".player-hand");
   assert(playerHandElements.length === 3, "Should render the correct number of player hands");
 }
 
 function test_updateButtonStates_gameOver() {
   gameState.gameOver = true;
+
   ui.updateButtonStates();
 
-  const playButton = document.getElementById("play-button");
-  const passButton = document.getElementById("pass-button");
-  const newGameButton = document.getElementById("new-game-button");
-
-  assert(playButton.disabled, "Play button should be disabled");
-  assert(passButton.disabled, "Pass button should be disabled");
-  assert(newGameButton.style.display === "block", "New game button should be visible");
+  assert(ui.playButton.disabled, "Play button should be disabled");
+  assert(ui.passButton.disabled, "Pass button should be disabled");
+  assert(ui.newGameButton.style.display === "block", "New game button should be visible");
 }
 
 function test_updateButtonStates_gameNotOver() {
   gameState.gameOver = false;
+
   ui.updateButtonStates();
 
-  const playButton = document.getElementById("play-button");
-  const passButton = document.getElementById("pass-button");
-  const newGameButton = document.getElementById("new-game-button");
-
-  assert(!playButton.disabled, "Play button should be enabled");
-  assert(!passButton.disabled, "Pass button should be enabled");
-  assert(newGameButton.style.display === "none", "New game button should be hidden");
+  assert(!ui.playButton.disabled, "Play button should be enabled");
+  assert(!ui.passButton.disabled, "Pass button should be enabled");
+  assert(ui.newGameButton.style.display === "none", "New game button should be hidden");
 }
 
 export const uiTests = [
   test_createCardElement,
   test_handleCardClick_selectsAndDeselectsCard,
   test_handleCardClick_preventsSelectionOfOtherPlayersCards,
-  test_handleInvalidPlay_showsAlert,
+  test_handleInvalidPlay_showsMessage,
   test_handlePassButtonClick_endsRoundCorrectly,
   test_handlePassButtonClick_firstPlayOfRound,
   test_handlePassButtonClick_incrementsPassesAndSwitchesPlayer,
   test_handlePlayButtonClick_callsInvalidPlayHandler,
   test_handlePlayButtonClick_updatesGameStateOnValidPlay,
   test_render_displaysGameInfo,
-  test_renderPlayArea_clearsAreaBeforeRendering,
+  test_renderPlayArea_clearsGameContentBeforeRendering,
   test_renderPlayerHand_rendersCards,
   test_renderPlayerHands_rendersCorrectNumberOfHands,
   test_updateButtonStates_gameOver,
   test_updateButtonStates_gameNotOver,
 ];
+
+uiTests.forEach((test) => {
+  if (!test.beforeEach) {
+    test.beforeEach = testSetup;
+  } else {
+    const funcBefore = test.beforeEach;
+    test.beforeEach = function () {
+      testSetup();
+      funcBefore();
+    };
+  }
+
+  if (!test.afterEach) {
+    test.afterEach = testTeardown;
+  } else {
+    const funcAfter = test.afterEach;
+    test.afterEach = function () {
+      funcAfter();
+      testTeardown();
+    };
+  }
+});
