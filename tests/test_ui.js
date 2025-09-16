@@ -2,6 +2,15 @@ import { assert } from "./utils.js";
 import { gameState } from "../src/game.js";
 import ui from "../src/ui.js";
 
+function test_createCardElement() {
+  const card = { rank: "A", suit: "♠", value: 48 };
+  const cardElement = ui.createCardElement(card);
+  assert(cardElement.textContent === "A♠ ", "Should create a card element with the correct text content");
+  assert(cardElement.classList.contains("card"), "Should have the card class");
+  assert(cardElement.classList.contains("black"), "Should have the black class for a spade");
+  assert(cardElement.dataset.card === JSON.stringify(card), "Should have the card data attribute");
+}
+
 function test_handleCardClick_selectsAndDeselectsCard() {
   const tmp = document.createElement(`div`);
   const card = { rank: "A", suit: "♠", value: 48 };
@@ -110,6 +119,8 @@ function test_handlePlayButtonClick_callsInvalidPlayHandler() {
   };
 
   // Set up an invalid game state to make isValidPlay return false.
+  gameState.numPlayers = 2;
+  gameState.playerHands = [[], []];
   gameState.selectedCards = [{ rank: "3", suit: "♠", value: 0 }];
   gameState.playPile = [{ rank: "A", suit: "♠", value: 48 }];
 
@@ -176,7 +187,16 @@ function test_updateButtonStates_gameNotOver() {
   assert(newGameButton.style.display === "none", "New game button should be hidden");
 }
 
+function test_renderPlayArea_clearsAreaBeforeRendering() {
+  const playArea = document.getElementById("play-area");
+  playArea.innerHTML = "<p>Some content</p>";
+  gameState.playPile = [];
+  ui.renderPlayArea(playArea);
+  assert(playArea.innerHTML === "<h2>Play Area</h2>", "Should clear the play area before rendering");
+}
+
 export const uiTests = [
+  test_createCardElement,
   test_handleCardClick_selectsAndDeselectsCard,
   test_handleInvalidPlay_showsAlert,
   test_handlePassButtonClick_endsRoundCorrectly,
@@ -184,6 +204,7 @@ export const uiTests = [
   test_handlePassButtonClick_incrementsPassesAndSwitchesPlayer,
   test_handlePlayButtonClick_callsInvalidPlayHandler,
   test_handlePlayButtonClick_updatesGameStateOnValidPlay,
+  test_renderPlayArea_clearsAreaBeforeRendering,
   test_updateButtonStates_gameOver,
   test_updateButtonStates_gameNotOver,
 ];
