@@ -10,10 +10,25 @@ export function runTests(tests, results) {
   tests.forEach((test) => {
     const li = document.createElement("li");
     try {
+      // Call beforeEach if it exists
+      if (typeof test.beforeEach === 'function') {
+        test.beforeEach();
+      }
+
       test();
+
+      // Call afterEach if it exists
+      if (typeof test.afterEach === 'function') {
+        test.afterEach();
+      }
+
       li.textContent = `PASS: ${test.name}`;
       li.style.color = "green";
     } catch (e) {
+      // Call afterEach even if test fails
+      if (typeof test.afterEach === 'function') {
+        test.afterEach();
+      }
       li.textContent = `FAIL: ${test.name} - ${e.message}`;
       li.style.color = "red";
     }
