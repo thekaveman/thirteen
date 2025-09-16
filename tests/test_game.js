@@ -16,6 +16,7 @@ import {
   isValidPlay,
   passTurn,
   playCards,
+  resetGame,
   sortHand,
   switchToNextPlayer,
 } from "../src/game.js";
@@ -68,7 +69,21 @@ function test_findStartingPlayer_findsPlayerWithLowestCard() {
   assert(startingPlayer === 1, "Player with the lowest card should start");
 }
 
-function test_gameState() {}
+function test_gameState() {
+  assert(gameState.numPlayers === 2, "Initial numPlayers should be 2");
+  assert(Array.isArray(gameState.playerHands), "Initial playerHands should be an array");
+  assert(gameState.playerHands.length === 0, "Initial playerHands should be empty");
+  assert(Array.isArray(gameState.playPile), "Initial playPile should be an array");
+  assert(gameState.playPile.length === 0, "Initial playPile should be empty");
+  assert(gameState.currentPlayer === 0, "Initial currentPlayer should be 0");
+  assert(gameState.currentTurn === 0, "Initial currentTurn should be 0");
+  assert(Array.isArray(gameState.selectedCards), "Initial selectedCards should be an array");
+  assert(gameState.selectedCards.length === 0, "Initial selectedCards should be empty");
+  assert(gameState.consecutivePasses === 0, "Initial consecutivePasses should be 0");
+  assert(gameState.lastPlayerToPlay === -1, "Initial lastPlayerToPlay should be -1");
+  assert(gameState.roundNumber === 1, "Initial roundNumber should be 1");
+  assert(gameState.gameOver === false, "Initial gameOver should be false");
+}
 
 function test_getCombinationType_returnsCorrectType() {
   let cards = [{ rank: "A", suit: "♠", value: 48 }];
@@ -206,6 +221,18 @@ function test_isBombForSingleTwo_returnsTrueForThreeConsecutivePairs() {
   assert(isBombForSingleTwo(cards), "Should return true for three consecutive pairs");
 }
 
+function test_isConsecutivePairs_returnsFalseForInvalidPairs() {
+  const cards = [
+    { rank: "3", suit: "♠", value: 0 },
+    { rank: "3", suit: "♦", value: 1 },
+    { rank: "4", suit: "♣", value: 4 },
+    { rank: "5", suit: "♥", value: 9 },
+    { rank: "5", suit: "♠", value: 8 },
+    { rank: "5", suit: "♦", value: 9 },
+  ];
+  assert(!isConsecutivePairs(cards), "Should return false for invalid pairs");
+}
+
 function test_isConsecutivePairs_returnsFalseForNotConsecutivePairs() {
   const cards = [
     { rank: "3", suit: "♠", value: 0 },
@@ -283,6 +310,15 @@ function test_isStraight_returnsFalseForNotStraight() {
   const cards = [
     { rank: "3", suit: "♠", value: 0 },
     { rank: "5", suit: "♦", value: 9 },
+    { rank: "6", suit: "♣", value: 14 },
+  ];
+  assert(!isStraight(cards), "Should return false for a non-straight");
+}
+
+function test_isStraight_returnsFalseForNotAStraight() {
+  const cards = [
+    { rank: "3", suit: "♠", value: 0 },
+    { rank: "4", suit: "♦", value: 5 },
     { rank: "6", suit: "♣", value: 14 },
   ];
   assert(!isStraight(cards), "Should return false for a non-straight");
@@ -699,6 +735,34 @@ function test_playCards_updatesGameState() {
   assert(gameState.gameOver === true, "Should set gameOver to true when player wins");
 }
 
+function test_resetGame() {
+  gameState.numPlayers = 3;
+  gameState.playerHands = [[], [], []];
+  gameState.playPile = [{ rank: "A", suit: "♠", value: 48 }];
+  gameState.currentPlayer = 1;
+  gameState.currentTurn = 5;
+  gameState.selectedCards = [{ rank: "A", suit: "♠", value: 48 }];
+  gameState.consecutivePasses = 1;
+  gameState.lastPlayerToPlay = 0;
+  gameState.roundNumber = 2;
+  gameState.gameOver = true;
+
+  resetGame();
+
+  assert(Array.isArray(gameState.playerHands), "Reset playerHands should be an array");
+  assert(gameState.playerHands.length === 0, "Reset playerHands should be empty");
+  assert(Array.isArray(gameState.playPile), "Reset playPile should be an array");
+  assert(gameState.playPile.length === 0, "Reset playPile should be empty");
+  assert(gameState.currentPlayer === 0, "Reset currentPlayer should be 0");
+  assert(gameState.currentTurn === 0, "Reset currentTurn should be 0");
+  assert(Array.isArray(gameState.selectedCards), "Reset selectedCards should be an array");
+  assert(gameState.selectedCards.length === 0, "Reset selectedCards should be empty");
+  assert(gameState.consecutivePasses === 0, "Reset consecutivePasses should be 0");
+  assert(gameState.lastPlayerToPlay === -1, "Reset lastPlayerToPlay should be -1");
+  assert(gameState.roundNumber === 1, "Reset roundNumber should be 1");
+  assert(gameState.gameOver === false, "Reset gameOver should be false");
+}
+
 function test_sortHand_sortsHandByValue() {
   const hand = [
     { rank: "A", suit: "♠", value: 48 },
@@ -734,6 +798,7 @@ export const gameTests = [
   test_isBombForSingleTwo_returnsFalseForOtherCombinations,
   test_isBombForSingleTwo_returnsTrueForFourOfAKind,
   test_isBombForSingleTwo_returnsTrueForThreeConsecutivePairs,
+  test_isConsecutivePairs_returnsFalseForInvalidPairs,
   test_isConsecutivePairs_returnsFalseForNotConsecutivePairs,
   test_isConsecutivePairs_returnsTrueForConsecutivePairs,
   test_isFourOfAKind_returnsFalseForNotFourOfAKind,
@@ -742,6 +807,7 @@ export const gameTests = [
   test_isPair_returnsTrueForPair,
   test_isSingle_returnsFalseForNotSingle,
   test_isSingle_returnsTrueForSingle,
+  test_isStraight_returnsFalseForNotAStraight,
   test_isStraight_returnsFalseForNotStraight,
   test_isStraight_returnsFalseForStraightWith2,
   test_isStraight_returnsTrueForStraight,
@@ -773,6 +839,7 @@ export const gameTests = [
   test_passTurn_firstPlayOfRound,
   test_passTurn_incrementsPassesAndSwitchesPlayer,
   test_playCards_updatesGameState,
+  test_resetGame,
   test_sortHand_sortsHandByValue,
   test_switchToNextPlayer_switchesPlayer,
 ];
