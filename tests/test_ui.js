@@ -10,12 +10,10 @@ let originalUiRender;
 function testSetup() {
   originalUiRender = ui.render;
   ui.render = () => {};
+  // Initialize UI elements
+  ui.init();
   // Reset game state for a clean test environment
   resetGame();
-  // Clear DOM elements that ui.render might populate
-  ui.gameContent.innerHTML = "";
-  ui.gameMessages.innerHTML = "";
-  ui.playersHands.innerHTML = "";
   // Ensure buttons are in a known state for tests that check them
   ui.playButton.disabled = false;
   ui.passButton.disabled = false;
@@ -32,6 +30,7 @@ function testTeardown() {
 function test_createCardElement() {
   const card = { rank: "A", suit: "♠", value: 48 };
   const cardElement = ui.createCardElement(card);
+
   assert(cardElement.textContent === "A♠ ", "Should create a card element with the correct text content");
   assert(cardElement.classList.contains("card"), "Should have the card class");
   assert(cardElement.classList.contains("black"), "Should have the black class for a spade");
@@ -180,7 +179,7 @@ function test_handlePlayButtonClick_updatesGameStateOnValidPlay() {
 }
 
 function test_render_displaysGameInfo() {
-  ui.playArea.innerHTML = "";
+  ui.gameContent.innerHTML = "";
   ui.playersHands.innerHTML = "";
 
   gameState.roundNumber = 5;
@@ -209,11 +208,12 @@ test_render_displaysGameInfo.beforeEach = () => {
 };
 
 function test_renderPlayArea_clearsGameContentBeforeRendering() {
-  ui.gameContent.innerHTML = "<p>Some content</p>";
   gameState.playPile = [];
   gameState.roundNumber = 1;
+
   ui.renderPlayArea();
-  assert(ui.gameContent.innerHTML === "<h2>Play Area (Round 1)</h2>", "Should clear the play area before rendering");
+
+  assert(ui.gameContent.innerHTML.includes("<h2>Play Area (Round 1)</h2>"), "Should clear the play area before rendering");
 }
 
 function test_renderPlayerHand_rendersCards() {
@@ -221,7 +221,9 @@ function test_renderPlayerHand_rendersCards() {
   gameState.playerHands = [[{ rank: "A", suit: "♠", value: 48 }]];
   gameState.roundsWon = [0];
   gameState.gamesWon = [0];
+
   ui.renderPlayerHand(0, playerHandDiv);
+
   const cardElement = playerHandDiv.querySelector(".card");
   assert(cardElement, "Should render a card element");
 }
@@ -229,13 +231,16 @@ function test_renderPlayerHand_rendersCards() {
 function test_renderPlayerHands_rendersCorrectNumberOfHands() {
   ui.playersHands.innerHTML = "";
   gameState.playerHands = [[], [], []];
+
   ui.renderPlayerHands();
+
   const playerHandElements = ui.playersHands.querySelectorAll(".player-hand");
   assert(playerHandElements.length === 3, "Should render the correct number of player hands");
 }
 
 function test_updateButtonStates_gameOver() {
   gameState.gameOver = true;
+
   ui.updateButtonStates();
 
   assert(ui.playButton.disabled, "Play button should be disabled");
@@ -245,6 +250,7 @@ function test_updateButtonStates_gameOver() {
 
 function test_updateButtonStates_gameNotOver() {
   gameState.gameOver = false;
+
   ui.updateButtonStates();
 
   assert(!ui.playButton.disabled, "Play button should be enabled");

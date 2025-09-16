@@ -3,13 +3,15 @@ import { log } from "./utils.js";
 
 const ui = {};
 
-ui.gameMessages = document.getElementById("game-messages");
-ui.playersHands = document.getElementById("players-hands");
-ui.playArea = document.getElementById("play-area");
-ui.gameContent = document.getElementById("game-content");
-ui.playButton = document.getElementById("play-button");
-ui.passButton = document.getElementById("pass-button");
-ui.newGameButton = document.getElementById("new-game-button");
+ui.init = function () {
+  ui.gameMessages = document.getElementById("game-messages");
+  ui.playersHands = document.getElementById("players-hands");
+  ui.playArea = document.getElementById("play-area");
+  ui.gameContent = document.getElementById("game-content");
+  ui.playButton = document.getElementById("play-button");
+  ui.passButton = document.getElementById("pass-button");
+  ui.newGameButton = document.getElementById("new-game-button");
+};
 
 let messageTimeout;
 
