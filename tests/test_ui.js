@@ -62,9 +62,9 @@ function test_handleCardClick_preventsSelectionOfOtherPlayersCards() {
 
   // Mock DOM elements for player hands and cards
   const player0HandDiv = document.createElement("div");
-  player0HandDiv.id = "player0-hand";
+  player0HandDiv.id = "player-hand-0";
   const player1HandDiv = document.createElement("div");
-  player1HandDiv.id = "player1-hand";
+  player1HandDiv.id = "player-hand-1";
 
   // Render hands to attach event listeners
   ui.renderPlayerHand(0, player0HandDiv);
@@ -204,13 +204,13 @@ function test_render_displaysGameInfo() {
 
   assert(ui.gameContent.innerHTML.includes("Round 5"), "Should display the current round number");
 
-  const player1Hand = ui.playersHands.querySelector("#player0-hand");
+  const player1Hand = document.getElementById("player-hand-0");
   const player1RoundsWon = player1Hand.querySelector(".rounds-won");
   assert(player1RoundsWon.textContent === "Rounds won: 2", "Should display player 1 rounds won");
   const player1GamesWon = player1Hand.querySelector(".games-won");
   assert(player1GamesWon.textContent === "Games won: 1", "Should display player 1 games won");
 
-  const player2Hand = ui.playersHands.querySelector("#player1-hand");
+  const player2Hand = document.getElementById("player-hand-1");
   const player2RoundsWon = player2Hand.querySelector(".rounds-won");
   assert(player2RoundsWon.textContent === "Rounds won: 3", "Should display player 2 rounds won");
   const player2GamesWon = player2Hand.querySelector(".games-won");

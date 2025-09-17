@@ -143,7 +143,7 @@ ui.render = function () {
  * Renders cards to a target element.
  * @param {Array<object>} card The array of cards.
  * @param {HTMLElement} targetElement The element in which to render.
- * @param {Function} preRender An optional function to run on each card element before rendering.
+ * @param {(cardSpan:HTMLElement, card:object) => void} preRender An optional function to run on each card element before rendering.
  */
 ui.renderCardsContainer = function (cards, targetElement, preRender = null) {
   const cardsContainer = document.createElement("div");
@@ -153,7 +153,7 @@ ui.renderCardsContainer = function (cards, targetElement, preRender = null) {
   cards.forEach((card) => {
     const cardSpan = ui.createCardElement(card);
     if (preRender != null) {
-      preRender(cardSpan);
+      preRender(cardSpan, card);
     }
     cardsContainer.appendChild(cardSpan);
   });
@@ -192,7 +192,7 @@ ui.renderPlayerHand = function (playerIndex, handDiv) {
   roundsWonEl.textContent = `Rounds won: ${gameState.roundsWon[playerIndex]}`;
   handDiv.appendChild(roundsWonEl);
 
-  const preRender = function (cardSpan) {
+  const preRender = function (cardSpan, card) {
     if (playerIndex === gameState.currentPlayer) {
       cardSpan.addEventListener("click", ui.handleCardClick);
     }
@@ -200,8 +200,8 @@ ui.renderPlayerHand = function (playerIndex, handDiv) {
       cardSpan.classList.add("selected");
     }
   };
-
-  ui.renderCardsContainer(gameState.playerHands[playerIndex], handDiv, preRender);
+  const playerHand = gameState.playerHands[playerIndex];
+  ui.renderCardsContainer(playerHand, handDiv, preRender);
 };
 
 /**
@@ -211,7 +211,7 @@ ui.renderPlayerHands = function () {
   ui.playersHands.innerHTML = ""; // Clear the hands
   gameState.playerHands.forEach((hand, i) => {
     const playerHandDiv = document.createElement("div");
-    playerHandDiv.id = `player${i}-hand`;
+    playerHandDiv.id = `player-hand-${i}`;
     playerHandDiv.classList.add("player-hand");
     if (i === gameState.currentPlayer) {
       playerHandDiv.classList.add("current");
