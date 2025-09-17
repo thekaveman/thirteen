@@ -8,6 +8,7 @@ body {
 body {
   font-family: sans-serif;
   background-color: #f0f0f0;
+  padding-bottom: 80px;
 }
 
 #game-container {
@@ -43,7 +44,7 @@ h2 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px;
+  padding: 10px 20px;
   flex-grow: 1;
 }
 
@@ -153,7 +154,7 @@ h2 {
   left: 0;
   right: 0;
   background-color: #f0f0f0;
-  padding: 10px;
+  padding: 10px 20px;
   box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
   z-index: 1000;
   display: flex;
@@ -221,7 +222,7 @@ button:disabled,
   font-weight: bold;
   max-width: 800px;
   width: 95%;
-  height: 50px;
+  min-height: 60px;
   visibility: hidden;
 }
 
@@ -250,6 +251,7 @@ button:disabled,
 
   .player-hand {
     padding: 15px;
+    height: 330px;
     width: 45%;
   }
 
@@ -296,10 +298,9 @@ button:disabled,
     position: static;
     box-shadow: none;
     justify-content: center;
-    gap: 10px;
+    gap: 20px;
     width: auto;
     padding: 0;
-    margin-top: 20px;
     z-index: auto;
     bottom: auto;
   }

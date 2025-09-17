@@ -22,8 +22,10 @@ let messageTimeout;
  */
 ui.displayMessage = function (message, type) {
   console.log(`displayMessage: ${message}, type: ${type}`);
-  ui.gameMessages.textContent = message;
+  const messageEl = document.createElement("p");
+  messageEl.textContent = message;
   ui.gameMessages.classList.add(type);
+  ui.gameMessages.appendChild(messageEl);
   clearTimeout(messageTimeout);
   messageTimeout = setTimeout(() => {
     ui.clearMessage();
