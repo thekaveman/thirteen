@@ -202,6 +202,11 @@ ui.renderPlayerHand = function (playerIndex, handDiv) {
   };
   const playerHand = gameState.playerHands[playerIndex];
   ui.renderCardsContainer(playerHand, handDiv, preRender);
+
+  const cardCountEl = document.createElement("p");
+  cardCountEl.classList.add("card-count");
+  cardCountEl.textContent = `Cards remaining: ${playerHand.length}`;
+  handDiv.appendChild(cardCountEl);
 };
 
 /**
