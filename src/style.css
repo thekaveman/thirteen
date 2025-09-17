@@ -25,19 +25,20 @@ header {
   flex-shrink: 0;
 }
 
+.logo {
+  width: 100px;
+  margin: 0 auto;
+  display: block;
+}
+
 h1 {
-  font-size: 2em;
+  font-size: 1.5em;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   margin: 0;
 }
 
-.subtitle {
-  font-size: 1.2em;
-  margin: 0;
-}
-
 h2 {
-  font-size: 1.2em;
+  font-size: 1em;
 }
 
 #game-board {
@@ -89,7 +90,7 @@ h2 {
 }
 
 .games-won {
-  font-size: 1.1em;
+  font-size: 1em;
   color: #333;
   font-weight: bold;
   margin-bottom: 10px;
@@ -243,6 +244,10 @@ button:disabled,
 @media (min-width: 768px) {
   body {
     padding-bottom: 0;
+  }
+
+  h1 {
+    font-size: 2em;
   }
 
   #players-hands {
