@@ -1,16 +1,16 @@
 import { gameState, handContainsCard, isValidPlay, passTurn, playCards } from "./game.js";
 import { log } from "./utils.js";
 
-const ui = {};
-
-ui.init = function () {
-  ui.gameMessages = document.getElementById("game-messages");
-  ui.playersHands = document.getElementById("players-hands");
-  ui.playArea = document.getElementById("play-area");
-  ui.gameContent = document.getElementById("game-content");
-  ui.playButton = document.getElementById("play-button");
-  ui.passButton = document.getElementById("pass-button");
-  ui.newGameButton = document.getElementById("new-game-button");
+const ui = {
+  id: {
+    gameMessages: "game-messages",
+    playersHands: "players-hands",
+    playArea: "play-area",
+    gameContent: "game-content",
+    playButton: "play-button",
+    passButton: "pass-button",
+    newGameButton: "new-game-button",
+  },
 };
 
 let messageTimeout;
@@ -113,6 +113,19 @@ ui.handlePlayButtonClick = function () {
     ui.handleInvalidPlay();
   }
   ui.render();
+};
+
+/**
+ * Initializes elements in the ui object.
+ */
+ui.init = function () {
+  ui.gameMessages = document.getElementById(ui.id.gameMessages);
+  ui.playersHands = document.getElementById(ui.id.playersHands);
+  ui.playArea = document.getElementById(ui.id.playArea);
+  ui.gameContent = document.getElementById(ui.id.gameContent);
+  ui.playButton = document.getElementById(ui.id.playButton);
+  ui.passButton = document.getElementById(ui.id.passButton);
+  ui.newGameButton = document.getElementById(ui.id.newGameButton);
 };
 
 /**

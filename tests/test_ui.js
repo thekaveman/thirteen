@@ -2,16 +2,26 @@ import { assert } from "./utils.js";
 import { gameState, resetGame } from "../src/game.js";
 import ui from "../src/ui.js";
 
-let originalUiRender;
+const TEST_UI = "test-ui";
 
 /**
   Setup function to run before each test
 */
 function testSetup() {
-  originalUiRender = ui.render;
-  ui.render = () => {};
-  // Initialize UI elements
+  // create mock UI elements
+  const container = document.createElement("div");
+  container.id = TEST_UI;
+  container.style.display = "none";
+  for (const [_, value] of Object.entries(ui.id)) {
+    const el = document.createElement("div");
+    el.id = value;
+    container.appendChild(el);
+  }
+  document.body.appendChild(container);
+
+  // Initialize UI elements after JSDOM setup
   ui.init();
+
   // Reset game state for a clean test environment
   resetGame();
   // Ensure buttons are in a known state for tests that check them
@@ -24,7 +34,10 @@ function testSetup() {
   Teardown function to run after each test
 */
 function testTeardown() {
-  ui.render = originalUiRender;
+  const testUI = document.getElementById(TEST_UI);
+  if (testUI) {
+    testUI.remove();
+  }
 }
 
 function test_createCardElement() {
@@ -203,9 +216,6 @@ function test_render_displaysGameInfo() {
   const player2GamesWon = player2Hand.querySelector(".games-won");
   assert(player2GamesWon.textContent === "Games won: 0", "Should display player 2 games won");
 }
-test_render_displaysGameInfo.beforeEach = () => {
-  ui.render = originalUiRender;
-};
 
 function test_renderPlayArea_clearsGameContentBeforeRendering() {
   gameState.playPile = [];
