@@ -41,30 +41,34 @@ const TEST_CONFIG = {
   Game: gameTests,
   UI: uiTests,
 };
-let allTestsPassed = true;
+
+let testsRun = 0;
+let testsPassed = 0;
 
 for (const [name, tests] of Object.entries(TEST_CONFIG)) {
-  process.stdout.write(`\n--- Running ${name} Tests ---\n`);
+  process.stdout.write(`\n== Running tests: ${name}\n`);
   const mockResults = {
     innerHTML: "",
     appendChild: (li) => {
+      testsRun++;
       const text = li.textContent;
       const color = li.style.color;
       if (color === "red") {
-        allTestsPassed = false;
-        process.stderr.write(text + '\n');
+        process.stderr.write("> " + text + "\n");
       } else {
-        process.stdout.write(text + '\n');
+        testsPassed++;
+        process.stdout.write("> " + text + "\n");
       }
     },
   };
   runTests(tests, mockResults);
 }
 
-if (!allTestsPassed) {
-  process.stderr.write("\nSome tests failed!\n");
+if (testsPassed != testsRun) {
+  const testsFailed = testsRun - testsPassed;
+  process.stderr.write(`\nSome tests failed [${testsFailed} / ${testsRun}]\n`);
   process.exit(1);
 } else {
-  process.stdout.write("\nAll tests passed!\n");
+  process.stdout.write(`\nAll tests passed [${testsPassed} / ${testsRun}]\n`);
   process.exit(0);
 }
