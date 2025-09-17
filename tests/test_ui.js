@@ -1,6 +1,7 @@
 import { assert } from "./utils.js";
 import { gameState, resetGame } from "../src/game.js";
 import ui from "../src/ui.js";
+import humanPlayer from "../src/ui-human.js";
 
 const TEST_UI = "test-ui";
 
@@ -72,10 +73,9 @@ function test_handleCardClick_preventsSelectionOfOtherPlayersCards() {
 
   // Simulate clicking a card from Player 1's hand (not current player)
   const otherPlayerCardElement = player1HandDiv.querySelector(".card");
-  const otherPlayerCard = JSON.parse(otherPlayerCardElement.dataset.card);
   const event = { target: otherPlayerCardElement };
 
-  ui.handleCardClick(event);
+  humanPlayer.handleCardClick(event);
 
   assert(gameState.selectedCards.length === 0, "Should not select card from other player's hand");
   assert(!otherPlayerCardElement.classList.contains("selected"), "Other player's card should not have 'selected' class");
@@ -94,16 +94,12 @@ function test_handleCardClick_selectsAndDeselectsCard() {
   const card = { rank: "A", suit: "♠", value: 48 };
   const event = { target: { dataset: { card: JSON.stringify(card) }, classList: tmp.classList } };
 
-  ui.handleCardClick(event);
+  humanPlayer.handleCardClick(event);
   assert(gameState.selectedCards.length === 1, "Should select one card");
   assert(gameState.selectedCards[0].value === card.value, "Should select the correct card");
 
-  ui.handleCardClick(event);
+  humanPlayer.handleCardClick(event);
   assert(gameState.selectedCards.length === 0, "Should deselect the card");
-}
-
-function test_handleInvalidPlay_showsMessage() {
-  ui.handleInvalidPlay();
 }
 
 function test_handlePassButtonClick_endsRoundCorrectly() {
@@ -114,7 +110,7 @@ function test_handlePassButtonClick_endsRoundCorrectly() {
   gameState.roundNumber = 1;
   gameState.playPile = [{ rank: "A", suit: "♠", value: 48 }];
 
-  ui.handlePassButtonClick();
+  humanPlayer.handlePassButtonClick();
 
   assert(gameState.playPile.length === 0, "Should clear the play pile");
   assert(gameState.consecutivePasses === 0, "Should reset consecutive passes");
@@ -126,7 +122,7 @@ function test_handlePassButtonClick_firstPlayOfRound() {
   gameState.playPile = []; // Empty play pile indicates the start of a round
   const originalState = { ...gameState };
 
-  ui.handlePassButtonClick();
+  humanPlayer.handlePassButtonClick();
 
   assert(gameState.currentPlayer === originalState.currentPlayer, "Should not change current player");
   assert(gameState.consecutivePasses === originalState.consecutivePasses, "Should not change consecutive passes");
@@ -139,32 +135,23 @@ function test_handlePassButtonClick_incrementsPassesAndSwitchesPlayer() {
   gameState.playPile = [{ rank: "3", suit: "♠", value: 0 }]; // Not the first play
   gameState.selectedCards = [{ rank: "A", suit: "♠", value: 48 }];
 
-  ui.handlePassButtonClick();
+  humanPlayer.handlePassButtonClick();
 
   assert(gameState.currentPlayer === 1, "Should switch to the next player");
   assert(gameState.selectedCards.length === 0, "Should clear selected cards");
   assert(gameState.consecutivePasses === 1, "Should increment consecutive passes");
 }
 
-function test_handlePlayButtonClick_callsInvalidPlayHandler() {
-  const originalHandleInvalidPlay = ui.handleInvalidPlay;
-
-  let invalidPlayHandlerCalled = false;
-  ui.handleInvalidPlay = () => {
-    invalidPlayHandlerCalled = true;
-  };
-
+function test_handlePlayButtonClick_showsMessageOnInvalidPlay() {
   // Set up an invalid game state to make isValidPlay return false.
   gameState.numPlayers = 2;
   gameState.playerHands = [[], []];
   gameState.selectedCards = [{ rank: "3", suit: "♠", value: 0 }];
   gameState.playPile = [{ rank: "A", suit: "♠", value: 48 }];
 
-  ui.handlePlayButtonClick();
+  humanPlayer.handlePlayButtonClick();
 
-  assert(invalidPlayHandlerCalled, "Should call handleInvalidPlay on invalid move");
-
-  ui.handleInvalidPlay = originalHandleInvalidPlay;
+  assert(ui.gameMessages.textContent === "Invalid play", "Should show invalid play message");
 }
 
 function test_handlePlayButtonClick_updatesGameStateOnValidPlay() {
@@ -179,7 +166,7 @@ function test_handlePlayButtonClick_updatesGameStateOnValidPlay() {
   gameState.consecutivePasses = 1; // Should be reset
   gameState.gameOver = false; // Ensure game is not over initially
 
-  ui.handlePlayButtonClick();
+  humanPlayer.handlePlayButtonClick();
 
   assert(gameState.playerHands[0].length === 0, "Should remove card from player's hand");
   assert(gameState.playPile.length === 1, "Should add card to play pile");
@@ -272,11 +259,10 @@ export const uiTests = [
   test_createCardElement,
   test_handleCardClick_selectsAndDeselectsCard,
   test_handleCardClick_preventsSelectionOfOtherPlayersCards,
-  test_handleInvalidPlay_showsMessage,
   test_handlePassButtonClick_endsRoundCorrectly,
   test_handlePassButtonClick_firstPlayOfRound,
   test_handlePassButtonClick_incrementsPassesAndSwitchesPlayer,
-  test_handlePlayButtonClick_callsInvalidPlayHandler,
+  test_handlePlayButtonClick_showsMessageOnInvalidPlay,
   test_handlePlayButtonClick_updatesGameStateOnValidPlay,
   test_render_displaysGameInfo,
   test_renderPlayArea_clearsGameContentBeforeRendering,

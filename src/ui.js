@@ -1,5 +1,6 @@
-import { gameState, handContainsCard, isValidPlay, passTurn, playCards } from "./game.js";
+import { gameState } from "./game.js";
 import { log } from "./utils.js";
+import humanPlayer from "./ui-human.js";
 
 const ui = {
   id: {
@@ -57,63 +58,6 @@ ui.createCardElement = function (card) {
   }
   cardSpan.dataset.card = JSON.stringify(card);
   return cardSpan;
-};
-
-/**
- * Handles the click event on a card.
- * @param {Event} event The click event.
- */
-ui.handleCardClick = function (event) {
-  const card = JSON.parse(event.target.dataset.card);
-
-  // Check if the clicked card belongs to the current player's hand
-  const currentPlayerHand = gameState.playerHands[gameState.currentPlayer];
-  if (!handContainsCard(currentPlayerHand, card)) {
-    // If the card does not belong to the current player, do nothing
-    return;
-  }
-
-  const cardIndex = gameState.selectedCards.findIndex((c) => c.value === card.value);
-
-  if (cardIndex > -1) {
-    gameState.selectedCards.splice(cardIndex, 1);
-  } else {
-    gameState.selectedCards.push(card);
-  }
-  ui.renderSelectedCards();
-};
-
-/**
- * Handles an invalid play.
- */
-ui.handleInvalidPlay = function () {
-  log("Invalid play", gameState.selectedCards);
-  ui.displayMessage("Invalid play", "error");
-};
-
-/**
- * Handles the pass button click event.
- */
-ui.handlePassButtonClick = function () {
-  ui.clearMessage();
-  const passSuccessful = passTurn();
-  if (!passSuccessful) {
-    ui.displayMessage("You cannot pass on the first play of a round.", "error");
-  }
-  ui.render();
-};
-
-/**
- * Handles the play button click event.
- */
-ui.handlePlayButtonClick = function () {
-  ui.clearMessage();
-  if (isValidPlay(gameState.selectedCards, gameState.playPile)) {
-    playCards();
-  } else {
-    ui.handleInvalidPlay();
-  }
-  ui.render();
 };
 
 /**
@@ -194,7 +138,7 @@ ui.renderPlayerHand = function (playerIndex, handDiv) {
 
   const preRender = function (cardSpan, card) {
     if (playerIndex === gameState.currentPlayer) {
-      cardSpan.addEventListener("click", ui.handleCardClick);
+      cardSpan.addEventListener("click", humanPlayer.handleCardClick);
     }
     if (gameState.selectedCards.some((selectedCard) => selectedCard.value === card.value)) {
       cardSpan.classList.add("selected");

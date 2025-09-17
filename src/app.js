@@ -1,6 +1,7 @@
 import { createDeck, shuffleDeck, deal } from "./deck.js";
 import { gameState, findStartingPlayer, sortHand, resetGame } from "./game.js";
 import ui from "./ui.js";
+import humanPlayer from "./ui-human.js";
 import { log } from "./utils.js";
 
 /**
@@ -22,8 +23,8 @@ function startGame() {
   ui.init();
   ui.render();
 
-  ui.playButton.addEventListener("click", ui.handlePlayButtonClick);
-  ui.passButton.addEventListener("click", ui.handlePassButtonClick);
+  ui.playButton.addEventListener("click", humanPlayer.handlePlayButtonClick);
+  ui.passButton.addEventListener("click", humanPlayer.handlePassButtonClick);
   ui.newGameButton.addEventListener("click", startGame);
 }
 
