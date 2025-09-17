@@ -25,7 +25,7 @@ body {
 
 header {
   background-color: #2e7d32;
-  padding: 1em 0;
+  padding: 0.5em 0;
   text-align: center;
   color: white;
   flex-shrink: 0;
@@ -45,18 +45,20 @@ h1 {
 
 h2 {
   font-size: 1em;
+  margin: 0;
+  margin-bottom: 5px;
 }
 
 #game-board {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px 0;
+  padding: 5px 0;
   flex-grow: 1;
 }
 
 #play-area {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 8px;
@@ -66,17 +68,13 @@ h2 {
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-#play-area .cards-container {
-  justify-content: flex-start;
-}
-
 #players-hands {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 95%;
   max-width: 800px;
-  gap: 20px;
+  gap: 10px;
 }
 
 .player-hand {
@@ -88,9 +86,9 @@ h2 {
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
   width: 95%;
   max-width: 800px;
-  padding: 10px;
-  padding-bottom: 30px;
-  height: 250px;
+  padding: 5px;
+  padding-bottom: 20px;
+  height: 200px;
 }
 
 .player-hand.current {
@@ -119,6 +117,13 @@ h2 {
   justify-content: center;
   overflow-x: hidden;
   padding: 15px 15px;
+}
+
+#play-area .cards-container {
+  justify-content: flex-start;
+  height: 60px;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .card {
@@ -290,6 +295,10 @@ button:disabled,
     padding-bottom: 0;
   }
 
+  header {
+    padding: 1em 0;
+  }
+
   .logo {
     width: 150px;
   }
@@ -298,14 +307,28 @@ button:disabled,
     font-size: 2.5em;
   }
 
+  #game-board {
+    padding: 10px 0;
+  }
+
+  #play-area {
+    margin-bottom: 20px;
+  }
+
+  .rounds-won {
+    margin-bottom: 10px;
+  }
+
   #players-hands {
     flex-direction: row;
+    gap: 20px;
   }
 
   .player-hand {
     padding: 15px;
     height: 400px;
     width: 45%;
+    padding-bottom: 30px;
   }
 
   .cards-container {
