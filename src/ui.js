@@ -175,6 +175,7 @@ ui.renderPlayerHand = function (playerIndex, handDiv) {
   let text = `Player ${playerIndex + 1}`;
 
   if (gameState.gameOver && gameState.playerHands[playerIndex].length === 0) {
+    ui.displayMessage(`${text} wins in ${gameState.roundNumber} rounds`, "info");
     text += " (Winner!)";
   } else if (gameState.currentPlayer === playerIndex) {
     text += " (Your Turn)";
