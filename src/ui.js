@@ -22,10 +22,9 @@ let messageTimeout;
  */
 ui.displayMessage = function (message, type) {
   console.log(`displayMessage: ${message}, type: ${type}`);
-  const messageEl = document.createElement("p");
-  messageEl.textContent = message;
+  ui.gameMessages.textContent = message;
   ui.gameMessages.classList.add(type);
-  ui.gameMessages.appendChild(messageEl);
+  ui.gameMessages.classList.add("visible");
   clearTimeout(messageTimeout);
   messageTimeout = setTimeout(() => {
     ui.clearMessage();
@@ -39,6 +38,7 @@ ui.clearMessage = function () {
   console.log("clearMessage called");
   ui.gameMessages.textContent = "";
   ui.gameMessages.className = "";
+  ui.gameMessages.classList.remove("visible");
 };
 
 /**

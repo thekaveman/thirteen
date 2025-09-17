@@ -173,22 +173,35 @@ h2 {
   font-weight: bold;
   max-width: 800px;
   width: 95%;
-  min-height: 40px;
-  visibility: hidden;
+  min-height: 50px;
+  position: fixed;
+  top: 25%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+#game-messages.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
 }
 
 #game-messages.error {
   background-color: #f8d7da;
   color: #721c24;
   border: 1px solid #f5c6cb;
-  visibility: visible;
 }
 
 #game-messages.info {
   background-color: #d4edda;
   color: #155724;
   border: 1px solid #c3e6cb;
-  visibility: visible;
 }
 
 #controls {
@@ -309,6 +322,12 @@ button:disabled,
 
   .subtitle {
     font-size: 1.5em;
+  }
+
+  #game-messages.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -25%) scale(1);
   }
 }
 
