@@ -2,20 +2,11 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Play game",
-      "type": "chrome",
+      "type": "node",
       "request": "launch",
-      "url": "http://localhost:8000/src/",
-      "webRoot": "${workspaceFolder}",
-      "preLaunchTask": "serve"
-    },
-    {
-      "name": "Run tests",
-      "type": "chrome",
-      "request": "launch",
-      "url": "http://localhost:8000/tests/",
-      "webRoot": "${workspaceFolder}",
-      "preLaunchTask": "serve"
+      "name": "Launch via NPM",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start"]
     }
   ]
 }

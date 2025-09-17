@@ -2,16 +2,26 @@ import { assert } from "./utils.js";
 import { gameState, resetGame } from "../src/game.js";
 import ui from "../src/ui.js";
 
-let originalUiRender;
+const TEST_UI = "test-ui";
 
 /**
   Setup function to run before each test
 */
 function testSetup() {
-  originalUiRender = ui.render;
-  ui.render = () => {};
-  // Initialize UI elements
+  // create mock UI elements
+  const container = document.createElement("div");
+  container.id = TEST_UI;
+  container.style.display = "none";
+  for (const [_, value] of Object.entries(ui.id)) {
+    const el = document.createElement("div");
+    el.id = value;
+    container.appendChild(el);
+  }
+  document.body.appendChild(container);
+
+  // Initialize UI elements after JSDOM setup
   ui.init();
+
   // Reset game state for a clean test environment
   resetGame();
   // Ensure buttons are in a known state for tests that check them
@@ -24,7 +34,10 @@ function testSetup() {
   Teardown function to run after each test
 */
 function testTeardown() {
-  ui.render = originalUiRender;
+  const testUI = document.getElementById(TEST_UI);
+  if (testUI) {
+    testUI.remove();
+  }
 }
 
 function test_createCardElement() {
@@ -49,9 +62,9 @@ function test_handleCardClick_preventsSelectionOfOtherPlayersCards() {
 
   // Mock DOM elements for player hands and cards
   const player0HandDiv = document.createElement("div");
-  player0HandDiv.id = "player0-hand";
+  player0HandDiv.id = "player-hand-0";
   const player1HandDiv = document.createElement("div");
-  player1HandDiv.id = "player1-hand";
+  player1HandDiv.id = "player-hand-1";
 
   // Render hands to attach event listeners
   ui.renderPlayerHand(0, player0HandDiv);
@@ -191,21 +204,18 @@ function test_render_displaysGameInfo() {
 
   assert(ui.gameContent.innerHTML.includes("Round 5"), "Should display the current round number");
 
-  const player1Hand = ui.playersHands.querySelector("#player0-hand");
+  const player1Hand = document.getElementById("player-hand-0");
   const player1RoundsWon = player1Hand.querySelector(".rounds-won");
   assert(player1RoundsWon.textContent === "Rounds won: 2", "Should display player 1 rounds won");
   const player1GamesWon = player1Hand.querySelector(".games-won");
   assert(player1GamesWon.textContent === "Games won: 1", "Should display player 1 games won");
 
-  const player2Hand = ui.playersHands.querySelector("#player1-hand");
+  const player2Hand = document.getElementById("player-hand-1");
   const player2RoundsWon = player2Hand.querySelector(".rounds-won");
   assert(player2RoundsWon.textContent === "Rounds won: 3", "Should display player 2 rounds won");
   const player2GamesWon = player2Hand.querySelector(".games-won");
   assert(player2GamesWon.textContent === "Games won: 0", "Should display player 2 games won");
 }
-test_render_displaysGameInfo.beforeEach = () => {
-  ui.render = originalUiRender;
-};
 
 function test_renderPlayArea_clearsGameContentBeforeRendering() {
   gameState.playPile = [];

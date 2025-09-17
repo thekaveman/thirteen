@@ -7,7 +7,8 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "node tests/cli_runner.js"
+    "test": "node tests/cli_runner.js",
+    "start": "live-server"
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,7 @@
   },
   "homepage": "https://thekaveman.github.io/thirteen/src/",
   "devDependencies": {
-    "jsdom": "^27.0.0"
+    "jsdom": "^27.0.0",
+    "live-server": "^1.2.2"
   }
 }

@@ -1,16 +1,16 @@
 import { gameState, handContainsCard, isValidPlay, passTurn, playCards } from "./game.js";
 import { log } from "./utils.js";
 
-const ui = {};
-
-ui.init = function () {
-  ui.gameMessages = document.getElementById("game-messages");
-  ui.playersHands = document.getElementById("players-hands");
-  ui.playArea = document.getElementById("play-area");
-  ui.gameContent = document.getElementById("game-content");
-  ui.playButton = document.getElementById("play-button");
-  ui.passButton = document.getElementById("pass-button");
-  ui.newGameButton = document.getElementById("new-game-button");
+const ui = {
+  id: {
+    gameMessages: "game-messages",
+    playersHands: "players-hands",
+    playArea: "play-area",
+    gameContent: "game-content",
+    playButton: "play-button",
+    passButton: "pass-button",
+    newGameButton: "new-game-button",
+  },
 };
 
 let messageTimeout;
@@ -24,6 +24,7 @@ ui.displayMessage = function (message, type) {
   console.log(`displayMessage: ${message}, type: ${type}`);
   ui.gameMessages.textContent = message;
   ui.gameMessages.classList.add(type);
+  ui.gameMessages.classList.add("visible");
   clearTimeout(messageTimeout);
   messageTimeout = setTimeout(() => {
     ui.clearMessage();
@@ -37,6 +38,7 @@ ui.clearMessage = function () {
   console.log("clearMessage called");
   ui.gameMessages.textContent = "";
   ui.gameMessages.className = "";
+  ui.gameMessages.classList.remove("visible");
 };
 
 /**
@@ -75,11 +77,10 @@ ui.handleCardClick = function (event) {
 
   if (cardIndex > -1) {
     gameState.selectedCards.splice(cardIndex, 1);
-    event.target.classList.remove("selected");
   } else {
     gameState.selectedCards.push(card);
-    event.target.classList.add("selected");
   }
+  ui.renderSelectedCards();
 };
 
 /**
@@ -116,12 +117,45 @@ ui.handlePlayButtonClick = function () {
 };
 
 /**
+ * Initializes elements in the ui object.
+ */
+ui.init = function () {
+  ui.gameMessages = document.getElementById(ui.id.gameMessages);
+  ui.playersHands = document.getElementById(ui.id.playersHands);
+  ui.playArea = document.getElementById(ui.id.playArea);
+  ui.gameContent = document.getElementById(ui.id.gameContent);
+  ui.playButton = document.getElementById(ui.id.playButton);
+  ui.passButton = document.getElementById(ui.id.passButton);
+  ui.newGameButton = document.getElementById(ui.id.newGameButton);
+};
+
+/**
  * Renders the entire game state in the DOM.
  */
 ui.render = function () {
-  ui.renderPlayerHands();
   ui.renderPlayArea();
+  ui.renderPlayerHands();
   ui.updateButtonStates();
+};
+
+/**
+ * Renders cards to a target element.
+ * @param {Array<object>} card The array of cards.
+ * @param {HTMLElement} targetElement The element in which to render.
+ * @param {(cardSpan:HTMLElement, card:object) => void} preRender An optional function to run on each card element before rendering.
+ */
+ui.renderCardsContainer = function (cards, targetElement, preRender = null) {
+  const cardsContainer = document.createElement("div");
+  cardsContainer.classList.add("cards-container");
+  targetElement.appendChild(cardsContainer);
+
+  cards.forEach((card) => {
+    const cardSpan = ui.createCardElement(card);
+    if (preRender != null) {
+      preRender(cardSpan, card);
+    }
+    cardsContainer.appendChild(cardSpan);
+  });
 };
 
 /**
@@ -129,10 +163,7 @@ ui.render = function () {
  */
 ui.renderPlayArea = function () {
   ui.gameContent.innerHTML = `<h2>Play Area (Round ${gameState.roundNumber})</h2>`;
-  gameState.playPile.forEach((card) => {
-    const cardSpan = ui.createCardElement(card);
-    ui.gameContent.appendChild(cardSpan);
-  });
+  ui.renderCardsContainer(gameState.playPile, ui.gameContent);
 };
 
 /**
@@ -144,6 +175,7 @@ ui.renderPlayerHand = function (playerIndex, handDiv) {
   let text = `Player ${playerIndex + 1}`;
 
   if (gameState.gameOver && gameState.playerHands[playerIndex].length === 0) {
+    ui.displayMessage(`${text} wins in ${gameState.roundNumber} rounds`, "info");
     text += " (Winner!)";
   } else if (gameState.currentPlayer === playerIndex) {
     text += " (Your Turn)";
@@ -160,16 +192,21 @@ ui.renderPlayerHand = function (playerIndex, handDiv) {
   roundsWonEl.textContent = `Rounds won: ${gameState.roundsWon[playerIndex]}`;
   handDiv.appendChild(roundsWonEl);
 
-  gameState.playerHands[playerIndex].forEach((card) => {
-    const cardSpan = ui.createCardElement(card);
+  const preRender = function (cardSpan, card) {
     if (playerIndex === gameState.currentPlayer) {
       cardSpan.addEventListener("click", ui.handleCardClick);
     }
     if (gameState.selectedCards.some((selectedCard) => selectedCard.value === card.value)) {
       cardSpan.classList.add("selected");
     }
-    handDiv.appendChild(cardSpan);
-  });
+  };
+  const playerHand = gameState.playerHands[playerIndex];
+  ui.renderCardsContainer(playerHand, handDiv, preRender);
+
+  const cardCountEl = document.createElement("p");
+  cardCountEl.classList.add("card-count");
+  cardCountEl.textContent = `Cards remaining: ${playerHand.length}`;
+  handDiv.appendChild(cardCountEl);
 };
 
 /**
@@ -179,7 +216,7 @@ ui.renderPlayerHands = function () {
   ui.playersHands.innerHTML = ""; // Clear the hands
   gameState.playerHands.forEach((hand, i) => {
     const playerHandDiv = document.createElement("div");
-    playerHandDiv.id = `player${i}-hand`;
+    playerHandDiv.id = `player-hand-${i}`;
     playerHandDiv.classList.add("player-hand");
     if (i === gameState.currentPlayer) {
       playerHandDiv.classList.add("current");
@@ -202,6 +239,31 @@ ui.updateButtonStates = function () {
     ui.passButton.disabled = false;
     ui.newGameButton.style.display = "none";
   }
+};
+
+/**
+ * Updates the 'selected' class on all card DOM elements in the current player's hand
+ * based on the gameState.selectedCards array.
+ */
+ui.renderSelectedCards = function () {
+  const currentPlayerHandDiv = document.getElementById(`player-hand-${gameState.currentPlayer}`);
+  if (!currentPlayerHandDiv) {
+    return;
+  }
+
+  const cardElements = currentPlayerHandDiv.querySelectorAll(".card");
+  cardElements.forEach((cardEl) => {
+    const card = JSON.parse(cardEl.dataset.card);
+    const isSelected = gameState.selectedCards.some(
+      (selectedCard) => selectedCard.rank === card.rank && selectedCard.suit === card.suit
+    );
+
+    if (isSelected) {
+      cardEl.classList.add("selected");
+    } else {
+      cardEl.classList.remove("selected");
+    }
+  });
 };
 
 export default ui;
