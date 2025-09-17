@@ -77,11 +77,10 @@ ui.handleCardClick = function (event) {
 
   if (cardIndex > -1) {
     gameState.selectedCards.splice(cardIndex, 1);
-    event.target.classList.remove("selected");
   } else {
     gameState.selectedCards.push(card);
-    event.target.classList.add("selected");
   }
+  ui.renderSelectedCards();
 };
 
 /**
@@ -234,6 +233,31 @@ ui.updateButtonStates = function () {
     ui.passButton.disabled = false;
     ui.newGameButton.style.display = "none";
   }
+};
+
+/**
+ * Updates the 'selected' class on all card DOM elements in the current player's hand
+ * based on the gameState.selectedCards array.
+ */
+ui.renderSelectedCards = function () {
+  const currentPlayerHandDiv = document.getElementById(`player-hand-${gameState.currentPlayer}`);
+  if (!currentPlayerHandDiv) {
+    return;
+  }
+
+  const cardElements = currentPlayerHandDiv.querySelectorAll(".card");
+  cardElements.forEach((cardEl) => {
+    const card = JSON.parse(cardEl.dataset.card);
+    const isSelected = gameState.selectedCards.some(
+      (selectedCard) => selectedCard.rank === card.rank && selectedCard.suit === card.suit
+    );
+
+    if (isSelected) {
+      cardEl.classList.add("selected");
+    } else {
+      cardEl.classList.remove("selected");
+    }
+  });
 };
 
 export default ui;
