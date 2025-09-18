@@ -1,6 +1,13 @@
 import { assert } from "./utils.js";
 import { SUITS, RANKS } from "../src/constants.js";
-import { createDeck, deal, shuffleDeck, sortHand } from "../src/deck.js";
+import { createCard, createDeck, deal, getCardValue, shuffleDeck, sortHand } from "../src/deck.js";
+
+function test_createCard_createsCorrectCard() {
+  const card = createCard("A", "♠");
+  assert(card.rank === "A", "Card should have correct rank");
+  assert(card.suit === "♠", "Card should have correct suit");
+  assert(card.value === getCardValue("A", "♠"), "Card should have correct value");
+}
 
 function test_createDeck_has52Cards() {
   const deck = createDeck();
@@ -68,6 +75,12 @@ function test_deal_dealsCorrectTotalCards() {
   assert(totalCardsInHands2 === 26, "Should deal 26 cards in total for 2 players");
 }
 
+function test_getCardValue_returnsCorrectValue() {
+  assert(getCardValue("3", "♠") === 0, "3♠ should have value 0");
+  assert(getCardValue("A", "♦") === 46, "A♦ should have value 46");
+  assert(getCardValue("2", "♥") === 51, "2♥ should have value 51");
+}
+
 function test_shuffleDeck_shufflesDeck() {
   const deck1 = createDeck();
   const deck2 = [...deck1];
@@ -89,6 +102,7 @@ function test_sortHand_sortsHandByValue() {
 }
 
 export const deckTests = [
+  test_createCard_createsCorrectCard,
   test_createDeck_has52Cards,
   test_createDeck_has13CardsOfEachSuit,
   test_createDeck_has4CardsOfEachRank,
@@ -96,6 +110,7 @@ export const deckTests = [
   test_deal_deals13CardsToEachPlayer,
   test_deal_dealsCorrectNumberOfHands,
   test_deal_dealsCorrectTotalCards,
+  test_getCardValue_returnsCorrectValue,
   test_shuffleDeck_shufflesDeck,
   test_sortHand_sortsHandByValue,
 ];

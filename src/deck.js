@@ -1,18 +1,28 @@
 import { SUITS, RANKS } from "./constants.js";
 
 /**
+ * Creates a card from a 52-card deck.
+ * @param {string} rank The rank of the card (e.g., "A", "K", "3").
+ * @param {string} suit The suit of the card (e.g., "♠", "♣", "♦", "♥").
+ * @returns {object} A card object.
+ */
+export function createCard(rank, suit) {
+  return {
+    rank,
+    suit,
+    value: getCardValue(rank, suit),
+  };
+}
+
+/**
  * Creates a standard 52-card deck.
  * @returns {Array<object>} An array of card objects.
  */
 export function createDeck() {
   const deck = [];
-  SUITS.forEach((suit, suitIndex) => {
-    RANKS.forEach((rank, rankIndex) => {
-      deck.push({
-        rank,
-        suit,
-        value: rankIndex * 4 + suitIndex,
-      });
+  SUITS.forEach((suit, _) => {
+    RANKS.forEach((rank, _) => {
+      deck.push(createCard(rank, suit));
     });
   });
   return deck;
@@ -31,6 +41,18 @@ export function deal(deck, numPlayers) {
     hands[i % numPlayers].push(deck[i]);
   }
   return hands;
+}
+
+/**
+ * Calculates the numeric value of a card based on its rank and suit.
+ * @param {string} rank The rank of the card (e.g., "A", "K", "3").
+ * @param {string} suit The suit of the card (e.g., "♠", "♣", "♦", "♥").
+ * @returns {number} The calculated numeric value of the card.
+ */
+export function getCardValue(rank, suit) {
+  const rankIndex = RANKS.indexOf(rank);
+  const suitIndex = SUITS.indexOf(suit);
+  return rankIndex * 4 + suitIndex;
 }
 
 /**
