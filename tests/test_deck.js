@@ -1,6 +1,6 @@
 import { assert } from "./utils.js";
-import { createDeck, shuffleDeck, deal } from "../src/deck.js";
 import { SUITS, RANKS } from "../src/constants.js";
+import { createDeck, deal, shuffleDeck, sortHand } from "../src/deck.js";
 
 function test_createDeck_has52Cards() {
   const deck = createDeck();
@@ -38,21 +38,6 @@ function test_createDeck_cardsHaveCorrectStructure() {
   });
 }
 
-function test_shuffleDeck_shufflesDeck() {
-  const deck1 = createDeck();
-  const deck2 = [...deck1];
-  shuffleDeck(deck2);
-  assert(JSON.stringify(deck1) !== JSON.stringify(deck2), "Shuffled deck should be different from the original");
-  assert(deck1.length === deck2.length, "Shuffled deck should have the same number of cards");
-}
-
-function test_deal_dealsCorrectNumberOfHands() {
-  const deck = createDeck();
-  const numPlayers = 2;
-  const hands = deal(deck, numPlayers);
-  assert(hands.length === numPlayers, "Should deal the correct number of hands");
-}
-
 function test_deal_deals13CardsToEachPlayer() {
   const deck = createDeck();
   const numPlayers = 2;
@@ -60,6 +45,13 @@ function test_deal_deals13CardsToEachPlayer() {
   hands.forEach((hand, i) => {
     assert(hand.length === 13, `Player ${i + 1} should have 13 cards`);
   });
+}
+
+function test_deal_dealsCorrectNumberOfHands() {
+  const deck = createDeck();
+  const numPlayers = 2;
+  const hands = deal(deck, numPlayers);
+  assert(hands.length === numPlayers, "Should deal the correct number of hands");
 }
 
 function test_deal_dealsCorrectTotalCards() {
@@ -76,13 +68,34 @@ function test_deal_dealsCorrectTotalCards() {
   assert(totalCardsInHands2 === 26, "Should deal 26 cards in total for 2 players");
 }
 
+function test_shuffleDeck_shufflesDeck() {
+  const deck1 = createDeck();
+  const deck2 = [...deck1];
+  shuffleDeck(deck2);
+  assert(JSON.stringify(deck1) !== JSON.stringify(deck2), "Shuffled deck should be different from the original");
+  assert(deck1.length === deck2.length, "Shuffled deck should have the same number of cards");
+}
+
+function test_sortHand_sortsHandByValue() {
+  const hand = [
+    { rank: "A", suit: "♠", value: 48 },
+    { rank: "3", suit: "♦", value: 2 },
+    { rank: "K", suit: "♣", value: 45 },
+  ];
+  sortHand(hand);
+  assert(hand[0].value === 2, "Hand should be sorted by value");
+  assert(hand[1].value === 45, "Hand should be sorted by value");
+  assert(hand[2].value === 48, "Hand should be sorted by value");
+}
+
 export const deckTests = [
   test_createDeck_has52Cards,
   test_createDeck_has13CardsOfEachSuit,
   test_createDeck_has4CardsOfEachRank,
   test_createDeck_cardsHaveCorrectStructure,
-  test_shuffleDeck_shufflesDeck,
-  test_deal_dealsCorrectNumberOfHands,
   test_deal_deals13CardsToEachPlayer,
+  test_deal_dealsCorrectNumberOfHands,
   test_deal_dealsCorrectTotalCards,
+  test_shuffleDeck_shufflesDeck,
+  test_sortHand_sortsHandByValue,
 ];

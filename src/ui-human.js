@@ -1,4 +1,5 @@
-import { gameState, passTurn, playCards, isValidPlay, sortHand } from "./game.js";
+import { sortHand } from "./deck.js";
+import { gameState, passTurn, playCards, isValidPlay } from "./game.js";
 import ui from "./ui.js";
 import { log } from "./utils.js";
 

@@ -17,7 +17,6 @@ import {
   passTurn,
   playCards,
   resetGame,
-  sortHand,
   switchToNextPlayer,
 } from "../src/game.js";
 
@@ -837,18 +836,6 @@ function test_resetGame() {
   assert(gameState.gameOver === false, "Reset gameOver should be false");
 }
 
-function test_sortHand_sortsHandByValue() {
-  const hand = [
-    { rank: "A", suit: "♠", value: 48 },
-    { rank: "3", suit: "♦", value: 2 },
-    { rank: "K", suit: "♣", value: 45 },
-  ];
-  sortHand(hand);
-  assert(hand[0].value === 2, "Hand should be sorted by value");
-  assert(hand[1].value === 45, "Hand should be sorted by value");
-  assert(hand[2].value === 48, "Hand should be sorted by value");
-}
-
 function test_switchToNextPlayer_switchesPlayer() {
   gameState.currentPlayer = 0;
   gameState.numPlayers = 2;
@@ -927,6 +914,5 @@ export const gameTests = [
   test_playCards_updatesGameState,
   test_playCards_updatesGamesWon,
   test_resetGame,
-  test_sortHand_sortsHandByValue,
   test_switchToNextPlayer_switchesPlayer,
 ];

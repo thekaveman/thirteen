@@ -355,14 +355,6 @@ export function resetGame() {
 }
 
 /**
- * Sorts a player's hand by card value.
- * @param {Array<object>} hand The hand to sort.
- */
-export function sortHand(hand) {
-  hand.sort((a, b) => a.value - b.value);
-}
-
-/**
  * Switches to the next player.
  */
 export function switchToNextPlayer() {

@@ -1,5 +1,5 @@
-import { createDeck, shuffleDeck, deal } from "./deck.js";
-import { gameState, findStartingPlayer, sortHand, resetGame } from "./game.js";
+import { createDeck, deal, shuffleDeck, sortHand } from "./deck.js";
+import { gameState, findStartingPlayer, resetGame } from "./game.js";
 import ui from "./ui.js";
 import humanPlayer from "./ui-human.js";
 import { log } from "./utils.js";

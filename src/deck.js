@@ -19,17 +19,6 @@ export function createDeck() {
 }
 
 /**
- * Shuffles a deck of cards in place.
- * @param {Array<object>} deck The deck to shuffle.
- */
-export function shuffleDeck(deck) {
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
-  }
-}
-
-/**
  * Deals a deck of cards to a specified number of players.
  * @param {Array<object>} deck The deck to deal from.
  * @param {number} numPlayers The number of players.
@@ -42,4 +31,23 @@ export function deal(deck, numPlayers) {
     hands[i % numPlayers].push(deck[i]);
   }
   return hands;
+}
+
+/**
+ * Shuffles a deck of cards in place.
+ * @param {Array<object>} deck The deck to shuffle.
+ */
+export function shuffleDeck(deck) {
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+}
+
+/**
+ * Sorts a hand of cards by value.
+ * @param {Array<object>} hand The hand to sort.
+ */
+export function sortHand(hand) {
+  hand.sort((a, b) => a.value - b.value);
 }
