@@ -1,4 +1,4 @@
-import { gameState, passTurn, playCards, isValidPlay } from "./game.js";
+import { gameState, passTurn, playCards, isValidPlay, sortHand } from "./game.js";
 import ui from "./ui.js";
 import { log } from "./utils.js";
 
@@ -20,6 +20,7 @@ const humanPlayer = {
     } else {
       gameState.selectedCards.push(card);
     }
+    sortHand(gameState.selectedCards);
     ui.renderSelectedCards();
   },
 
@@ -34,7 +35,7 @@ const humanPlayer = {
 
   handlePlayButtonClick: function () {
     ui.clearMessage();
-    if (isValidPlay(gameState.selectedCards, gameState.playPile)) {
+    if (isValidPlay(gameState.selectedCards, gameState.playPile, gameState.playerHands[gameState.currentPlayer])) {
       playCards();
     } else {
       log("Invalid play", gameState.selectedCards);

@@ -214,15 +214,13 @@ export function isTriple(cards) {
  * Checks if a play is valid according to the game rules.
  * @param {Array<object>} selectedCards The cards the player has selected.
  * @param {Array<object>} playPile The cards currently in the play pile.
+ * @param {Array<object>} playerHand The hand of the player making the play.
  * @returns {boolean} True if the play is valid.
  */
-export function isValidPlay(selectedCards, playPile) {
-  sortHand(selectedCards);
-
+export function isValidPlay(selectedCards, playPile, playerHand) {
   // Check if all selected cards are in the current player's hand
-  const currentPlayerHand = gameState.playerHands[gameState.currentPlayer];
   for (const selectedCard of selectedCards) {
-    if (!currentPlayerHand.some((card) => card.rank === selectedCard.rank && card.suit === selectedCard.suit)) {
+    if (!playerHand.some((card) => card.rank === selectedCard.rank && card.suit === selectedCard.suit)) {
       return false;
     }
   }
