@@ -1,14 +1,6 @@
 import { log } from "../src/utils.js";
+import { TEST_CONFIG } from "./config.js";
 import { runTests } from "./utils.js";
-import { deckTests } from "./test_deck.js";
-import { gameTests } from "./test_game.js";
-import { uiTests } from "./test_ui.js";
-
-export const TEST_CONFIG = {
-  Deck: deckTests,
-  Game: gameTests,
-  UI: uiTests,
-};
 
 let allTestsRun = 0;
 let allTestsPassed = 0;

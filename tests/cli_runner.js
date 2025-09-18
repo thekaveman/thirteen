@@ -31,16 +31,7 @@ global.ui = ui;
 import { assert, runTests } from "./utils.js";
 global.assert = assert; // Make assert globally available for test files
 
-// Load tests, configure, and run
-import { deckTests } from "./test_deck.js";
-import { gameTests } from "./test_game.js";
-import { uiTests } from "./test_ui.js";
-
-const TEST_CONFIG = {
-  Deck: deckTests,
-  Game: gameTests,
-  UI: uiTests,
-};
+import { TEST_CONFIG } from "./config.js";
 
 let testsRun = 0;
 let testsPassed = 0;
