@@ -46,7 +46,7 @@ let testsRun = 0;
 let testsPassed = 0;
 
 for (const [name, tests] of Object.entries(TEST_CONFIG)) {
-  process.stdout.write(`\n== Running tests: ${name}\n`);
+  process.stdout.write(`\n== Running tests: ${name} [${tests.length}]\n`);
   const mockResults = {
     innerHTML: "",
     appendChild: (li) => {
