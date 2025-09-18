@@ -1,4 +1,5 @@
 import { COMBINATION_TYPES, RANKS } from "./constants.js";
+import { allCardsHaveSameRank, findLowestCardInHands } from "./deck.js";
 import { log } from "./utils.js";
 
 export const gameState = {
@@ -17,51 +18,16 @@ export const gameState = {
 };
 
 /**
- * Checks if all cards in a combination have the same rank.
- * @param {Array<object>} cards The cards to check.
- * @returns {boolean} True if all cards have the same rank.
- */
-export function allCardsHaveSameRank(cards) {
-  if (cards.length === 0) {
-    return true;
-  }
-  const firstRank = cards[0].rank;
-  return cards.every((card) => card.rank === firstRank);
-}
-
-/**
- * Finds the lowest card in the entire game.
- * @param {Array<Array<object>>} hands An array of player hands.
- * @returns {object} The lowest card object.
- */
-export function findLowestCardInGame(hands) {
-  let lowestCard = null;
-  let lowestCardValue = Infinity;
-
-  hands.forEach((hand) => {
-    hand.forEach((card) => {
-      if (card.value < lowestCardValue) {
-        lowestCardValue = card.value;
-        lowestCard = card;
-      }
-    });
-  });
-
-  return lowestCard;
-}
-
-/**
  * Finds the player who should start the game based on the lowest card.
- * @param {Array<Array<object>>} hands An array of player hands.
+ * @param {Array<Array<object>>} hands An array of sorted player hands.
  * @returns {number} The index of the player who should start.
  */
 export function findStartingPlayer(hands) {
   let startingPlayer = 0;
-  let lowestCardValue = hands[0][0].value;
+  const lowestCardValue = findLowestCardInHands(hands).value;
 
-  for (let i = 1; i < hands.length; i++) {
-    if (hands[i][0].value < lowestCardValue) {
-      lowestCardValue = hands[i][0].value;
+  for (let i = 0; i < hands.length; i++) {
+    if (hands[i][0].value == lowestCardValue) {
       startingPlayer = i;
     }
   }
@@ -82,16 +48,6 @@ export function getCombinationType(cards) {
   if (isConsecutivePairs(cards)) return COMBINATION_TYPES.CONSECUTIVE_PAIRS;
   if (isFourOfAKind(cards)) return COMBINATION_TYPES.FOUR_OF_A_KIND;
   return COMBINATION_TYPES.INVALID;
-}
-
-/**
- * Determines if the given hand contains the given card.
- * @param {Array<object>} hand The hand to check.
- * @param {object} card The card to check.
- * @returns {boolean} True if the hand contains the card.
- */
-export function handContainsCard(hand, card) {
-  return hand.some((handCard) => handCard.rank === card.rank && handCard.suit === card.suit);
 }
 
 /**
@@ -254,7 +210,7 @@ export function isValidPlay(selectedCards, playPile, playerHand) {
   // Standard play validation
   if (playPile.length === 0) {
     if (gameState.currentTurn === 0) {
-      const lowestCard = findLowestCardInGame(gameState.playerHands);
+      const lowestCard = findLowestCardInHands(gameState.playerHands);
       return selectedCards.some((card) => card.value === lowestCard.value);
     }
     return true;

@@ -1,6 +1,25 @@
 import { assert } from "./utils.js";
 import { SUITS, RANKS } from "../src/constants.js";
-import { createCard, createDeck, deal, getCardValue, shuffleDeck, sortHand } from "../src/deck.js";
+import {
+  allCardsHaveSameRank,
+  createCard,
+  createDeck,
+  deal,
+  findLowestCardInHands,
+  getCardValue,
+  shuffleDeck,
+  sortHand,
+} from "../src/deck.js";
+
+function test_allCardsHaveSameRank_returnsFalseForDifferentRank() {
+  const cards = [createCard("K", "♦"), createCard("A", "♠"), createCard("A", "♣")];
+  assert(!allCardsHaveSameRank(cards), "Should return false for cards with different ranks");
+}
+
+function test_allCardsHaveSameRank_returnsTrueForSameRank() {
+  const cards = [createCard("A", "♠"), createCard("A", "♣"), createCard("A", "♦")];
+  assert(allCardsHaveSameRank(cards), "Should return true for cards with the same rank");
+}
 
 function test_createCard_createsCorrectCard() {
   const card = createCard("A", "♠");
@@ -75,6 +94,15 @@ function test_deal_dealsCorrectTotalCards() {
   assert(totalCardsInHands2 === 26, "Should deal 26 cards in total for 2 players");
 }
 
+function test_findLowestCardInHands_findsLowestCard() {
+  const hands = [
+    [createCard("K", "♣"), createCard("A", "♠")],
+    [createCard("4", "♠"), createCard("3", "♦")],
+  ];
+  const lowestCard = findLowestCardInHands(hands);
+  assert(lowestCard.value === getCardValue("3", "♦"), "Should find the lowest card in the the hands");
+}
+
 function test_getCardValue_returnsCorrectValue() {
   assert(getCardValue("3", "♠") === 0, "3♠ should have value 0");
   assert(getCardValue("A", "♦") === 46, "A♦ should have value 46");
@@ -102,6 +130,8 @@ function test_sortHand_sortsHandByValue() {
 }
 
 export const deckTests = [
+  test_allCardsHaveSameRank_returnsFalseForDifferentRank,
+  test_allCardsHaveSameRank_returnsTrueForSameRank,
   test_createCard_createsCorrectCard,
   test_createDeck_has52Cards,
   test_createDeck_has13CardsOfEachSuit,
@@ -110,6 +140,7 @@ export const deckTests = [
   test_deal_deals13CardsToEachPlayer,
   test_deal_dealsCorrectNumberOfHands,
   test_deal_dealsCorrectTotalCards,
+  test_findLowestCardInHands_findsLowestCard,
   test_getCardValue_returnsCorrectValue,
   test_shuffleDeck_shufflesDeck,
   test_sortHand_sortsHandByValue,

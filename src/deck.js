@@ -1,6 +1,19 @@
 import { SUITS, RANKS } from "./constants.js";
 
 /**
+ * Checks if all cards in a combination have the same rank.
+ * @param {Array<object>} cards The cards to check.
+ * @returns {boolean} True if all cards have the same rank.
+ */
+export function allCardsHaveSameRank(cards) {
+  if (cards.length === 0) {
+    return true;
+  }
+  const firstRank = cards[0].rank;
+  return cards.every((card) => card.rank === firstRank);
+}
+
+/**
  * Creates a card from a 52-card deck.
  * @param {string} rank The rank of the card (e.g., "A", "K", "3").
  * @param {string} suit The suit of the card (e.g., "♠", "♣", "♦", "♥").
@@ -41,6 +54,27 @@ export function deal(deck, numPlayers) {
     hands[i % numPlayers].push(deck[i]);
   }
   return hands;
+}
+
+/**
+ * Finds the lowest card in the list of hands.
+ * @param {Array<Array<object>>} hands An array of player hands.
+ * @returns {object} The lowest card object.
+ */
+export function findLowestCardInHands(hands) {
+  let lowestCard = null;
+  let lowestCardValue = Infinity;
+
+  hands.forEach((hand) => {
+    hand.forEach((card) => {
+      if (card.value < lowestCardValue) {
+        lowestCardValue = card.value;
+        lowestCard = card;
+      }
+    });
+  });
+
+  return lowestCard;
 }
 
 /**

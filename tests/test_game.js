@@ -1,8 +1,6 @@
 import { assert } from "./utils.js";
-import { getCardValue, createCard } from "../src/deck.js";
+import { createCard } from "../src/deck.js";
 import {
-  allCardsHaveSameRank,
-  findLowestCardInGame,
   findStartingPlayer,
   gameState,
   getCombinationType,
@@ -20,25 +18,6 @@ import {
   resetGame,
   switchToNextPlayer,
 } from "../src/game.js";
-
-function test_allCardsHaveSameRank_returnsFalseForDifferentRank() {
-  const cards = [createCard("K", "♦"), createCard("A", "♠"), createCard("A", "♣")];
-  assert(!allCardsHaveSameRank(cards), "Should return false for cards with different ranks");
-}
-
-function test_allCardsHaveSameRank_returnsTrueForSameRank() {
-  const cards = [createCard("A", "♠"), createCard("A", "♣"), createCard("A", "♦")];
-  assert(allCardsHaveSameRank(cards), "Should return true for cards with the same rank");
-}
-
-function test_findLowestCardInGame_findsLowestCard() {
-  const hands = [
-    [createCard("A", "♠"), createCard("K", "♣")],
-    [createCard("3", "♦"), createCard("4", "♠")],
-  ];
-  const lowestCard = findLowestCardInGame(hands);
-  assert(lowestCard.value === getCardValue("3", "♦"), "Should find the lowest card in the game");
-}
 
 function test_findStartingPlayer_findsPlayerWithLowestCard() {
   const hands = [
@@ -634,9 +613,6 @@ function test_playCards_updatesGamesWon() {
 }
 
 export const gameTests = [
-  test_allCardsHaveSameRank_returnsFalseForDifferentRank,
-  test_allCardsHaveSameRank_returnsTrueForSameRank,
-  test_findLowestCardInGame_findsLowestCard,
   test_findStartingPlayer_findsPlayerWithLowestCard,
   test_gameState,
   test_getCombinationType_returnsCorrectType,
