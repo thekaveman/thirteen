@@ -325,6 +325,24 @@ function test_isValidPlay_fourOfAKindBeatsSingle2() {
   );
 }
 
+function test_isValidPlay_fourOfAKindOnlyValidAsBomb() {
+  const fourOfAKind = [createCard("4", "♠"), createCard("4", "♣"), createCard("4", "♦"), createCard("4", "♥")];
+  gameState.currentPlayer = 0;
+  gameState.playerHands = [fourOfAKind];
+
+  const playPileSingle = [createCard("K", "♠")]; // A single card, not a 2
+  assert(
+    !isValidPlay(fourOfAKind, playPileSingle, gameState.playerHands[gameState.currentPlayer]),
+    "Four of a kind should only be valid as a bomb against a 2"
+  );
+
+  const playPileFourOfAKind = [createCard("3", "♠"), createCard("3", "♣"), createCard("3", "♦"), createCard("3", "♥")];
+  assert(
+    !isValidPlay(fourOfAKind, playPileFourOfAKind, gameState.playerHands[gameState.currentPlayer]),
+    "Four of a kind should only be valid as a bomb against a 2"
+  );
+}
+
 function test_isValidPlay_higherSingleBeatsLowerSingle() {
   const selectedCards = [createCard("A", "♠")];
   gameState.currentPlayer = 0;
@@ -402,6 +420,17 @@ function test_isValidPlay_lowerTripleDoesNotBeatHigherTriple() {
   );
 }
 
+function test_isValidPlay_orderMatters() {
+  const selectedCards = [createCard("5", "♣"), createCard("3", "♠"), createCard("4", "♦")];
+  gameState.currentPlayer = 0;
+  gameState.playerHands = [selectedCards];
+  const playPile = [];
+  assert(
+    !isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    "Assumes cards are ordered ascending by value"
+  );
+}
+
 function test_isValidPlay_pairBeatsLowerPair() {
   const selectedCards = [createCard("A", "♠"), createCard("A", "♦")];
   gameState.currentPlayer = 0;
@@ -432,17 +461,6 @@ function test_isValidPlay_returnsFalseForLowerRankSingle() {
   assert(
     !isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
     "Should return false for lower rank single"
-  );
-}
-
-function test_isValidPlay_selectionOrderDoesNotMatter() {
-  const selectedCards = [createCard("5", "♣"), createCard("3", "♠"), createCard("4", "♦")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
-  const playPile = [];
-  assert(
-    isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
-    "Card selection order should not matter"
   );
 }
 
@@ -643,6 +661,7 @@ export const gameTests = [
   test_isValidPlay_firstTurnMustPlayLowestCard,
   test_isValidPlay_fourConsecutivePairsBeatsPairOf2s,
   test_isValidPlay_fourOfAKindBeatsSingle2,
+  test_isValidPlay_fourOfAKindOnlyValidAsBomb,
   test_isValidPlay_higherSingleBeatsLowerSingle,
   test_isValidPlay_lowerConsecutivePairsDoesNotBeatHigherConsecutivePairs,
   test_isValidPlay_lowerFourOfAKindDoesNotBeatHigherFourOfAKind,
@@ -650,6 +669,7 @@ export const gameTests = [
   test_isValidPlay_lowerSingleDoesNotBeatHigherSingle,
   test_isValidPlay_lowerStraightDoesNotBeatHigherStraight,
   test_isValidPlay_lowerTripleDoesNotBeatHigherTriple,
+  test_isValidPlay_orderMatters,
   test_isValidPlay_pairBeatsLowerPair,
   test_isValidPlay_playMustBeSameCombinationType,
   test_isValidPlay_returnsFalseForLowerRankSingle,
