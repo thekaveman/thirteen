@@ -225,12 +225,12 @@ export function isValidPlay(selectedCards, playPile, playerHand) {
     }
   }
 
-  const combinationType = getCombinationType(selectedCards);
-  if (combinationType === COMBINATION_TYPES.INVALID) {
+  const playPileCombinationType = getCombinationType(playPile);
+  const selectedCombinationType = getCombinationType(selectedCards);
+
+  if (selectedCombinationType === COMBINATION_TYPES.INVALID) {
     return false;
   }
-
-  const playPileCombinationType = getCombinationType(playPile);
 
   // Bomb logic
   if (playPile.length > 0 && playPile[0].rank === "2") {
@@ -242,9 +242,12 @@ export function isValidPlay(selectedCards, playPile, playerHand) {
     }
   }
 
-  // Consecutive pairs are only valid as bombs, which is handled above.
-  // Any other attempted use of consecutive pairs is invalid.
-  if (combinationType === COMBINATION_TYPES.CONSECUTIVE_PAIRS) {
+  // These combinations are only valid as bombs, which are handled above.
+  // Any other attempted use is invalid.
+  if (
+    selectedCombinationType === COMBINATION_TYPES.CONSECUTIVE_PAIRS ||
+    selectedCombinationType === COMBINATION_TYPES.FOUR_OF_A_KIND
+  ) {
     return false;
   }
 
@@ -257,7 +260,7 @@ export function isValidPlay(selectedCards, playPile, playerHand) {
     return true;
   }
 
-  if (combinationType !== playPileCombinationType) {
+  if (selectedCombinationType !== playPileCombinationType) {
     return false;
   }
 

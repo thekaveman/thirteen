@@ -468,24 +468,6 @@ function test_isValidPlay_fourConsecutivePairsBeatsPairOf2s() {
   );
 }
 
-function test_isValidPlay_fourOfAKindBeatsLowerFourOfAKind() {
-  const selectedCards = [
-    { rank: "A", suit: "♠", value: 48 },
-    { rank: "A", suit: "♦", value: 49 },
-    { rank: "A", suit: "♣", value: 50 },
-    { rank: "A", suit: "♥", value: 51 },
-  ];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
-  const playPile = [
-    { rank: "K", suit: "♠", value: 44 },
-    { rank: "K", suit: "♦", value: 45 },
-    { rank: "K", suit: "♣", value: 46 },
-    { rank: "K", suit: "♥", value: 47 },
-  ];
-  assert(isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]), "Higher four of a kind should beat lower four of a kind");
-}
-
 function test_isValidPlay_fourOfAKindBeatsSingle2() {
   const selectedCards = [
     { rank: "3", suit: "♠", value: 0 },
@@ -893,7 +875,6 @@ export const gameTests = [
   test_isValidPlay_disallowsPlayingCardsNotInOwnHand,
   test_isValidPlay_firstTurnMustPlayLowestCard,
   test_isValidPlay_fourConsecutivePairsBeatsPairOf2s,
-  test_isValidPlay_fourOfAKindBeatsLowerFourOfAKind,
   test_isValidPlay_fourOfAKindBeatsSingle2,
   test_isValidPlay_higherSingleBeatsLowerSingle,
   test_isValidPlay_lowerConsecutivePairsDoesNotBeatHigherConsecutivePairs,
