@@ -1,9 +1,11 @@
 import { assert } from "./utils.js";
 import { gameState, resetGame } from "../src/game.js";
 import ui from "../src/ui.js";
-import humanPlayer from "../src/ui-human.js";
+import { Player } from "../src/player.js";
 
 const TEST_UI = "test-ui";
+
+let humanPlayer;
 
 /**
   Setup function to run before each test
@@ -25,6 +27,11 @@ function testSetup() {
 
   // Reset game state for a clean test environment
   resetGame();
+
+  gameState.playerTypes = ["human", "human"];
+  gameState.players = gameState.playerTypes.map((type) => new Player(type));
+  humanPlayer = gameState.players[0];
+
   // Ensure buttons are in a known state for tests that check them
   ui.playButton.disabled = false;
   ui.passButton.disabled = false;

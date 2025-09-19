@@ -4,6 +4,7 @@ import { log } from "./utils.js";
 
 export const gameState = {
   numPlayers: 2,
+  players: [],
   playerHands: [],
   playPile: [],
   currentPlayer: 0,
@@ -15,6 +16,7 @@ export const gameState = {
   roundsWon: [],
   gamesWon: [],
   gameOver: false,
+  playerTypes: ["human", "human"], // Default to human players
 };
 
 /**

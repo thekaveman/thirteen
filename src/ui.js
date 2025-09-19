@@ -1,6 +1,5 @@
 import { gameState } from "./game.js";
 import { log } from "./utils.js";
-import humanPlayer from "./ui-human.js";
 
 const ui = {
   id: {
@@ -137,8 +136,9 @@ ui.renderPlayerHand = function (playerIndex, handDiv) {
   handDiv.appendChild(roundsWonEl);
 
   const preRender = function (cardSpan, card) {
-    if (playerIndex === gameState.currentPlayer) {
-      cardSpan.addEventListener("click", humanPlayer.handleCardClick);
+    const currentPlayer = gameState.players[playerIndex];
+    if (playerIndex === gameState.currentPlayer && currentPlayer.type === 'human') {
+      cardSpan.addEventListener("click", currentPlayer.handleCardClick.bind(currentPlayer));
     }
     if (gameState.selectedCards.some((selectedCard) => selectedCard.value === card.value)) {
       cardSpan.classList.add("selected");
