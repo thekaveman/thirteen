@@ -1,5 +1,5 @@
 import { assert } from "./utils.js";
-import { AI } from "../src/ai.js";
+import { AI, LowestCardAI } from "../src/ai.js";
 import { createCard, getCardValue } from "../src/deck.js";
 
 function test_AI_generateCombinations_consecutivePairs() {
@@ -162,6 +162,138 @@ function test_AI_generateCombinations_triples() {
   );
 }
 
+function test_LowestCardAI_takeTurn_lowestConsecutivePairs() {
+  const ai = new LowestCardAI();
+  const playerHand = [
+    createCard("3", "♠"),
+    createCard("3", "♦"),
+    createCard("4", "♣"),
+    createCard("4", "♥"),
+    createCard("5", "♠"),
+    createCard("5", "♦"),
+    createCard("6", "♠"),
+    createCard("6", "♦"),
+  ];
+  const playPile = [createCard("2", "♠")]; // Play pile has a single 2
+  const currentTurn = 1; // Not the first turn
+  const allPlayerHands = [playerHand];
+
+  const move = ai.takeTurn(playerHand, playPile, currentTurn, allPlayerHands);
+
+  assert(move.length === 6, "AI should have played three consecutive pairs");
+  assert(
+    move[0].rank === "3" &&
+      move[1].rank === "3" &&
+      move[2].rank === "4" &&
+      move[3].rank === "4" &&
+      move[4].rank === "5" &&
+      move[5].rank === "5",
+    "AI should have played the 33-44-55 consecutive pairs"
+  );
+}
+
+function test_LowestCardAI_takeTurn_lowestFourOfAKind() {
+  const ai = new LowestCardAI();
+  const currentPlayer = 0;
+  const playerHands = [
+    [
+      createCard("3", "♠"),
+      createCard("3", "♦"),
+      createCard("3", "♣"),
+      createCard("3", "♥"),
+      createCard("4", "♠"),
+      createCard("4", "♣"),
+      createCard("4", "♦"),
+      createCard("4", "♥"),
+    ],
+  ];
+  const playPile = [createCard("2", "♠")]; // Play pile has a single 2
+  const currentTurn = 1; // Not the first turn
+
+  const move = ai.takeTurn(playerHands[currentPlayer], playPile, currentTurn, playerHands);
+
+  assert(move.length === 4, "Should find a four of a kind move");
+  assert(
+    move[0].rank === "3" && move[1].rank === "3" && move[2].rank === "3" && move[3].rank === "3",
+    "Should find the lowest four of a kind"
+  );
+}
+
+function test_LowestCardAI_takeTurn_lowestPair() {
+  const ai = new LowestCardAI();
+  const currentPlayer = 0;
+  const playerHands = [[createCard("4", "♠"), createCard("4", "♦"), createCard("5", "♣"), createCard("5", "♥")]];
+  const playPile = [createCard("3", "♠"), createCard("3", "♦")]; // Play pile has a pair of 3s
+  const currentTurn = 1; // Not the first turn
+
+  const move = ai.takeTurn(playerHands[currentPlayer], playPile, currentTurn, playerHands);
+
+  assert(move.length === 2, "Should find a pair move");
+  assert(move[0].rank === "4" && move[1].rank === "4", "Should find the lowest pair");
+}
+
+function test_LowestCardAI_takeTurn_lowestSingle() {
+  const ai = new LowestCardAI();
+  const currentPlayer = 0;
+  const playerHands = [[createCard("4", "♠"), createCard("5", "♦"), createCard("6", "♣")]];
+  const playPile = [createCard("3", "♠")];
+  const currentTurn = 1;
+
+  const move = ai.takeTurn(playerHands[currentPlayer], playPile, currentTurn, playerHands);
+
+  assert(move.length === 1, "Should find a single card move");
+  assert(move[0].value === getCardValue("4", "♠"), "Should find the lowest valid single card");
+}
+
+function test_LowestCardAI_takeTurn_lowestStraight() {
+  const ai = new LowestCardAI();
+  const currentPlayer = 0;
+  const playerHands = [
+    [createCard("6", "♠"), createCard("7", "♦"), createCard("8", "♣"), createCard("9", "♠"), createCard("10", "♦")],
+  ];
+  const playPile = [createCard("3", "♠"), createCard("4", "♦"), createCard("5", "♣")]; // Play pile has a straight of 3-4-5
+  const currentTurn = 1; // Not the first turn
+
+  const move = ai.takeTurn(playerHands[currentPlayer], playPile, currentTurn, playerHands);
+
+  assert(move.length === 3, "Should find a straight move");
+  assert(move[0].rank === "6" && move[1].rank === "7" && move[2].rank === "8", "Should find the lowest straight");
+}
+
+function test_LowestCardAI_takeTurn_lowestTriple() {
+  const ai = new LowestCardAI();
+  const currentPlayer = 0;
+  const playerHands = [
+    [
+      createCard("5", "♠"),
+      createCard("5", "♦"),
+      createCard("5", "♣"),
+      createCard("6", "♠"),
+      createCard("6", "♦"),
+      createCard("6", "♣"),
+    ],
+  ];
+  const playPile = [createCard("4", "♠"), createCard("4", "♦"), createCard("4", "♣")]; // Play pile has a triple of 4s
+  const currentTurn = 1; // Not the first turn
+
+  const move = ai.takeTurn(playerHands[currentPlayer], playPile, currentTurn, playerHands);
+
+  assert(move.length === 3, "Should find a triple move");
+  assert(move[0].rank === "5" && move[1].rank === "5" && move[2].rank === "5", "Should find the lowest triple");
+}
+
+function test_LowestCardAI_takeTurn_returnsEmptyArrayWhenNoValidMove() {
+  const ai = new LowestCardAI();
+  const currentPlayer = 0;
+  const playerHands = [[createCard("4", "♠"), createCard("5", "♦")]];
+  const playPile = [createCard("6", "♣")];
+  const currentTurn = 1;
+
+  const move = ai.takeTurn(playerHands[currentPlayer], playPile, currentTurn, playerHands);
+
+  assert(move.length === 0, "Should return an empty array when no valid move is found");
+}
+
 export const aiTests = [
   test_AI_generateCombinations_consecutivePairs,
   test_AI_generateCombinations_fourOfAKind,
@@ -169,4 +301,11 @@ export const aiTests = [
   test_AI_generateCombinations_singles,
   test_AI_generateCombinations_straights,
   test_AI_generateCombinations_triples,
+  test_LowestCardAI_takeTurn_lowestConsecutivePairs,
+  test_LowestCardAI_takeTurn_lowestFourOfAKind,
+  test_LowestCardAI_takeTurn_lowestPair,
+  test_LowestCardAI_takeTurn_lowestSingle,
+  test_LowestCardAI_takeTurn_lowestStraight,
+  test_LowestCardAI_takeTurn_lowestTriple,
+  test_LowestCardAI_takeTurn_returnsEmptyArrayWhenNoValidMove,
 ];

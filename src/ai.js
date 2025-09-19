@@ -285,3 +285,40 @@ export class AI {
     return subConsecutivePairs;
   }
 }
+
+export class LowestCardAI extends AI {
+  /**
+   * Executes the AI's turn by finding the lowest valid move.
+   * @param {Array<object>} playerHand The AI player's hand.
+   * @param {Array<object>} playPile The current play pile.
+   * @param {number} currentTurn The current turn number.
+   * @param {Array<Array<object>>} allPlayerHands All players' hands.
+   * @returns {Array<object>} The cards to play, or an empty array if the AI passes.
+   */
+  takeTurn(playerHand, playPile, currentTurn, allPlayerHands) {
+    const move = this._findLowestValidMove(playerHand, playPile, currentTurn, allPlayerHands);
+    return move.length > 0 ? move : [];
+  }
+
+  /**
+   * Finds the lowest valid move for the AI player.
+   * @param {Array<object>} hand The AI player's hand.
+   * @param {Array<object>} playPile The current play pile.
+   * @param {number} currentTurn The current turn number.
+   * @param {Array<Array<object>>} allPlayerHands All players' hands.
+   * @returns {Array<object>} The cards to play, or an empty array if no valid move is found.
+   */
+  _findLowestValidMove(hand, playPile, currentTurn, allPlayerHands) {
+    let allValidMoves = [];
+    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "single", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "pair", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "triple", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "straight", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "four_of_a_kind", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "consecutive_pairs", currentTurn, allPlayerHands));
+
+    allValidMoves.sort((a, b) => a[0].value - b[0].value);
+
+    return allValidMoves.length > 0 ? allValidMoves[0] : [];
+  }
+}
