@@ -2,6 +2,16 @@ import { assert } from "./utils.js";
 import { AI, LowestCardAI } from "../src/ai.js";
 import { createCard, getCardValue } from "../src/deck.js";
 
+export class TestAI {
+  constructor(move) {
+    this.move = move;
+  }
+
+  takeTurn(hand, playPile, currentTurn, playerHands) {
+    return this.move;
+  }
+}
+
 function test_AI_generateCombinations_consecutivePairs() {
   const ai = new AI();
   const hand = [
@@ -294,6 +304,13 @@ function test_LowestCardAI_takeTurn_returnsEmptyArrayWhenNoValidMove() {
   assert(move.length === 0, "Should return an empty array when no valid move is found");
 }
 
+function test_TestAI_takeTurn() {
+  const move = [createCard("5", "♦")];
+  const ai = new TestAI(move);
+  const selectedMove = ai.takeTurn();
+  assert(selectedMove === move, "TestAI should return the move it was constructed with");
+}
+
 export const aiTests = [
   test_AI_generateCombinations_consecutivePairs,
   test_AI_generateCombinations_fourOfAKind,
@@ -308,4 +325,5 @@ export const aiTests = [
   test_LowestCardAI_takeTurn_lowestStraight,
   test_LowestCardAI_takeTurn_lowestTriple,
   test_LowestCardAI_takeTurn_returnsEmptyArrayWhenNoValidMove,
+  test_TestAI_takeTurn,
 ];

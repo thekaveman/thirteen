@@ -4,11 +4,19 @@ import ui from "./ui.js";
 import { log } from "./utils.js";
 
 export class Player {
-  constructor(type) {
+  constructor(type, ai = null) {
     this.type = type;
+    this.ai = ai;
   }
 
   takeTurn() {
+    if (this.type === "ai" && this.ai) {
+      const playerHand = gameState.playerHands[gameState.currentPlayer];
+      const playPile = gameState.playPile;
+      const currentTurn = gameState.currentTurn;
+      const allPlayerHands = gameState.playerHands;
+      return this.ai.takeTurn(playerHand, playPile, currentTurn, allPlayerHands);
+    }
     // For human players, the turn is taken via UI interactions
     return null;
   }
