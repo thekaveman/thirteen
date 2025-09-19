@@ -50,7 +50,15 @@ export class Player {
   handlePlayButtonClick() {
     if (this.type === "human") {
       ui.clearMessage();
-      if (isValidPlay(gameState.selectedCards, gameState.playPile, gameState.playerHands[gameState.currentPlayer])) {
+      if (
+        isValidPlay(
+          gameState.selectedCards,
+          gameState.playPile,
+          gameState.playerHands[gameState.currentPlayer],
+          gameState.currentTurn,
+          gameState.playerHands
+        )
+      ) {
         playCards();
       } else {
         log("Invalid play", gameState.selectedCards);

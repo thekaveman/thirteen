@@ -175,7 +175,7 @@ export function isTriple(cards) {
  * @param {Array<object>} playerHand The hand of the player making the play.
  * @returns {boolean} True if the play is valid.
  */
-export function isValidPlay(selectedCards, playPile, playerHand) {
+export function isValidPlay(selectedCards, playPile, playerHand, currentTurn, allPlayerHands) {
   // Check if all selected cards are in the current player's hand
   for (const selectedCard of selectedCards) {
     if (!playerHand.some((card) => card.rank === selectedCard.rank && card.suit === selectedCard.suit)) {
@@ -211,8 +211,8 @@ export function isValidPlay(selectedCards, playPile, playerHand) {
 
   // Standard play validation
   if (playPile.length === 0) {
-    if (gameState.currentTurn === 0) {
-      const lowestCard = findLowestCardInHands(gameState.playerHands);
+    if (currentTurn === 0) {
+      const lowestCard = findLowestCardInHands(allPlayerHands);
       return selectedCards.some((card) => card.value === lowestCard.value);
     }
     return true;

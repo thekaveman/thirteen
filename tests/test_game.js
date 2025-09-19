@@ -228,12 +228,12 @@ function test_isTriple_returnsTrueForTriple() {
 
 function test_isValidPlay_allowsSingleCardOnEmptyPile() {
   const selectedCards = [createCard("6", "♠")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [];
-  gameState.currentTurn = 1; // Not the first turn
+  const currentTurn = 1; // Not the first turn
   assert(
-    isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Should allow playing a single card on an empty pile"
   );
 }
@@ -247,35 +247,37 @@ function test_isValidPlay_cannotStartRoundWithConsecutivePairs() {
     createCard("5", "♠"),
     createCard("5", "♦"),
   ];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [];
-  gameState.currentTurn = 1;
+  const currentTurn = 1;
   assert(
-    !isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    !isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Should not be able to start a round with consecutive pairs"
   );
 }
 
 function test_isValidPlay_consecutivePairsCannotBeatLowerConsecutivePairs() {
   const selectedCards = [createCard("4", "♠"), createCard("4", "♦"), createCard("5", "♣"), createCard("5", "♥")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [createCard("3", "♠"), createCard("3", "♦"), createCard("4", "♣"), createCard("4", "♥")];
+  const currentTurn = 1;
   assert(
-    !isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    !isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Consecutive pairs should not beat lower consecutive pairs"
   );
 }
 
 function test_isValidPlay_disallowsPlayingCardsNotInOwnHand() {
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [[createCard("3", "♠")], [createCard("4", "♠")]];
+  const currentPlayer = 0;
+  const playerHands = [[createCard("3", "♠")], [createCard("4", "♠")]];
   const selectedCards = [createCard("4", "♠")]; // Card from player 1's hand
   const playPile = [];
+  const currentTurn = 0;
 
   assert(
-    !isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    !isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Should not allow playing cards not in current player's hand"
   );
 }
@@ -283,13 +285,14 @@ function test_isValidPlay_disallowsPlayingCardsNotInOwnHand() {
 function test_isValidPlay_firstTurnMustPlayLowestCard() {
   const selectedCards = [createCard("4", "♠")];
   const playPile = [];
-  gameState.currentTurn = 0;
-  gameState.playerHands = [
+  const currentTurn = 0;
+  const playerHands = [
     [createCard("3", "♦"), createCard("4", "♠")],
     [createCard("A", "♠"), createCard("K", "♣")],
   ];
+  const currentPlayer = 0;
   assert(
-    !isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    !isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "First turn must play the lowest card in the game"
   );
 }
@@ -305,172 +308,187 @@ function test_isValidPlay_fourConsecutivePairsBeatsPairOf2s() {
     createCard("6", "♠"),
     createCard("6", "♦"),
   ];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [createCard("2", "♠"), createCard("2", "♦")];
+  const currentTurn = 1;
   assert(
-    isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Four consecutive pairs should beat a pair of 2s"
   );
 }
 
 function test_isValidPlay_fourOfAKindBeatsSingle2() {
   const selectedCards = [createCard("3", "♠"), createCard("3", "♦"), createCard("3", "♣"), createCard("3", "♥")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [createCard("2", "♠")];
+  const currentTurn = 1;
   assert(
-    isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Four of a kind should beat a single 2"
   );
 }
 
 function test_isValidPlay_fourOfAKindOnlyValidAsBomb() {
   const fourOfAKind = [createCard("4", "♠"), createCard("4", "♣"), createCard("4", "♦"), createCard("4", "♥")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [fourOfAKind];
+  const currentPlayer = 0;
+  const playerHands = [fourOfAKind];
+  const currentTurn = 1;
 
   const playPileSingle = [createCard("K", "♠")]; // A single card, not a 2
   assert(
-    !isValidPlay(fourOfAKind, playPileSingle, gameState.playerHands[gameState.currentPlayer]),
+    !isValidPlay(fourOfAKind, playPileSingle, playerHands[currentPlayer], currentTurn, playerHands),
     "Four of a kind should only be valid as a bomb against a 2"
   );
 
   const playPileFourOfAKind = [createCard("3", "♠"), createCard("3", "♣"), createCard("3", "♦"), createCard("3", "♥")];
   assert(
-    !isValidPlay(fourOfAKind, playPileFourOfAKind, gameState.playerHands[gameState.currentPlayer]),
+    !isValidPlay(fourOfAKind, playPileFourOfAKind, playerHands[currentPlayer], currentTurn, playerHands),
     "Four of a kind should only be valid as a bomb against a 2"
   );
 }
 
 function test_isValidPlay_higherSingleBeatsLowerSingle() {
   const selectedCards = [createCard("A", "♠")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [createCard("K", "♠")];
+  const currentTurn = 1;
   assert(
-    isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Higher single should beat lower single"
   );
 }
 
 function test_isValidPlay_lowerConsecutivePairsDoesNotBeatHigherConsecutivePairs() {
   const selectedCards = [createCard("3", "♠"), createCard("3", "♦"), createCard("4", "♣"), createCard("4", "♥")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [createCard("4", "♠"), createCard("4", "♦"), createCard("5", "♣"), createCard("5", "♥")];
+  const currentTurn = 1;
   assert(
-    !isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    !isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Lower consecutive pairs should not beat higher consecutive pairs"
   );
 }
 
 function test_isValidPlay_lowerFourOfAKindDoesNotBeatHigherFourOfAKind() {
   const selectedCards = [createCard("K", "♠"), createCard("K", "♦"), createCard("K", "♣"), createCard("K", "♥")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [createCard("A", "♠"), createCard("A", "♦"), createCard("A", "♣"), createCard("A", "♥")];
+  const currentTurn = 1;
   assert(
-    !isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    !isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Lower four of a kind should not beat higher four of a kind"
   );
 }
 
 function test_isValidPlay_lowerPairDoesNotBeatHigherPair() {
   const selectedCards = [createCard("K", "♠"), createCard("K", "♦")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [createCard("A", "♠"), createCard("A", "♦")];
+  const currentTurn = 1;
   assert(
-    !isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    !isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Lower pair should not beat higher pair"
   );
 }
 
 function test_isValidPlay_lowerSingleDoesNotBeatHigherSingle() {
   const selectedCards = [createCard("K", "♠")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [createCard("A", "♠")];
+  const currentTurn = 1;
   assert(
-    !isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    !isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Lower single should not beat higher single"
   );
 }
 
 function test_isValidPlay_lowerStraightDoesNotBeatHigherStraight() {
   const selectedCards = [createCard("3", "♠"), createCard("4", "♦"), createCard("5", "♣")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [createCard("4", "♠"), createCard("5", "♦"), createCard("6", "♣")];
+  const currentTurn = 1;
   assert(
-    !isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    !isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Lower straight should not beat higher straight"
   );
 }
 
 function test_isValidPlay_lowerTripleDoesNotBeatHigherTriple() {
   const selectedCards = [createCard("K", "♠"), createCard("K", "♦"), createCard("K", "♣")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [createCard("A", "♠"), createCard("A", "♦"), createCard("A", "♣")];
+  const currentTurn = 1;
   assert(
-    !isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    !isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Lower triple should not beat higher triple"
   );
 }
 
 function test_isValidPlay_orderMatters() {
   const selectedCards = [createCard("5", "♣"), createCard("3", "♠"), createCard("4", "♦")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [];
+  const currentTurn = 1;
   assert(
-    !isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    !isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Assumes cards are ordered ascending by value"
   );
 }
 
 function test_isValidPlay_pairBeatsLowerPair() {
   const selectedCards = [createCard("A", "♠"), createCard("A", "♦")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [createCard("K", "♠"), createCard("K", "♦")];
+  const currentTurn = 1;
   assert(
-    isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Higher pair should beat lower pair"
   );
 }
 
 function test_isValidPlay_playMustBeSameCombinationType() {
   const selectedCards = [createCard("A", "♠"), createCard("A", "♦")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [createCard("K", "♠")];
+  const currentTurn = 1;
   assert(
-    !isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    !isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Play must be the same combination type"
   );
 }
 
 function test_isValidPlay_returnsFalseForLowerRankSingle() {
   const selectedCards = [createCard("4", "♠")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [createCard("5", "♠")];
+  const currentTurn = 1;
   assert(
-    !isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    !isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Should return false for lower rank single"
   );
 }
 
 function test_isValidPlay_straightBeatsLowerStraight() {
   const selectedCards = [createCard("4", "♠"), createCard("5", "♦"), createCard("6", "♣")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [createCard("3", "♠"), createCard("4", "♦"), createCard("5", "♣")];
+  const currentTurn = 1;
   assert(
-    isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Higher straight should beat lower straight"
   );
 }
@@ -484,22 +502,24 @@ function test_isValidPlay_threeConsecutivePairsBeatsSingle2() {
     createCard("5", "♠"),
     createCard("5", "♦"),
   ];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [createCard("2", "♠")];
+  const currentTurn = 1;
   assert(
-    isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Three consecutive pairs should beat a single 2"
   );
 }
 
 function test_isValidPlay_tripleBeatsLowerTriple() {
   const selectedCards = [createCard("A", "♠"), createCard("A", "♦"), createCard("A", "♣")];
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [selectedCards];
+  const currentPlayer = 0;
+  const playerHands = [selectedCards];
   const playPile = [createCard("K", "♠"), createCard("K", "♦"), createCard("K", "♣")];
+  const currentTurn = 1;
   assert(
-    isValidPlay(selectedCards, playPile, gameState.playerHands[gameState.currentPlayer]),
+    isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Higher triple should beat lower triple"
   );
 }
