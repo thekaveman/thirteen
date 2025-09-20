@@ -18,7 +18,7 @@ export class Game {
       roundsWon: [],
       gamesWon: [],
       gameOver: false,
-      playerTypes: ["human", "human"], // Default to human players
+      playerTypes: ["human", "ai"], // Default to one human and one AI player
     };
   }
 

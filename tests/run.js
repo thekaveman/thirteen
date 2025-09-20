@@ -1,6 +1,11 @@
 import { log } from "../src/utils.js";
 import { TEST_CONFIG } from "./config.js";
 import { runTests } from "./utils.js";
+import { LowestCardAI } from "../src/ai.js";
+import { App } from "../src/app.js";
+import * as deck from "../src/deck.js";
+import { Game } from "../src/game.js";
+import { UI } from "../src/ui.js";
 
 let allTestsRun = 0;
 let allTestsPassed = 0;
@@ -20,6 +25,13 @@ if (typeof window !== "undefined") {
     rerunButton.addEventListener("click", () => {
       window.location.reload();
     });
+
+    // Create a new Game instance for each test suite
+    const gameInstance = new Game();
+    const app = new App(deck.createDeck(), gameInstance, LowestCardAI, UI);
+
+    // Initialize the app with actual dependencies, but mockUI for UI
+    app.init(window.setTimeout);
 
     for (const [name, tests] of Object.entries(TEST_CONFIG)) {
       log(`Running tests: ${name} [${tests.length}]`);
@@ -65,6 +77,6 @@ if (typeof window !== "undefined") {
     }
     lastRun.appendChild(overallResults);
 
-    lastRun.log("Testing complete");
+    log("Testing complete");
   };
 }

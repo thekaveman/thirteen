@@ -19,13 +19,26 @@ global.HTMLElement = dom.window.HTMLElement;
 global.Node = dom.window.Node;
 global.alert = () => {}; // Provide a no-op mock for alert
 
-// Load game state (mock if necessary, or ensure it's reset for each test)
-import { gameState } from "../src/game.js";
-global.gameState = gameState;
+// Populate the document body with the HTML content
+dom.window.document.body.innerHTML = html;
+
+// Load game module
+import { Game } from "../src/game.js";
+
+// Load deck module
+import { createDeck } from "../src/deck.js";
+
+// Load player module
+import { HumanPlayer, AIPlayer } from "../src/player.js";
 
 // Load UI module
-import ui from "../src/ui.js";
-global.ui = ui;
+import { UI } from "../src/ui.js";
+
+// Load AI module
+import { LowestCardAI } from "../src/ai.js";
+
+// Load app module
+import { App } from "../src/app.js";
 
 // Load test utilities
 import { assert, runTests } from "./utils.js";
@@ -37,6 +50,13 @@ let testsRun = 0;
 let testsPassed = 0;
 
 for (const [name, tests] of Object.entries(TEST_CONFIG)) {
+  // Create a new Game instance for each test suite
+  const gameInstance = new Game();
+  const deck = createDeck();
+  const app = new App(deck, gameInstance, LowestCardAI, UI);
+
+  app.init();
+
   process.stdout.write(`\n== Running tests: ${name} [${tests.length}]\n`);
   const mockResults = {
     innerHTML: "",
@@ -52,8 +72,7 @@ for (const [name, tests] of Object.entries(TEST_CONFIG)) {
       }
     },
   };
-  runTests(tests, mockResults);
-}
+  runTests(tests, mockResults, { gameInstance });
 
 if (testsPassed != testsRun) {
   const testsFailed = testsRun - testsPassed;

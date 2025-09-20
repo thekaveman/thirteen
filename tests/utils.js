@@ -35,3 +35,21 @@ export function runTests(tests, results, context = {}) {
     results.appendChild(li);
   });
 }
+
+export function spyOn(obj, methodName) {
+  const originalMethod = obj[methodName];
+  const spy = {
+    called: false,
+    callCount: 0,
+    originalMethod: originalMethod,
+    restore: () => {
+      obj[methodName] = originalMethod;
+    },
+  };
+  obj[methodName] = function (...args) {
+    spy.called = true;
+    spy.callCount++;
+    return originalMethod.apply(this, args);
+  };
+  return spy;
+}
