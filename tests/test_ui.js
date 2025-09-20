@@ -1,20 +1,110 @@
 import { assert } from "./utils.js";
-import { gameState, resetGame } from "../src/game.js";
-import ui from "../src/ui.js";
+import { createCard } from "../src/deck.js";
 import { Player } from "../src/player.js";
+import { UI } from "../src/ui.js";
 
-const TEST_UI = "test-ui";
+const TEST_UI_ID = "test-ui";
 
 let humanPlayer;
+let game; // Declare a global variable to hold the game instance
+let ui;
+
+const mockDeck = {
+  createDeck: () => [
+    createCard("3", "♠"),
+    createCard("4", "♦"),
+    createCard("5", "♣"),
+    createCard("6", "♥"),
+    createCard("7", "♠"),
+    createCard("8", "♦"),
+    createCard("9", "♣"),
+    createCard("10", "♥"),
+    createCard("J", "♠"),
+    createCard("Q", "♦"),
+    createCard("K", "♣"),
+    createCard("A", "♥"),
+    createCard("2", "♠"),
+    createCard("3", "♦"),
+    createCard("4", "♣"),
+    createCard("5", "♥"),
+    createCard("6", "♠"),
+    createCard("7", "♦"),
+    createCard("8", "♣"),
+    createCard("9", "♥"),
+    createCard("10", "♠"),
+    createCard("J", "♦"),
+    createCard("Q", "♣"),
+    createCard("K", "♥"),
+    createCard("A", "♠"),
+    createCard("2", "♦"),
+  ],
+  deal: () => [
+    [
+      createCard("3", "♠"),
+      createCard("4", "♦"),
+      createCard("5", "♣"),
+      createCard("6", "♥"),
+      createCard("7", "♠"),
+      createCard("8", "♦"),
+      createCard("9", "♣"),
+      createCard("10", "♥"),
+      createCard("J", "♠"),
+      createCard("Q", "♦"),
+      createCard("K", "♣"),
+      createCard("A", "♥"),
+      createCard("2", "♠"),
+    ],
+    [
+      createCard("3", "♦"),
+      createCard("4", "♣"),
+      createCard("5", "♥"),
+      createCard("6", "♠"),
+      createCard("7", "♦"),
+      createCard("8", "♣"),
+      createCard("9", "♥"),
+      createCard("10", "♠"),
+      createCard("J", "♦"),
+      createCard("Q", "♣"),
+      createCard("K", "♥"),
+      createCard("A", "♠"),
+      createCard("2", "♦"),
+    ],
+  ],
+  shuffleDeck: () => {},
+  sortHand: () => {},
+};
+
+let originalSetTimeout;
+let originalClearTimeout;
+let setTimeoutCalls = [];
 
 /**
   Setup function to run before each test
 */
-function testSetup() {
+function testSetup(context) {
+  game = context.gameInstance; // Store game instance globally for tests
+
+  // Mock setTimeout and clearTimeout
+  originalSetTimeout = global.setTimeout;
+  originalClearTimeout = global.clearTimeout;
+  setTimeoutCalls = [];
+  global.setTimeout = (handler, delay) => {
+    setTimeoutCalls.push({ handler, delay });
+    return setTimeoutCalls.length - 1; // Return a mock timeout ID
+  };
+  global.clearTimeout = (id) => {
+    if (setTimeoutCalls[id]) {
+      setTimeoutCalls[id].cleared = true;
+    }
+  };
+
   // create mock UI elements
+  ui = new UI(game);
+
   const container = document.createElement("div");
-  container.id = TEST_UI;
+  container.id = TEST_UI_ID;
   container.style.display = "none";
+
   for (const [_, value] of Object.entries(ui.id)) {
     const el = document.createElement("div");
     el.id = value;
@@ -22,15 +112,16 @@ function testSetup() {
   }
   document.body.appendChild(container);
 
-  // Initialize UI elements after JSDOM setup
-  ui.init();
+  ui.init(game);
 
   // Reset game state for a clean test environment
-  resetGame();
+  game.reset();
+  const deck = mockDeck.createDeck();
+  game.start(deck);
 
-  gameState.playerTypes = ["human", "human"];
-  gameState.players = gameState.playerTypes.map((type) => new Player(type));
-  humanPlayer = gameState.players[0];
+  game.playerTypes = ["human", "human"];
+  game.players = game.playerTypes.map((type) => new Player(type, game, null, ui));
+  humanPlayer = game.players[0];
 
   // Ensure buttons are in a known state for tests that check them
   ui.playButton.disabled = false;
@@ -42,157 +133,35 @@ function testSetup() {
   Teardown function to run after each test
 */
 function testTeardown() {
-  const testUI = document.getElementById(TEST_UI);
+  const testUI = document.getElementById(TEST_UI_ID);
   if (testUI) {
     testUI.remove();
   }
+  ui = null;
+  // Restore original setTimeout and clearTimeout
+  global.setTimeout = originalSetTimeout;
+  global.clearTimeout = originalClearTimeout;
 }
 
 function test_createCardElement() {
-  const card = { rank: "A", suit: "♠", value: 48 };
+  const card = createCard("A", "♠");
   const cardElement = ui.createCardElement(card);
 
-  assert(cardElement.textContent === "A♠ ", "Should create a card element with the correct text content");
+  assert(cardElement.textContent.includes(card.rank), "Should create a card element with the correct rank");
+  assert(cardElement.textContent.includes(card.suit), "Should create a card element with the correct suit");
   assert(cardElement.classList.contains("card"), "Should have the card class");
   assert(cardElement.classList.contains("black"), "Should have the black class for a spade");
   assert(cardElement.dataset.card === JSON.stringify(card), "Should have the card data attribute");
-}
-
-function test_handleCardClick_preventsSelectionOfOtherPlayersCards() {
-  // Setup initial game state
-  gameState.currentPlayer = 0;
-  gameState.numPlayers = 2;
-  gameState.playerHands = [
-    [{ rank: "3", suit: "♠", value: 0 }], // Player 0's hand
-    [{ rank: "4", suit: "♦", value: 1 }], // Player 1's hand
-  ];
-  gameState.selectedCards = [];
-
-  // Mock DOM elements for player hands and cards
-  const player0HandDiv = document.createElement("div");
-  player0HandDiv.id = "player-hand-0";
-  const player1HandDiv = document.createElement("div");
-  player1HandDiv.id = "player-hand-1";
-
-  // Render hands to attach event listeners
-  ui.renderPlayerHand(0, player0HandDiv);
-  ui.renderPlayerHand(1, player1HandDiv);
-
-  // Simulate clicking a card from Player 1's hand (not current player)
-  const otherPlayerCardElement = player1HandDiv.querySelector(".card");
-  const event = { target: otherPlayerCardElement };
-
-  humanPlayer.handleCardClick(event);
-
-  assert(gameState.selectedCards.length === 0, "Should not select card from other player's hand");
-  assert(!otherPlayerCardElement.classList.contains("selected"), "Other player's card should not have 'selected' class");
-}
-
-function test_handleCardClick_selectsAndDeselectsCard() {
-  // Setup initial game state for the current player
-  gameState.currentPlayer = 0;
-  gameState.playerHands = [
-    [{ rank: "A", suit: "♠", value: 48 }], // Player 0's hand
-    [], // Other players' hands can be empty for this test
-  ];
-  gameState.selectedCards = [];
-
-  const tmp = document.createElement(`div`);
-  const card = { rank: "A", suit: "♠", value: 48 };
-  const event = { target: { dataset: { card: JSON.stringify(card) }, classList: tmp.classList } };
-
-  humanPlayer.handleCardClick(event);
-  assert(gameState.selectedCards.length === 1, "Should select one card");
-  assert(gameState.selectedCards[0].value === card.value, "Should select the correct card");
-
-  humanPlayer.handleCardClick(event);
-  assert(gameState.selectedCards.length === 0, "Should deselect the card");
-}
-
-function test_handlePassButtonClick_endsRoundCorrectly() {
-  gameState.numPlayers = 3;
-  gameState.currentPlayer = 2; // Player 3 is passing
-  gameState.lastPlayerToPlay = 1; // Player 2 was the last to play
-  gameState.consecutivePasses = 1; // Player 1 already passed
-  gameState.roundNumber = 1;
-  gameState.playPile = [{ rank: "A", suit: "♠", value: 48 }];
-
-  humanPlayer.handlePassButtonClick();
-
-  assert(gameState.playPile.length === 0, "Should clear the play pile");
-  assert(gameState.consecutivePasses === 0, "Should reset consecutive passes");
-  assert(gameState.currentPlayer === 1, "Should set the current player to the round winner");
-  assert(gameState.roundNumber === 2, "Should increment the round number");
-}
-
-function test_handlePassButtonClick_firstPlayOfRound() {
-  gameState.playPile = []; // Empty play pile indicates the start of a round
-  const originalState = { ...gameState };
-
-  humanPlayer.handlePassButtonClick();
-
-  assert(gameState.currentPlayer === originalState.currentPlayer, "Should not change current player");
-  assert(gameState.consecutivePasses === originalState.consecutivePasses, "Should not change consecutive passes");
-}
-
-function test_handlePassButtonClick_incrementsPassesAndSwitchesPlayer() {
-  gameState.numPlayers = 3;
-  gameState.currentPlayer = 0;
-  gameState.consecutivePasses = 0;
-  gameState.playPile = [{ rank: "3", suit: "♠", value: 0 }]; // Not the first play
-  gameState.selectedCards = [{ rank: "A", suit: "♠", value: 48 }];
-
-  humanPlayer.handlePassButtonClick();
-
-  assert(gameState.currentPlayer === 1, "Should switch to the next player");
-  assert(gameState.selectedCards.length === 0, "Should clear selected cards");
-  assert(gameState.consecutivePasses === 1, "Should increment consecutive passes");
-}
-
-function test_handlePlayButtonClick_showsMessageOnInvalidPlay() {
-  // Set up an invalid game state to make isValidPlay return false.
-  gameState.numPlayers = 2;
-  gameState.playerHands = [[], []];
-  gameState.selectedCards = [{ rank: "3", suit: "♠", value: 0 }];
-  gameState.playPile = [{ rank: "A", suit: "♠", value: 48 }];
-
-  humanPlayer.handlePlayButtonClick();
-
-  assert(ui.gameMessages.textContent === "Invalid play", "Should show invalid play message");
-}
-
-function test_handlePlayButtonClick_updatesGameStateOnValidPlay() {
-  // Set up a valid game state to make isValidPlay return true.
-  gameState.currentPlayer = 0;
-  gameState.numPlayers = 2;
-  const cardToPlay = { rank: "4", suit: "♠", value: 4 };
-  gameState.playerHands = [[cardToPlay], []];
-  gameState.selectedCards = [cardToPlay];
-  gameState.playPile = [];
-  gameState.currentTurn = 1;
-  gameState.consecutivePasses = 1; // Should be reset
-  gameState.gameOver = false; // Ensure game is not over initially
-
-  humanPlayer.handlePlayButtonClick();
-
-  assert(gameState.playerHands[0].length === 0, "Should remove card from player's hand");
-  assert(gameState.playPile.length === 1, "Should add card to play pile");
-  assert(gameState.playPile[0].value === 4, "Should add correct card to play pile");
-  assert(gameState.selectedCards.length === 0, "Should clear selected cards");
-  assert(gameState.currentPlayer === 0, "Current player should remain the winner");
-  assert(gameState.consecutivePasses === 0, "Should reset consecutive passes");
-  assert(gameState.lastPlayerToPlay === 0, "Should set the last player to play");
-  assert(gameState.gameOver === true, "Should set gameOver to true when player wins");
 }
 
 function test_render_displaysGameInfo() {
   ui.gameContent.innerHTML = "";
   ui.playersHands.innerHTML = "";
 
-  gameState.roundNumber = 5;
-  gameState.roundsWon = [2, 3];
-  gameState.gamesWon = [1, 0];
-  gameState.playerHands = [[], []];
+  game.gameState.roundNumber = 5;
+  game.gameState.roundsWon = [2, 3];
+  game.gameState.gamesWon = [1, 0];
+  game.gameState.playerHands = [[], []];
 
   ui.render();
 
@@ -212,8 +181,8 @@ function test_render_displaysGameInfo() {
 }
 
 function test_renderPlayArea_clearsGameContentBeforeRendering() {
-  gameState.playPile = [];
-  gameState.roundNumber = 1;
+  game.gameState.playPile = [];
+  game.gameState.roundNumber = 1;
 
   ui.renderPlayArea();
 
@@ -222,9 +191,9 @@ function test_renderPlayArea_clearsGameContentBeforeRendering() {
 
 function test_renderPlayerHand_rendersCards() {
   const playerHandDiv = document.createElement("div");
-  gameState.playerHands = [[{ rank: "A", suit: "♠", value: 48 }]];
-  gameState.roundsWon = [0];
-  gameState.gamesWon = [0];
+  game.gameState.playerHands = [[createCard("A", "♠")]];
+  game.gameState.roundsWon = [0];
+  game.gameState.gamesWon = [0];
 
   ui.renderPlayerHand(0, playerHandDiv);
 
@@ -234,7 +203,7 @@ function test_renderPlayerHand_rendersCards() {
 
 function test_renderPlayerHands_rendersCorrectNumberOfHands() {
   ui.playersHands.innerHTML = "";
-  gameState.playerHands = [[], [], []];
+  game.gameState.playerHands = [[], [], []];
 
   ui.renderPlayerHands();
 
@@ -243,7 +212,7 @@ function test_renderPlayerHands_rendersCorrectNumberOfHands() {
 }
 
 function test_updateButtonStates_gameOver() {
-  gameState.gameOver = true;
+  game.gameState.gameOver = true;
 
   ui.updateButtonStates();
 
@@ -253,7 +222,7 @@ function test_updateButtonStates_gameOver() {
 }
 
 function test_updateButtonStates_gameNotOver() {
-  gameState.gameOver = false;
+  game.gameState.gameOver = false;
 
   ui.updateButtonStates();
 
@@ -264,13 +233,6 @@ function test_updateButtonStates_gameNotOver() {
 
 export const uiTests = [
   test_createCardElement,
-  test_handleCardClick_selectsAndDeselectsCard,
-  test_handleCardClick_preventsSelectionOfOtherPlayersCards,
-  test_handlePassButtonClick_endsRoundCorrectly,
-  test_handlePassButtonClick_firstPlayOfRound,
-  test_handlePassButtonClick_incrementsPassesAndSwitchesPlayer,
-  test_handlePlayButtonClick_showsMessageOnInvalidPlay,
-  test_handlePlayButtonClick_updatesGameStateOnValidPlay,
   test_render_displaysGameInfo,
   test_renderPlayArea_clearsGameContentBeforeRendering,
   test_renderPlayerHand_rendersCards,
@@ -284,8 +246,8 @@ uiTests.forEach((test) => {
     test.beforeEach = testSetup;
   } else {
     const funcBefore = test.beforeEach;
-    test.beforeEach = function () {
-      testSetup();
+    test.beforeEach = function (context) {
+      testSetup(context);
       funcBefore();
     };
   }

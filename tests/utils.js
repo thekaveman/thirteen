@@ -4,7 +4,7 @@ export function assert(condition, message) {
   }
 }
 
-export function runTests(tests, results) {
+export function runTests(tests, results, context = {}) {
   results.innerHTML = "";
 
   tests.forEach((test) => {
@@ -12,7 +12,7 @@ export function runTests(tests, results) {
     try {
       // Call beforeEach if it exists
       if (typeof test.beforeEach === "function") {
-        test.beforeEach();
+        test.beforeEach(context);
       }
 
       test();
