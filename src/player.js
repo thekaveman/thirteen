@@ -1,20 +1,25 @@
 import { sortHand } from "./deck.js";
-import { gameState, passTurn, playCards, isValidPlay } from "./game.js";
 import ui from "./ui.js";
 import { log } from "./utils.js";
 
 export class Player {
-  constructor(type, ai = null) {
+  /**
+   * @param {string} type The type of player (human or ai).
+   * @param {object} game The game instance.
+   * @param {object} ai The AI instance if the player is an AI.
+   */
+  constructor(type, game, ai = null) {
     this.type = type;
+    this.game = game;
     this.ai = ai;
   }
 
   takeTurn() {
     if (this.type === "ai" && this.ai) {
-      const playerHand = gameState.playerHands[gameState.currentPlayer];
-      const playPile = gameState.playPile;
-      const currentTurn = gameState.currentTurn;
-      const allPlayerHands = gameState.playerHands;
+      const playerHand = this.game.gameState.playerHands[this.game.gameState.currentPlayer];
+      const playPile = this.game.gameState.playPile;
+      const currentTurn = this.game.gameState.currentTurn;
+      const allPlayerHands = this.game.gameState.playerHands;
       return this.ai.takeTurn(playerHand, playPile, currentTurn, allPlayerHands);
     }
     // For human players, the turn is taken via UI interactions
@@ -26,20 +31,20 @@ export class Player {
       const card = JSON.parse(event.target.dataset.card);
 
       // Check if the clicked card belongs to the current player's hand
-      const currentPlayerHand = gameState.playerHands[gameState.currentPlayer];
+      const currentPlayerHand = this.game.gameState.playerHands[this.game.gameState.currentPlayer];
       if (!currentPlayerHand.some((c) => c.rank === card.rank && c.suit === card.suit)) {
         // If the card does not belong to the current player, do nothing
         return;
       }
 
-      const cardIndex = gameState.selectedCards.findIndex((c) => c.value === card.value);
+      const cardIndex = this.game.gameState.selectedCards.findIndex((c) => c.value === card.value);
 
       if (cardIndex > -1) {
-        gameState.selectedCards.splice(cardIndex, 1);
+        this.game.gameState.selectedCards.splice(cardIndex, 1);
       } else {
-        gameState.selectedCards.push(card);
+        this.game.gameState.selectedCards.push(card);
       }
-      sortHand(gameState.selectedCards);
+      sortHand(this.game.gameState.selectedCards);
       ui.renderSelectedCards();
     }
   }
@@ -47,7 +52,7 @@ export class Player {
   handlePassButtonClick() {
     if (this.type === "human") {
       ui.clearMessage();
-      const passSuccessful = passTurn();
+      const passSuccessful = this.game.passTurn();
       if (!passSuccessful) {
         ui.displayMessage("You cannot pass on the first play of a round.", "error");
       }
@@ -59,17 +64,17 @@ export class Player {
     if (this.type === "human") {
       ui.clearMessage();
       if (
-        isValidPlay(
-          gameState.selectedCards,
-          gameState.playPile,
-          gameState.playerHands[gameState.currentPlayer],
-          gameState.currentTurn,
-          gameState.playerHands
+        this.game.isValidPlay(
+          this.game.gameState.selectedCards,
+          this.game.gameState.playPile,
+          this.game.gameState.playerHands[this.game.gameState.currentPlayer],
+          this.game.gameState.currentTurn,
+          this.game.gameState.playerHands
         )
       ) {
-        playCards();
+        this.game.playCards();
       } else {
-        log("Invalid play", gameState.selectedCards);
+        log("Invalid play", this.game.gameState.selectedCards);
         ui.displayMessage("Invalid play", "error");
       }
       ui.render();
