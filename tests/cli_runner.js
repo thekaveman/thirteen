@@ -46,10 +46,13 @@ global.assert = assert; // Make assert globally available for test files
 
 import { TEST_CONFIG } from "./config.js";
 
-let testsRun = 0;
-let testsPassed = 0;
+let allTestsRun = 0;
+let allTestsPassed = 0;
+let allTestsFailed = [];
 
 for (const [name, tests] of Object.entries(TEST_CONFIG)) {
+  let testsRun = 0;
+  let testsPassed = 0;
   // Create a new Game instance for each test suite
   const gameInstance = new Game();
   const deck = createDeck();
@@ -61,24 +64,31 @@ for (const [name, tests] of Object.entries(TEST_CONFIG)) {
   const mockResults = {
     innerHTML: "",
     appendChild: (li) => {
+      allTestsRun++;
       testsRun++;
       const text = li.textContent;
       const color = li.style.color;
       if (color === "red") {
         process.stderr.write("> " + text + "\n");
+        allTestsFailed.push(text);
       } else {
+        allTestsPassed++;
         testsPassed++;
-        process.stdout.write("> " + text + "\n");
       }
     },
   };
   runTests(tests, mockResults, { gameInstance });
+  process.stdout.write(`Result: [${testsPassed} / ${testsRun}] passed\n`);
+}
 
-if (testsPassed != testsRun) {
-  const testsFailed = testsRun - testsPassed;
-  process.stderr.write(`\nSome tests failed [${testsFailed} / ${testsRun}]\n`);
+if (allTestsPassed != allTestsRun) {
+  const testsFailed = allTestsRun - allTestsPassed;
+  allTestsFailed.forEach((test) => {
+    process.stderr.write(`\n${test}`);
+  });
+  process.stderr.write(`\nSome tests failed [${testsFailed} / ${allTestsRun}]\n`);
   process.exit(1);
 } else {
-  process.stdout.write(`\nAll tests passed [${testsPassed} / ${testsRun}]\n`);
+  process.stdout.write(`\nAll tests passed [${allTestsPassed} / ${allTestsRun}]\n`);
   process.exit(0);
 }
