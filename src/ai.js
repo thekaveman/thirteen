@@ -1,9 +1,10 @@
 import { RANKS } from "./constants.js";
 import { sortHand } from "./deck.js";
-import { isValidPlay } from "./game.js";
 
 export class AI {
-  constructor() {}
+  constructor(game) {
+    this.game = game;
+  }
 
   /**
    * Executes the AI's turn and returns the chosen move.
@@ -31,7 +32,7 @@ export class AI {
     const validMoves = [];
 
     for (const potentialPlay of potentialMoves) {
-      if (isValidPlay(potentialPlay, playPile, hand, currentTurn, allPlayerHands)) {
+      if (this.game.isValidPlay(potentialPlay, playPile, hand, currentTurn, allPlayerHands)) {
         validMoves.push(potentialPlay);
       }
     }
@@ -161,19 +162,19 @@ export class AI {
     const maximalStraights = [];
     if (uniqueRanks.length === 0) return maximalStraights;
 
-    let currentMaximalStraight = [uniqueRanks[0]];
+    let currentMaximalSequence = [uniqueRanks[0]];
     for (let i = 1; i < uniqueRanks.length; i++) {
       if (
         RANKS.indexOf(uniqueRanks[i].rank) ===
-        RANKS.indexOf(currentMaximalStraight[currentMaximalStraight.length - 1].rank) + 1
+        RANKS.indexOf(currentMaximalSequence[currentMaximalSequence.length - 1].rank) + 1
       ) {
-        currentMaximalStraight.push(uniqueRanks[i]);
+        currentMaximalSequence.push(uniqueRanks[i]);
       } else {
-        maximalStraights.push(currentMaximalStraight);
-        currentMaximalStraight = [uniqueRanks[i]];
+        maximalStraights.push(currentMaximalSequence);
+        currentMaximalSequence = [uniqueRanks[i]];
       }
     }
-    maximalStraights.push(currentMaximalStraight);
+    maximalStraights.push(currentMaximalSequence);
     return maximalStraights;
   }
 
@@ -287,6 +288,10 @@ export class AI {
 }
 
 export class LowestCardAI extends AI {
+  constructor(game) {
+    super(game);
+  }
+
   /**
    * Executes the AI's turn by finding the lowest valid move.
    * @param {Array<object>} playerHand The AI player's hand.

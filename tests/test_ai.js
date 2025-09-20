@@ -1,9 +1,29 @@
 import { assert } from "./utils.js";
+import { log } from "../src/utils.js";
 import { AI, LowestCardAI } from "../src/ai.js";
 import { createCard, getCardValue } from "../src/deck.js";
+import { Game } from "../src/game.js"; // Import the actual Game class
 
-export class TestAI {
-  constructor(move) {
+// Mock Game class by extending the actual Game class
+class MockGame extends Game {
+  constructor() {
+    super();
+  }
+  // Override methods as needed for specific test scenarios
+  findLowestCardInHands(allPlayerHands) {
+    // Simplified mock for findLowestCardInHands
+    return createCard("3", "♣");
+  }
+
+  reset() {
+    // Call super.reset() if needed, or provide a full mock
+    super.reset();
+  }
+}
+
+export class TestAI extends AI {
+  constructor(game, move) {
+    super(game);
     this.move = move;
   }
 
@@ -13,7 +33,8 @@ export class TestAI {
 }
 
 function test_AI_generateCombinations_consecutivePairs() {
-  const ai = new AI();
+  const game = new MockGame();
+  const ai = new AI(game);
   const hand = [
     createCard("3", "♠"),
     createCard("3", "♦"),
@@ -62,7 +83,8 @@ function test_AI_generateCombinations_consecutivePairs() {
 }
 
 function test_AI_generateCombinations_fourOfAKind() {
-  const ai = new AI();
+  const game = new MockGame();
+  const ai = new AI(game);
   const hand = [
     createCard("3", "♠"),
     createCard("3", "♦"),
@@ -93,7 +115,8 @@ function test_AI_generateCombinations_fourOfAKind() {
 }
 
 function test_AI_generateCombinations_pairs() {
-  const ai = new AI();
+  const game = new MockGame();
+  const ai = new AI(game);
   const hand = [createCard("3", "♠"), createCard("3", "♦"), createCard("4", "♣"), createCard("4", "♥"), createCard("5", "♠")];
   const pairs = ai._generateCombinations(hand, "pair");
 
@@ -103,7 +126,8 @@ function test_AI_generateCombinations_pairs() {
 }
 
 function test_AI_generateCombinations_singles() {
-  const ai = new AI();
+  const game = new MockGame();
+  const ai = new AI(game);
   const hand = [createCard("3", "♠"), createCard("4", "♦"), createCard("5", "♣")];
   const singles = ai._generateCombinations(hand, "single");
 
@@ -114,7 +138,8 @@ function test_AI_generateCombinations_singles() {
 }
 
 function test_AI_generateCombinations_straights() {
-  const ai = new AI();
+  const game = new MockGame();
+  const ai = new AI(game);
   const hand = [createCard("3", "♠"), createCard("4", "♦"), createCard("5", "♣"), createCard("6", "♠"), createCard("7", "♦")];
   const straights = ai._generateCombinations(hand, "straight");
 
@@ -150,7 +175,8 @@ function test_AI_generateCombinations_straights() {
 }
 
 function test_AI_generateCombinations_triples() {
-  const ai = new AI();
+  const game = new MockGame();
+  const ai = new AI(game);
   const hand = [
     createCard("3", "♠"),
     createCard("3", "♦"),
@@ -172,38 +198,9 @@ function test_AI_generateCombinations_triples() {
   );
 }
 
-function test_LowestCardAI_takeTurn_lowestConsecutivePairs() {
-  const ai = new LowestCardAI();
-  const playerHand = [
-    createCard("3", "♠"),
-    createCard("3", "♦"),
-    createCard("4", "♣"),
-    createCard("4", "♥"),
-    createCard("5", "♠"),
-    createCard("5", "♦"),
-    createCard("6", "♠"),
-    createCard("6", "♦"),
-  ];
-  const playPile = [createCard("2", "♠")]; // Play pile has a single 2
-  const currentTurn = 1; // Not the first turn
-  const allPlayerHands = [playerHand];
-
-  const move = ai.takeTurn(playerHand, playPile, currentTurn, allPlayerHands);
-
-  assert(move.length === 6, "AI should have played three consecutive pairs");
-  assert(
-    move[0].rank === "3" &&
-      move[1].rank === "3" &&
-      move[2].rank === "4" &&
-      move[3].rank === "4" &&
-      move[4].rank === "5" &&
-      move[5].rank === "5",
-    "AI should have played the 33-44-55 consecutive pairs"
-  );
-}
-
-function test_LowestCardAI_takeTurn_lowestFourOfAKind() {
-  const ai = new LowestCardAI();
+function test_LowestCardAI_takeTurn_LowestFourOfAKind() {
+  const game = new MockGame();
+  const ai = new LowestCardAI(game);
   const currentPlayer = 0;
   const playerHands = [
     [
@@ -229,8 +226,9 @@ function test_LowestCardAI_takeTurn_lowestFourOfAKind() {
   );
 }
 
-function test_LowestCardAI_takeTurn_lowestPair() {
-  const ai = new LowestCardAI();
+function test_LowestCardAI_takeTurn_LowestPair() {
+  const game = new MockGame();
+  const ai = new LowestCardAI(game);
   const currentPlayer = 0;
   const playerHands = [[createCard("4", "♠"), createCard("4", "♦"), createCard("5", "♣"), createCard("5", "♥")]];
   const playPile = [createCard("3", "♠"), createCard("3", "♦")]; // Play pile has a pair of 3s
@@ -242,8 +240,9 @@ function test_LowestCardAI_takeTurn_lowestPair() {
   assert(move[0].rank === "4" && move[1].rank === "4", "Should find the lowest pair");
 }
 
-function test_LowestCardAI_takeTurn_lowestSingle() {
-  const ai = new LowestCardAI();
+function test_LowestCardAI_takeTurn_LowestSingle() {
+  const game = new MockGame();
+  const ai = new LowestCardAI(game);
   const currentPlayer = 0;
   const playerHands = [[createCard("4", "♠"), createCard("5", "♦"), createCard("6", "♣")]];
   const playPile = [createCard("3", "♠")];
@@ -255,8 +254,9 @@ function test_LowestCardAI_takeTurn_lowestSingle() {
   assert(move[0].value === getCardValue("4", "♠"), "Should find the lowest valid single card");
 }
 
-function test_LowestCardAI_takeTurn_lowestStraight() {
-  const ai = new LowestCardAI();
+function test_LowestCardAI_takeTurn_LowestStraight() {
+  const game = new MockGame();
+  const ai = new LowestCardAI(game);
   const currentPlayer = 0;
   const playerHands = [
     [createCard("6", "♠"), createCard("7", "♦"), createCard("8", "♣"), createCard("9", "♠"), createCard("10", "♦")],
@@ -270,8 +270,9 @@ function test_LowestCardAI_takeTurn_lowestStraight() {
   assert(move[0].rank === "6" && move[1].rank === "7" && move[2].rank === "8", "Should find the lowest straight");
 }
 
-function test_LowestCardAI_takeTurn_lowestTriple() {
-  const ai = new LowestCardAI();
+function test_LowestCardAI_takeTurn_LowestTriple() {
+  const game = new MockGame();
+  const ai = new LowestCardAI(game);
   const currentPlayer = 0;
   const playerHands = [
     [
@@ -293,7 +294,8 @@ function test_LowestCardAI_takeTurn_lowestTriple() {
 }
 
 function test_LowestCardAI_takeTurn_returnsEmptyArrayWhenNoValidMove() {
-  const ai = new LowestCardAI();
+  const game = new MockGame();
+  const ai = new LowestCardAI(game);
   const currentPlayer = 0;
   const playerHands = [[createCard("4", "♠"), createCard("5", "♦")]];
   const playPile = [createCard("6", "♣")];
@@ -305,10 +307,43 @@ function test_LowestCardAI_takeTurn_returnsEmptyArrayWhenNoValidMove() {
 }
 
 function test_TestAI_takeTurn() {
+  const game = new MockGame();
   const move = [createCard("5", "♦")];
-  const ai = new TestAI(move);
+  const ai = new TestAI(game, move);
   const selectedMove = ai.takeTurn();
   assert(selectedMove === move, "TestAI should return the move it was constructed with");
+}
+
+function test_LowestCardAI_takeTurn_LowestConsecutivePairs() {
+  const game = new MockGame();
+  const ai = new LowestCardAI(game);
+  const playerHand = [
+    createCard("3", "♠"),
+    createCard("3", "♦"),
+    createCard("4", "♣"),
+    createCard("4", "♥"),
+    createCard("5", "♠"),
+    createCard("5", "♦"),
+    createCard("6", "♠"),
+    createCard("6", "♦"),
+  ];
+  const playPile = [createCard("2", "♠")]; // Play pile has a single 2
+  const currentTurn = 1; // Not the first turn
+  const allPlayerHands = [playerHand];
+
+  const move = ai.takeTurn(playerHand, playPile, currentTurn, allPlayerHands);
+
+  log(move);
+  assert(move.length === 6, "AI should have played three consecutive pairs");
+  assert(
+    move[0].rank === "3" &&
+      move[1].rank === "3" &&
+      move[2].rank === "4" &&
+      move[3].rank === "4" &&
+      move[4].rank === "5" &&
+      move[5].rank === "5",
+    "AI should have played the 33-44-55 consecutive pairs"
+  );
 }
 
 export const aiTests = [
@@ -318,12 +353,12 @@ export const aiTests = [
   test_AI_generateCombinations_singles,
   test_AI_generateCombinations_straights,
   test_AI_generateCombinations_triples,
-  test_LowestCardAI_takeTurn_lowestConsecutivePairs,
-  test_LowestCardAI_takeTurn_lowestFourOfAKind,
-  test_LowestCardAI_takeTurn_lowestPair,
-  test_LowestCardAI_takeTurn_lowestSingle,
-  test_LowestCardAI_takeTurn_lowestStraight,
-  test_LowestCardAI_takeTurn_lowestTriple,
+  test_LowestCardAI_takeTurn_LowestFourOfAKind,
+  test_LowestCardAI_takeTurn_LowestPair,
+  test_LowestCardAI_takeTurn_LowestSingle,
+  test_LowestCardAI_takeTurn_LowestStraight,
+  test_LowestCardAI_takeTurn_LowestTriple,
   test_LowestCardAI_takeTurn_returnsEmptyArrayWhenNoValidMove,
   test_TestAI_takeTurn,
+  test_LowestCardAI_takeTurn_LowestConsecutivePairs,
 ];
