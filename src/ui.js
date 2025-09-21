@@ -205,6 +205,7 @@ export class UI {
           const playerHandDiv = document.createElement("div");
           playerHandDiv.id = `player-hand-${i}`;
           playerHandDiv.classList.add("player-hand");
+          playerHandDiv.classList.add(this.game.gameState.players[i].type); // Add 'human' or 'ai' class
           if (i === this.game.gameState.currentPlayer) {
             playerHandDiv.classList.add("current");
           }
