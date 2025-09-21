@@ -19,6 +19,25 @@ export class AI {
   }
 
   /**
+   * Finds all valid move for the AI player.
+   * @param {Array<Card>} hand The AI player's hand.
+   * @param {Array<Card>} playPile The current play pile.
+   * @param {number} currentTurn The current turn number.
+   * @param {Array<Array<Card>>} allPlayerHands All players' hands.
+   * @returns {Array<Array<Card>>} The cards to play, or an empty array if no valid move is found.
+   */
+  _findAllValidMoves(hand, playPile, currentTurn, allPlayerHands) {
+    let allValidMoves = [];
+    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "single", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "pair", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "triple", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "straight", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "four_of_a_kind", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "consecutive_pairs", currentTurn, allPlayerHands));
+    return allValidMoves;
+  }
+
+  /**
    * Finds all valid moves of a specific combination type for the AI player.
    * @param {Array<Card>} hand The AI player's hand.
    * @param {Array<Card>} playPile The current play pile.
@@ -124,75 +143,61 @@ export class AI {
    * @returns {Array<Array<Card>>} An array of straight combinations.
    */
   _generateStraights(hand) {
-    const combinations = [];
-    const sortedHand = [...hand];
-    Card.sort(sortedHand);
-
-    const uniqueSortedCardsWithoutTwos = this._getUniqueSortedRanksWithoutTwos(sortedHand);
-    const maximalStraights = this._findMaximalStraights(uniqueSortedCardsWithoutTwos);
-
-    for (const maximalStraight of maximalStraights) {
-      combinations.push(...this._deriveSubStraights(maximalStraight));
+    const straights = [];
+    const handWithoutTwos = hand.filter((card) => card.rank !== "2");
+    if (handWithoutTwos.length < 3) {
+      return straights;
     }
-    return combinations;
-  }
 
-  /**
-   * Extracts unique ranks (excluding '2's) from a sorted hand.
-   * @param {Array<Card>} sortedHand The sorted hand.
-   * @returns {Array<Card>} An array of cards with unique ranks.
-   */
-  _getUniqueSortedRanksWithoutTwos(sortedHand) {
-    const uniqueRanks = [];
-    for (const card of sortedHand) {
-      if (card.rank === "2") continue;
-      if (uniqueRanks.length === 0 || RANKS.indexOf(card.rank) !== RANKS.indexOf(uniqueRanks[uniqueRanks.length - 1].rank)) {
-        uniqueRanks.push(card);
+    // Find all unique straights of ranks
+    const uniqueCards = handWithoutTwos.reduce((acc, card) => {
+      if (!acc.find((c) => c.rank === card.rank)) {
+        acc.push(card);
       }
-    }
-    return uniqueRanks;
-  }
+      return acc;
+    }, []);
+    Card.sort(uniqueCards);
 
-  /**
-   * Builds the longest possible consecutive straight starting from a given index in uniqueRanks.
-   * @param {Array<Card>} uniqueRanks An array of cards with unique ranks.
-   * @returns {Array<Card>} The longest consecutive straight found.
-   */
-  _findMaximalStraights(uniqueRanks) {
-    const maximalStraights = [];
-    if (uniqueRanks.length === 0) return maximalStraights;
-
-    let currentMaximalSequence = [uniqueRanks[0]];
-    for (let i = 1; i < uniqueRanks.length; i++) {
-      if (
-        RANKS.indexOf(uniqueRanks[i].rank) ===
-        RANKS.indexOf(currentMaximalSequence[currentMaximalSequence.length - 1].rank) + 1
-      ) {
-        currentMaximalSequence.push(uniqueRanks[i]);
-      } else {
-        maximalStraights.push(currentMaximalSequence);
-        currentMaximalSequence = [uniqueRanks[i]];
-      }
-    }
-    maximalStraights.push(currentMaximalSequence);
-    return maximalStraights;
-  }
-
-  /**
-   * Extracts all sub-straights of length 3 or more from a given straight.
-   * @param {Array<Card>} maximalStraight The straight to extract sub-straights from.
-   * @returns {Array<Array<Card>>} An array of sub-straights.
-   */
-  _deriveSubStraights(maximalStraight) {
-    const subStraights = [];
-    if (maximalStraight.length >= 3) {
-      for (let i = 0; i <= maximalStraight.length - 3; i++) {
-        for (let j = i + 3; j <= maximalStraight.length; j++) {
-          subStraights.push(maximalStraight.slice(i, j));
+    const rankStraights = [];
+    for (let i = 0; i < uniqueCards.length; i++) {
+      for (let j = i; j < uniqueCards.length; j++) {
+        const slice = uniqueCards.slice(i, j + 1);
+        if (slice.length >= 3) {
+          let isStraight = true;
+          for (let k = 0; k < slice.length - 1; k++) {
+            if (RANKS.indexOf(slice[k + 1].rank) - RANKS.indexOf(slice[k].rank) !== 1) {
+              isStraight = false;
+              break;
+            }
+          }
+          if (isStraight) {
+            rankStraights.push(slice.map((card) => card.rank));
+          }
         }
       }
     }
-    return subStraights;
+
+    // For each rank straight, find all card combinations
+    for (const rankStraight of rankStraights) {
+      const cardsInStraight = rankStraight.map((rank) => handWithoutTwos.filter((card) => card.rank === rank));
+
+      const combinations = cardsInStraight.reduce(
+        (acc, cards) => {
+          const newAcc = [];
+          for (const accCard of acc) {
+            for (const card of cards) {
+              newAcc.push([...accCard, card]);
+            }
+          }
+          return newAcc;
+        },
+        [[]]
+      );
+
+      straights.push(...combinations);
+    }
+
+    return straights;
   }
 
   /**
@@ -314,13 +319,7 @@ export class LowestCardAI extends AI {
    * @returns {Array<Card>} The cards to play, or an empty array if no valid move is found.
    */
   _findLowestValidMove(hand, playPile, currentTurn, allPlayerHands) {
-    let allValidMoves = [];
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "single", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "pair", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "triple", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "straight", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "four_of_a_kind", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "consecutive_pairs", currentTurn, allPlayerHands));
+    const allValidMoves = this._findAllValidMoves(hand, playPile, currentTurn, allPlayerHands);
 
     allValidMoves.sort((a, b) => a[0].value - b[0].value);
 

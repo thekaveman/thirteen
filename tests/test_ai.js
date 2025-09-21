@@ -5,6 +5,62 @@ import { log } from "../src/utils.js";
 import { MockAI } from "./mocks.js";
 import { assert } from "./utils.js";
 
+function test_AI_findAllValidMoves() {
+  const game = new Game();
+  const ai = new AI(game);
+  const hand = [new Card("3", "♠"), new Card("3", "♦"), new Card("4", "♣"), new Card("5", "♠")];
+  const playPile = [];
+  const currentTurn = 3;
+  const allPlayerHands = [hand];
+
+  const allValidMoves = ai._findAllValidMoves(hand, playPile, currentTurn, allPlayerHands);
+
+  // Expected moves: singles (3♠, 3♦, 4♣, 5♠), pair (3♠, 3♦), straights (3♠-4♣-5♠, 3♦-4♣-5♠)
+  // Total 7 moves
+  assert(allValidMoves.length === 7, "Should return all valid moves from different combination types");
+
+  // Sort the moves for consistent assertion
+  allValidMoves.sort((a, b) => {
+    if (a.length !== b.length) return a.length - b.length;
+    return a[0].value - b[0].value;
+  });
+
+  assert(
+    allValidMoves[0].length === 1 && allValidMoves[0][0].rank === "3" && allValidMoves[0][0].suit === "♠",
+    "First move should be 3♠"
+  );
+  assert(
+    allValidMoves[1].length === 1 && allValidMoves[1][0].rank === "3" && allValidMoves[1][0].suit === "♦",
+    "Second move should be 3♦"
+  );
+  assert(
+    allValidMoves[2].length === 1 && allValidMoves[2][0].rank === "4" && allValidMoves[2][0].suit === "♣",
+    "Third move should be 4♣"
+  );
+  assert(
+    allValidMoves[3].length === 1 && allValidMoves[3][0].rank === "5" && allValidMoves[3][0].suit === "♠",
+    "Fourth move should be 5♠"
+  );
+  assert(
+    allValidMoves[4].length === 2 && allValidMoves[4][0].rank === "3" && allValidMoves[4][1].rank === "3",
+    "Fifth move should be a pair of 3s"
+  );
+  assert(
+    allValidMoves[5].length === 3 &&
+      allValidMoves[5][0].rank === "3" &&
+      allValidMoves[5][1].rank === "4" &&
+      allValidMoves[5][2].rank === "5",
+    "Sixth move should be a 3-4-5 straight"
+  );
+  assert(
+    allValidMoves[6].length === 3 &&
+      allValidMoves[6][0].rank === "3" &&
+      allValidMoves[6][1].rank === "4" &&
+      allValidMoves[6][2].rank === "5",
+    "Seventh move should be another 3-4-5 straight"
+  );
+}
+
 function test_AI_generateCombinations_consecutivePairs() {
   const game = new Game();
   const ai = new AI(game);
@@ -310,6 +366,7 @@ function test_MockAI_takeTurn() {
 }
 
 export const aiTests = [
+  test_AI_findAllValidMoves,
   test_AI_generateCombinations_consecutivePairs,
   test_AI_generateCombinations_fourOfAKind,
   test_AI_generateCombinations_pairs,

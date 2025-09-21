@@ -199,23 +199,25 @@ export class Game {
       return false;
     }
 
-    // Bomb logic
-    if (playPile.length > 0 && playPile[0].rank === "2") {
-      if (playPileCombinationType === COMBINATION_TYPES.SINGLE && this.isBombForSingleTwo(selectedCards)) {
-        return true;
-      }
-      if (playPileCombinationType === COMBINATION_TYPES.PAIR && this.isBombForPairOfTwos(selectedCards)) {
-        return true;
-      }
-    }
-
-    // These combinations are only valid as bombs, which are handled above.
-    // Any other attempted use is invalid.
+    // Bomb logic: A bomb can only be played on a 2 or a pair of 2s.
     if (
-      selectedCombinationType === COMBINATION_TYPES.CONSECUTIVE_PAIRS ||
-      selectedCombinationType === COMBINATION_TYPES.FOUR_OF_A_KIND
+      selectedCombinationType === COMBINATION_TYPES.FOUR_OF_A_KIND ||
+      selectedCombinationType === COMBINATION_TYPES.CONSECUTIVE_PAIRS
     ) {
-      return false;
+      if (playPile.length === 0) return false; // Bombs cannot be played on an empty pile
+
+      const topCard = playPile[playPile.length - 1];
+      if (topCard.rank !== "2") return false; // Bombs can only be played on 2s
+
+      if (playPile.length === 1) {
+        return this.isBombForSingleTwo(selectedCards);
+      }
+
+      if (playPile.length === 2) {
+        return this.isBombForPairOfTwos(selectedCards);
+      }
+
+      return false; // Bombs cannot be played on other combinations
     }
 
     // Standard play validation
