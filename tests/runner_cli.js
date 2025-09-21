@@ -41,7 +41,7 @@ import { LowestCardAI } from "../src/ai.js";
 import { App } from "../src/app.js";
 
 // Load test utilities
-import { assert, runTests } from "./utils.js";
+import { assert, runTests, mockSetTimeout, restoreSetTimeout } from "./utils.js";
 global.assert = assert; // Make assert globally available for test files
 
 import { TEST_CONFIG } from "./config.js";
@@ -60,7 +60,14 @@ for (const [name, tests] of Object.entries(TEST_CONFIG)) {
   const ui = new UI(game);
 
   const app = new App(deck, game, ai, ui);
-  app.init();
+
+  // Mock setTimeout for app initialization
+  mockSetTimeout();
+  app.init((handler, delay) => {
+    // This handler is called by app.init, but we don't want it to actually set a timeout
+    // We just want to ensure the app's internal setTimeout is mocked.
+  });
+  restoreSetTimeout();
 
   process.stdout.write(`\n== Running tests: ${name} [${tests.length}]\n`);
   const mockResults = {

@@ -1,108 +1,22 @@
-import { assert } from "./utils.js";
+import { assert, mockSetTimeout, restoreSetTimeout } from "./utils.js";
 import { Card } from "../src/deck.js";
 import { HumanPlayer } from "../src/player.js";
 import { UI } from "../src/ui.js";
-import { Game } from "../src/game.js";
+import { MockDeck, MockGame } from "./mocks.js";
 
 const TEST_UI_ID = "test-ui";
-
-const mockDeck = {
-  cards: [
-    new Card("3", "♠"),
-    new Card("4", "♦"),
-    new Card("5", "♣"),
-    new Card("6", "♥"),
-    new Card("7", "♠"),
-    new Card("8", "♦"),
-    new Card("9", "♣"),
-    new Card("10", "♥"),
-    new Card("J", "♠"),
-    new Card("Q", "♦"),
-    new Card("K", "♣"),
-    new Card("A", "♥"),
-    new Card("2", "♠"),
-    new Card("3", "♦"),
-    new Card("4", "♣"),
-    new Card("5", "♥"),
-    new Card("6", "♠"),
-    new Card("7", "♦"),
-    new Card("8", "♣"),
-    new Card("9", "♥"),
-    new Card("10", "♠"),
-    new Card("J", "♦"),
-    new Card("Q", "♣"),
-    new Card("K", "♥"),
-    new Card("A", "♠"),
-    new Card("2", "♦"),
-  ],
-  deal: () => [
-    [
-      new Card("3", "♠"),
-      new Card("4", "♦"),
-      new Card("5", "♣"),
-      new Card("6", "♥"),
-      new Card("7", "♠"),
-      new Card("8", "♦"),
-      new Card("9", "♣"),
-      new Card("10", "♥"),
-      new Card("J", "♠"),
-      new Card("Q", "♦"),
-      new Card("K", "♣"),
-      new Card("A", "♥"),
-      new Card("2", "♠"),
-    ],
-    [
-      new Card("3", "♦"),
-      new Card("4", "♣"),
-      new Card("5", "♥"),
-      new Card("6", "♠"),
-      new Card("7", "♦"),
-      new Card("8", "♣"),
-      new Card("9", "♥"),
-      new Card("10", "♠"),
-      new Card("J", "♦"),
-      new Card("Q", "♣"),
-      new Card("K", "♥"),
-      new Card("A", "♠"),
-      new Card("2", "♦"),
-    ],
-  ],
-  shuffle: () => {},
-};
-
-let originalSetTimeout;
-let originalClearTimeout;
-let setTimeoutCalls = [];
 
 /**
   Setup function to run before each test
 */
 function testSetup() {
-  const game = new Game();
+  const game = new MockGame();
+  const uiInstance = new UI(game);
 
   // Mock setTimeout and clearTimeout
-  originalSetTimeout = window.setTimeout;
-  originalClearTimeout = window.clearTimeout;
-  setTimeoutCalls = [];
-  window.setTimeout = (handler, delay) => {
-    setTimeoutCalls.push({ handler, delay });
-    return setTimeoutCalls.length - 1; // Return a mock timeout ID
-  };
-  window.clearTimeout = (id) => {
-    if (setTimeoutCalls[id]) {
-      setTimeoutCalls[id].cleared = true;
-    }
-  };
-
-  // Reset game state for a clean test environment
-  game.playerTypes = ["human", "human"];
-  game.reset();
-  game.start(mockDeck);
+  mockSetTimeout();
 
   // create mock UI elements
-  const uiInstance = new UI(game);
-  uiInstance.game.players = game.playerTypes.map((type, index) => new HumanPlayer(game, index, uiInstance));
-
   const container = document.createElement("div");
   container.id = TEST_UI_ID;
   container.style.display = "none";
@@ -113,6 +27,12 @@ function testSetup() {
     container.appendChild(el);
   }
   document.body.appendChild(container);
+
+  // Reset game state for a clean test environment
+  game.reset();
+  const playerTypes = ["human", "human"];
+  const players = playerTypes.map((type, index) => new HumanPlayer(game, index, uiInstance));
+  game.start(MockDeck, players);
 
   uiInstance.init(game);
 
@@ -133,8 +53,7 @@ function testTeardown() {
     testUI.remove();
   }
   // Restore original setTimeout and clearTimeout
-  window.setTimeout = originalSetTimeout;
-  window.clearTimeout = originalClearTimeout;
+  restoreSetTimeout();
 }
 
 function test_createCardElement() {

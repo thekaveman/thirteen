@@ -14,7 +14,7 @@ export class App {
     this.game = game;
     this.ai = ai;
     this.ui = ui;
-    this.setTimeout = typeof window !== "undefined" ? window.setTimeout : setTimeout;
+    this.setTimeout = typeof window !== "undefined" ? window.setTimeout.bind(window) : setTimeout;
   }
 
   init(currentSetTimeout = null) {

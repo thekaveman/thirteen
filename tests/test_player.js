@@ -1,9 +1,8 @@
-import { assert } from "./utils.js";
-import { HumanPlayer, AIPlayer } from "../src/player.js";
 import { Card } from "../src/deck.js";
 import { Game } from "../src/game.js";
-import { TestAI } from "./test_ai.js";
-import { MockUI } from "./test_app.js";
+import { HumanPlayer, AIPlayer } from "../src/player.js";
+import { assert } from "./utils.js";
+import { MockAI, MockUI } from "./mocks.js";
 
 function test_Player_constructor() {
   const game = new Game();
@@ -12,7 +11,7 @@ function test_Player_constructor() {
   assert(humanPlayer.type === "human", "Player constructor should set the type to human");
   assert(humanPlayer.ui !== null, "Human player should have a UI instance");
 
-  const ai = new TestAI();
+  const ai = new MockAI();
   const aiPlayer = new AIPlayer(game, 1, ai);
   assert(aiPlayer.type === "ai", "Player constructor should set the type to ai");
   assert(aiPlayer.ai === ai, "AI player should have an AI instance");
@@ -179,7 +178,7 @@ function test_AIPlayer_takeTurn_ai() {
   game.gameState.currentPlayer = 0;
   game.gameState.playerHands = [[]];
   const move = [new Card("5", "♦")];
-  const ai = new TestAI(game, move);
+  const ai = new MockAI(game, move);
   const player = new AIPlayer(game, 0, ai);
   const selectedMove = player.takeTurn();
   assert(selectedMove === move, "AI player should return the move from the AI");

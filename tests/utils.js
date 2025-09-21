@@ -4,6 +4,30 @@ export function assert(condition, message) {
   }
 }
 
+let originalSetTimeout;
+let originalClearTimeout;
+let setTimeoutCalls = [];
+
+export function mockSetTimeout() {
+  originalSetTimeout = window.setTimeout;
+  originalClearTimeout = window.clearTimeout;
+  setTimeoutCalls = [];
+  window.setTimeout = (handler, delay) => {
+    setTimeoutCalls.push({ handler, delay });
+    return setTimeoutCalls.length - 1; // Return a mock timeout ID
+  };
+  window.clearTimeout = (id) => {
+    if (setTimeoutCalls[id]) {
+      setTimeoutCalls[id].cleared = true;
+    }
+  };
+}
+
+export function restoreSetTimeout() {
+  window.setTimeout = originalSetTimeout;
+  window.clearTimeout = originalClearTimeout;
+}
+
 export function runTests(tests, results, context = {}) {
   results.innerHTML = "";
 
