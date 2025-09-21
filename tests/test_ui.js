@@ -1,6 +1,6 @@
 import { assert, mockSetTimeout, restoreSetTimeout } from "./utils.js";
 import { Card } from "../src/deck.js";
-import { HumanPlayer } from "../src/player.js";
+import { HumanPlayer, AIPlayer } from "../src/player.js";
 import { UI } from "../src/ui.js";
 import { MockDeck, MockGame } from "./mocks.js";
 
@@ -30,9 +30,18 @@ function testSetup() {
 
   // Reset game state for a clean test environment
   game.reset();
-  const playerTypes = ["human", "human"];
-  const players = playerTypes.map((type, index) => new HumanPlayer(game, index, uiInstance));
+  const players = [new HumanPlayer(game, 0, uiInstance), new AIPlayer(game, 1, uiInstance), new HumanPlayer(game, 2, uiInstance)];
   game.start(MockDeck, players);
+
+  // Set consistent initial game state for UI tests
+  game.gameState.playerHands = [
+    [new Card("3", "♠"), new Card("4", "♦")],
+    [new Card("5", "♣"), new Card("6", "♥")],
+    [new Card("7", "♣"), new Card("8", "♥")],
+  ];
+  game.gameState.roundsWon = [0, 0, 0];
+  game.gameState.gamesWon = [0, 0, 0];
+  game.gameState.currentPlayer = 0; // Default current player for UI tests
 
   uiInstance.init(game);
 
@@ -111,13 +120,6 @@ function test_renderPlayArea_clearsGameContentBeforeRendering() {
 function test_renderPlayerHand_rendersCards() {
   const ui = testSetup();
   const playerHandDiv = document.createElement("div");
-  ui.game.gameState.playerHands = [[new Card("A", "♠")]];
-  ui.game.gameState.roundsWon = [0];
-  ui.game.gameState.gamesWon = [0];
-  ui.game.gameState.players = ui.game.gameState.playerTypes.map((type, index) => new HumanPlayer(ui.game, index, ui));
-
-  // Ensure player 0 is the current player for this test
-  ui.game.gameState.currentPlayer = 0;
 
   ui.renderPlayerHand(0, playerHandDiv);
 

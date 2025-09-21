@@ -143,7 +143,12 @@ export class UI {
    * @param {HTMLElement} handDiv The div element to render the hand in.
    */
   renderPlayerHand(playerIndex, handDiv) {
+    const player = this.game.gameState.players[playerIndex];
     let text = `Player ${playerIndex + 1}`;
+
+    if (player.type === "ai") {
+      text += " (AI)";
+    }
 
     if (this.game.gameState.gameOver && this.game.gameState.playerHands[playerIndex].length === 0) {
       this.displayMessage(`${text} wins in ${this.game.gameState.roundNumber} rounds`, "info");
