@@ -30,6 +30,17 @@
         <button id="new-game-button" style="display: none">New Game</button>
       </div>
     </div>
-    <script type="module" src="app.js"></script>
+    <script type="module">
+      import { App } from "./app.js";
+      import { Deck } from "./deck.js";
+      import { Game } from "./game.js";
+      import { LowestCardAI } from "./ai.js";
+      import { UI } from "./ui.js";
+
+      const deck = new Deck();
+      const game = new Game();
+      const app = new App(deck, game, new LowestCardAI(game), new UI(game));
+      app.init();
+    </script>
   </body>
 </html>

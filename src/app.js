@@ -2,11 +2,18 @@ import { log } from "./utils.js";
 import { HumanPlayer, AIPlayer } from "./player.js";
 
 export class App {
-  constructor(deck, game, aiClass, uiClass) {
+  /**
+   * Creates a new app instance with dependencies.
+   * @param {Deck} deck
+   * @param {Game} game
+   * @param {AI} ai
+   * @param {UI} ui
+   */
+  constructor(deck, game, ai, ui) {
     this.deck = deck;
     this.game = game;
-    this.ai = new aiClass(this.game);
-    this.ui = new uiClass(this.game);
+    this.ai = ai;
+    this.ui = ui;
     this.setTimeout = typeof window !== "undefined" ? window.setTimeout : setTimeout;
   }
 

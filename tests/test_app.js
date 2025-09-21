@@ -163,17 +163,13 @@ class MockAI extends _TestAI {
 // Test cases
 
 function test_handleAITurn_playsCardsWhenMoveIsAvailable() {
-  const gameInstance = new MockGame();
+  const game = new MockGame();
   // Pass the AI's move directly to the MockAI constructor
   const app = new App(
-    mockDeck.createDeck(),
-    gameInstance,
-    class extends MockAI {
-      constructor(game) {
-        super(game, [createCard("3", "♠")]); // AI will play 3♠
-      }
-    },
-    MockUI
+    mockDeck,
+    game,
+    new MockAI(game, [new Card("3", "♠")]), // AI will play 3♠,
+    new MockUI(game)
   );
 
   // Mock app.nextTurn before app.init is called
@@ -207,34 +203,32 @@ function test_handleAITurn_playsCardsWhenMoveIsAvailable() {
 }
 
 function test_handleAITurn_passesTurnWhenNoMoveIsAvailable() {
-  const gameInstance = new MockGame();
+  const game = new MockGame();
   // Pass the AI's move directly to the MockAI constructor
   const app = new App(
-    mockDeck.createDeck(),
-    gameInstance,
-    class extends MockAI {
-      constructor(game) {
-        super(game, []); // AI will pass
-      }
-    },
-    MockUI
+    mockDeck,
+    game,
+    new MockAI(game, []), // AI will pass
+    new MockUI(game)
   );
 
   // Mock app.nextTurn before app.init is called
   const originalNextTurn = app.nextTurn;
   app.nextTurn = () => {};
 
-  app.init();
-  app.game.gameState.currentPlayer = 1;
-  app.nextTurn = originalNextTurn;
-
-  const aiPlayer = app.game.gameState.players[1];
-  const takeTurnSpy = spyOn(aiPlayer.ai, "takeTurn");
-
   let passTurnCalled = false;
   app.game.passTurn = () => {
     passTurnCalled = true;
   };
+
+  // Mock setTimeout to prevent immediate execution of nextTurn during init
+  app.init((handler, delay) => { /* do nothing */ });
+
+  app.game.gameState.currentPlayer = 1; // Set current player to AI
+  app.nextTurn = originalNextTurn; // Restore nextTurn
+
+  const aiPlayer = app.game.gameState.players[1];
+  const takeTurnSpy = spyOn(aiPlayer.ai, "takeTurn");
 
   // Explicitly call app.handleAITurn
   app.handleAITurn();
@@ -249,8 +243,8 @@ function test_handleAITurn_passesTurnWhenNoMoveIsAvailable() {
 }
 
 function test_handleHumanPlay_callsPlayButtonClickAndNextTurn() {
-  const gameInstance = new MockGame();
-  const app = new App(mockDeck.createDeck(), gameInstance, MockAI, MockUI);
+  const game = new MockGame();
+  const app = new App(mockDeck, game, new MockAI(game), new MockUI(game));
   app.init();
   app.game.gameState.currentPlayer = 0; // the human player
 
@@ -265,8 +259,8 @@ function test_handleHumanPlay_callsPlayButtonClickAndNextTurn() {
 }
 
 function test_handleHumanPass_callsPassButtonClickAndNextTurn() {
-  const gameInstance = new MockGame();
-  const app = new App(mockDeck.createDeck(), gameInstance, MockAI, MockUI);
+  const game = new MockGame();
+  const app = new App(mockDeck, game, new MockAI(game), new MockUI(game));
 
   app.init();
   app.game.gameState.currentPlayer = 0; // the human player
@@ -285,17 +279,8 @@ function test_handleHumanPass_callsPassButtonClickAndNextTurn() {
 }
 
 function test_nextTurn_callsHandleAITurnForAIPlayer() {
-  const gameInstance = new MockGame();
-  const app = new App(
-    mockDeck.createDeck(),
-    gameInstance,
-    class extends MockAI {
-      constructor(game) {
-        super(game, [createCard("3", "♦")]); // AI will play 3♦
-      }
-    },
-    MockUI
-  );
+  const game = new MockGame();
+  const app = new App(mockDeck, game, new MockAI(game, [new Card("3", "♦")]), new MockUI(game));
 
   const handleAITurnSpy = spyOn(app, "handleAITurn");
 
@@ -303,7 +288,7 @@ function test_nextTurn_callsHandleAITurnForAIPlayer() {
   app.init((handler, delay) => {
     handler();
   });
-  const playedCard = createCard("3", "♠");
+  const playedCard = new Card("3", "♠");
   app.game.gameState.playPile = [playedCard];
   app.game.gameState.currentPlayer = 1; // Assuming AI is next
 
@@ -315,8 +300,8 @@ function test_nextTurn_callsHandleAITurnForAIPlayer() {
 }
 
 function test_nextTurn_doesNotCallHandleAITurnForHumanPlayer() {
-  const gameInstance = new MockGame();
-  const app = new App(mockDeck.createDeck(), gameInstance, MockAI, MockUI);
+  const game = new MockGame();
+  const app = new App(mockDeck, game, new MockAI(game), new MockUI(game));
   const handleAITurnSpy = spyOn(app, "handleAITurn");
 
   app.init();
@@ -330,8 +315,8 @@ function test_nextTurn_doesNotCallHandleAITurnForHumanPlayer() {
 }
 
 function test_startGame_initializesGameStateCorrectly() {
-  const gameInstance = new MockGame();
-  const app = new App(mockDeck.createDeck(), gameInstance, MockAI, MockUI);
+  const game = new MockGame();
+  const app = new App(mockDeck, game, new MockAI(game), new MockUI(game));
 
   app.init();
 
@@ -345,6 +330,17 @@ function test_startGame_initializesGameStateCorrectly() {
   assert(app.ui.renderCalled, "ui.render should be called");
 }
 
+function test_spyOn_MockAI_takeTurn() {
+  const game = new MockGame();
+  const ai = new MockAI(game);
+  const takeTurnSpy = spyOn(ai, "takeTurn");
+
+  ai.takeTurn([], [], 0, []); // Call the method
+
+  assert(takeTurnSpy.called, "MockAI takeTurn should be called");
+  takeTurnSpy.restore();
+}
+
 export const appTests = [
   test_handleAITurn_playsCardsWhenMoveIsAvailable,
   test_handleAITurn_passesTurnWhenNoMoveIsAvailable,
@@ -355,14 +351,3 @@ export const appTests = [
   test_startGame_initializesGameStateCorrectly,
   test_spyOn_MockAI_takeTurn,
 ];
-
-function test_spyOn_MockAI_takeTurn() {
-  const gameInstance = new MockGame();
-  const mockAiInstance = new MockAI(gameInstance);
-  const takeTurnSpy = spyOn(mockAiInstance, "takeTurn");
-
-  mockAiInstance.takeTurn([], [], 0, []); // Call the method
-
-  assert(takeTurnSpy.called, "MockAI takeTurn should be called");
-  takeTurnSpy.restore();
-}
