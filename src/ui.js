@@ -1,269 +1,310 @@
-import { gameState, handContainsCard, isValidPlay, passTurn, playCards } from "./game.js";
 import { log } from "./utils.js";
+import { Card } from "./deck.js";
+import { Game } from "./game.js";
+import { COMBINATION_TYPES } from "./constants.js";
 
-const ui = {
-  id: {
-    gameMessages: "game-messages",
-    playersHands: "players-hands",
-    playArea: "play-area",
-    gameContent: "game-content",
-    playButton: "play-button",
-    passButton: "pass-button",
-    newGameButton: "new-game-button",
-  },
-};
+export class UI {
+  constructor(game) {
+    this.game = game;
+    this.id = {
+      gameMessages: "game-messages",
+      playersHands: "players-hands",
+      playArea: "play-area",
+      gameContent: "game-content",
+      playButton: "play-button",
+      passButton: "pass-button",
+      newGameButton: "new-game-button",
+      startGameButton: "start-game-button",
+    };
+    this.messageTimeout = null;
 
-let messageTimeout;
-
-/**
- * Displays a message to the user.
- * @param {string} message The message to display.
- * @param {string} type The type of message (e.g., "error", "info").
- */
-ui.displayMessage = function (message, type) {
-  console.log(`displayMessage: ${message}, type: ${type}`);
-  ui.gameMessages.textContent = message;
-  ui.gameMessages.classList.add(type);
-  ui.gameMessages.classList.add("visible");
-  clearTimeout(messageTimeout);
-  messageTimeout = setTimeout(() => {
-    ui.clearMessage();
-  }, 3000); // Clear message after 3 seconds
-};
-
-/**
- * Clears the displayed message.
- */
-ui.clearMessage = function () {
-  console.log("clearMessage called");
-  ui.gameMessages.textContent = "";
-  ui.gameMessages.className = "";
-  ui.gameMessages.classList.remove("visible");
-};
-
-/**
- * Creates a card element.
- * @param {object} card The card object.
- * @returns {HTMLElement} The card element.
- */
-ui.createCardElement = function (card) {
-  const cardSpan = document.createElement("span");
-  cardSpan.textContent = `${card.rank}${card.suit} `;
-  cardSpan.classList.add("card");
-  if (["♦", "♥"].includes(card.suit)) {
-    cardSpan.classList.add("red");
-  } else {
-    cardSpan.classList.add("black");
-  }
-  cardSpan.dataset.card = JSON.stringify(card);
-  return cardSpan;
-};
-
-/**
- * Handles the click event on a card.
- * @param {Event} event The click event.
- */
-ui.handleCardClick = function (event) {
-  const card = JSON.parse(event.target.dataset.card);
-
-  // Check if the clicked card belongs to the current player's hand
-  const currentPlayerHand = gameState.playerHands[gameState.currentPlayer];
-  if (!handContainsCard(currentPlayerHand, card)) {
-    // If the card does not belong to the current player, do nothing
-    return;
+    // Initialize DOM-related properties to null
+    this.gameMessages = null;
+    this.playersHands = null;
+    this.playArea = null;
+    this.gameContent = null;
+    this.playButton = null;
+    this.passButton = null;
+    this.newGameButton = null;
+    this.startGameButton = null;
   }
 
-  const cardIndex = gameState.selectedCards.findIndex((c) => c.value === card.value);
-
-  if (cardIndex > -1) {
-    gameState.selectedCards.splice(cardIndex, 1);
-  } else {
-    gameState.selectedCards.push(card);
-  }
-  ui.renderSelectedCards();
-};
-
-/**
- * Handles an invalid play.
- */
-ui.handleInvalidPlay = function () {
-  log("Invalid play", gameState.selectedCards);
-  ui.displayMessage("Invalid play", "error");
-};
-
-/**
- * Handles the pass button click event.
- */
-ui.handlePassButtonClick = function () {
-  ui.clearMessage();
-  const passSuccessful = passTurn();
-  if (!passSuccessful) {
-    ui.displayMessage("You cannot pass on the first play of a round.", "error");
-  }
-  ui.render();
-};
-
-/**
- * Handles the play button click event.
- */
-ui.handlePlayButtonClick = function () {
-  ui.clearMessage();
-  if (isValidPlay(gameState.selectedCards, gameState.playPile)) {
-    playCards();
-  } else {
-    ui.handleInvalidPlay();
-  }
-  ui.render();
-};
-
-/**
- * Initializes elements in the ui object.
- */
-ui.init = function () {
-  ui.gameMessages = document.getElementById(ui.id.gameMessages);
-  ui.playersHands = document.getElementById(ui.id.playersHands);
-  ui.playArea = document.getElementById(ui.id.playArea);
-  ui.gameContent = document.getElementById(ui.id.gameContent);
-  ui.playButton = document.getElementById(ui.id.playButton);
-  ui.passButton = document.getElementById(ui.id.passButton);
-  ui.newGameButton = document.getElementById(ui.id.newGameButton);
-};
-
-/**
- * Renders the entire game state in the DOM.
- */
-ui.render = function () {
-  ui.renderPlayArea();
-  ui.renderPlayerHands();
-  ui.updateButtonStates();
-};
-
-/**
- * Renders cards to a target element.
- * @param {Array<object>} card The array of cards.
- * @param {HTMLElement} targetElement The element in which to render.
- * @param {(cardSpan:HTMLElement, card:object) => void} preRender An optional function to run on each card element before rendering.
- */
-ui.renderCardsContainer = function (cards, targetElement, preRender = null) {
-  const cardsContainer = document.createElement("div");
-  cardsContainer.classList.add("cards-container");
-  targetElement.appendChild(cardsContainer);
-
-  cards.forEach((card) => {
-    const cardSpan = ui.createCardElement(card);
-    if (preRender != null) {
-      preRender(cardSpan, card);
+  /**
+   * Initializes elements in the ui object.
+   * @param {Game} game The game instance.
+   */
+  init(game) {
+    this.game = game;
+    if (typeof document !== "undefined") {
+      this.gameMessages = document.getElementById(this.id.gameMessages);
+      this.playersHands = document.getElementById(this.id.playersHands);
+      this.playArea = document.getElementById(this.id.playArea);
+      this.gameContent = document.getElementById(this.id.gameContent);
+      this.playButton = document.getElementById(this.id.playButton);
+      this.passButton = document.getElementById(this.id.passButton);
+      this.newGameButton = document.getElementById(this.id.newGameButton);
+      this.startGameButton = document.getElementById(this.id.startGameButton);
     }
-    cardsContainer.appendChild(cardSpan);
-  });
-};
-
-/**
- * Renders the play area in the DOM.
- */
-ui.renderPlayArea = function () {
-  ui.gameContent.innerHTML = `<h2>Play Area (Round ${gameState.roundNumber})</h2>`;
-  ui.renderCardsContainer(gameState.playPile, ui.gameContent);
-};
-
-/**
- * Renders a single player's hand in the DOM.
- * @param {number} playerIndex The index of the player.
- * @param {HTMLElement} handDiv The div element to render the hand in.
- */
-ui.renderPlayerHand = function (playerIndex, handDiv) {
-  let text = `Player ${playerIndex + 1}`;
-
-  if (gameState.gameOver && gameState.playerHands[playerIndex].length === 0) {
-    ui.displayMessage(`${text} wins in ${gameState.roundNumber} rounds`, "info");
-    text += " (Winner!)";
-  } else if (gameState.currentPlayer === playerIndex) {
-    text += " (Your Turn)";
-  }
-  handDiv.innerHTML = `<h2>${text}</h2>`;
-
-  const gamesWonEl = document.createElement("p");
-  gamesWonEl.classList.add("games-won");
-  gamesWonEl.textContent = `Games won: ${gameState.gamesWon[playerIndex]}`;
-  handDiv.appendChild(gamesWonEl);
-
-  const roundsWonEl = document.createElement("p");
-  roundsWonEl.classList.add("rounds-won");
-  roundsWonEl.textContent = `Rounds won: ${gameState.roundsWon[playerIndex]}`;
-  handDiv.appendChild(roundsWonEl);
-
-  const preRender = function (cardSpan, card) {
-    if (playerIndex === gameState.currentPlayer) {
-      cardSpan.addEventListener("click", ui.handleCardClick);
-    }
-    if (gameState.selectedCards.some((selectedCard) => selectedCard.value === card.value)) {
-      cardSpan.classList.add("selected");
-    }
-  };
-  const playerHand = gameState.playerHands[playerIndex];
-  ui.renderCardsContainer(playerHand, handDiv, preRender);
-
-  const cardCountEl = document.createElement("p");
-  cardCountEl.classList.add("card-count");
-  cardCountEl.textContent = `Cards remaining: ${playerHand.length}`;
-  handDiv.appendChild(cardCountEl);
-};
-
-/**
- * Renders all player hands in the DOM.
- */
-ui.renderPlayerHands = function () {
-  ui.playersHands.innerHTML = ""; // Clear the hands
-  gameState.playerHands.forEach((hand, i) => {
-    const playerHandDiv = document.createElement("div");
-    playerHandDiv.id = `player-hand-${i}`;
-    playerHandDiv.classList.add("player-hand");
-    if (i === gameState.currentPlayer) {
-      playerHandDiv.classList.add("current");
-    }
-    ui.playersHands.appendChild(playerHandDiv);
-    ui.renderPlayerHand(i, playerHandDiv);
-  });
-};
-
-/**
- * Updates the state of the play, pass, and new game buttons.
- */
-ui.updateButtonStates = function () {
-  if (gameState.gameOver) {
-    ui.playButton.disabled = true;
-    ui.passButton.disabled = true;
-    ui.newGameButton.style.display = "block";
-  } else {
-    ui.playButton.disabled = false;
-    ui.passButton.disabled = false;
-    ui.newGameButton.style.display = "none";
-  }
-};
-
-/**
- * Updates the 'selected' class on all card DOM elements in the current player's hand
- * based on the gameState.selectedCards array.
- */
-ui.renderSelectedCards = function () {
-  const currentPlayerHandDiv = document.getElementById(`player-hand-${gameState.currentPlayer}`);
-  if (!currentPlayerHandDiv) {
-    return;
   }
 
-  const cardElements = currentPlayerHandDiv.querySelectorAll(".card");
-  cardElements.forEach((cardEl) => {
-    const card = JSON.parse(cardEl.dataset.card);
-    const isSelected = gameState.selectedCards.some(
-      (selectedCard) => selectedCard.rank === card.rank && selectedCard.suit === card.suit
-    );
+  /**
+   * Displays a message to the user.
+   * @param {string} message The message to display.
+   * @param {string} type The type of message (e.g., "error", "info").
+   */
+  displayMessage(message, type) {
+    log(`displayMessage: ${message}, type: ${type}`);
+    if (this.gameMessages) {
+      this.gameMessages.textContent = message;
+      this.gameMessages.classList.add(type);
+      this.gameMessages.classList.add("visible");
+      clearTimeout(this.messageTimeout);
+      this.messageTimeout = setTimeout(() => {
+        this.clearMessage();
+      }, 3000); // Clear message after 3 seconds
+    }
+  }
 
-    if (isSelected) {
-      cardEl.classList.add("selected");
+  /**
+   * Clears the displayed message.
+   */
+  clearMessage() {
+    if (this.gameMessages) {
+      this.gameMessages.textContent = "";
+      this.gameMessages.className = "";
+      this.gameMessages.classList.remove("visible");
+    }
+  }
+
+  /**
+   * Returns a character-based indicator for the given combination type.
+   * @param {string} combinationType The combination type (e.g., COMBINATION_TYPES.SINGLE).
+   * @returns {string} The character indicator.
+   */
+  getCombinationTypeIndicator(combinationType) {
+    switch (combinationType) {
+      case COMBINATION_TYPES.SINGLE:
+        return "3♠"; // Three of Spades (single card)
+      case COMBINATION_TYPES.PAIR:
+        return "3♦3♣"; // Two different 3s (pair)
+      case COMBINATION_TYPES.TRIPLE:
+        return "3♦3♣3♥"; // Three different 3s (triple)
+      case COMBINATION_TYPES.STRAIGHT:
+        return "Q♦K♣A♥"; // Queen, King, Ace (straight)
+      case COMBINATION_TYPES.FOUR_OF_A_KIND:
+        return "💣"; // Bomb indicator for Four of a Kind
+      case COMBINATION_TYPES.CONSECUTIVE_PAIRS:
+        return "💣"; // Bomb indicator for Consecutive Pairs
+      default:
+        return "Open"; // Default for an empty play pile or invalid combination
+    }
+  }
+
+  /**
+   * Creates a card element.
+   * @param {Card} card The card object.
+   * @returns {HTMLElement} The card element.
+   */
+  createCardElement(card) {
+    if (typeof document === "undefined") {
+      // Mock for Node.js environment
+      return { classList: { add: () => {}, remove: () => {} }, dataset: {}, addEventListener: () => {} };
+    }
+    const cardSpan = document.createElement("span");
+    cardSpan.textContent = `${card.rank}${card.suit}`;
+    cardSpan.classList.add("card");
+    if (["♦", "♥"].includes(card.suit)) {
+      cardSpan.classList.add("red");
     } else {
-      cardEl.classList.remove("selected");
+      cardSpan.classList.add("black");
     }
-  });
-};
+    cardSpan.dataset.card = JSON.stringify(card);
+    return cardSpan;
+  }
 
-export default ui;
+  /**
+   * Renders the entire game state in the DOM.
+   */
+  render() {
+    this.renderPlayArea();
+    this.renderPlayerHands();
+    this.updateButtonStates();
+  }
+
+  /**
+   * Renders cards to a target element.
+   * @param {Array<Card>} cards The array of cards.
+   * @param {HTMLElement} targetElement The element in which to render.
+   * @param {(cardSpan:HTMLElement, card:Card) => void} preRender An optional function to run on each card element before rendering.
+   */
+  renderCardsContainer(cards, targetElement, preRender = null) {
+    if (typeof document === "undefined") {
+      // Mock for Node.js environment
+      return;
+    }
+    const cardsContainer = document.createElement("div");
+    cardsContainer.classList.add("cards-container");
+    targetElement.appendChild(cardsContainer);
+
+    cards.forEach((card) => {
+      const cardSpan = this.createCardElement(card);
+      if (preRender != null) {
+        preRender(cardSpan, card);
+      }
+      cardsContainer.appendChild(cardSpan);
+    });
+  }
+
+  /**
+   * Renders the play area in the DOM.
+   */
+  renderPlayArea() {
+    if (this.gameContent) {
+      const combinationType = this.game.getCombinationType(this.game.gameState.playPile);
+      const indicator = this.getCombinationTypeIndicator(combinationType);
+      this.gameContent.innerHTML = `<h2>Play Area (Round ${this.game.gameState.roundNumber}) <span class="combination-type-indicator">${indicator}</span></h2>`;
+      this.renderCardsContainer(this.game.gameState.playPile, this.gameContent);
+    }
+  }
+
+  /**
+   * Renders a single player's hand in the DOM.
+   * @param {number} playerIndex The index of the player.
+   * @param {HTMLElement} handDiv The div element to render the hand in.
+   */
+  renderPlayerHand(playerIndex, handDiv) {
+    const player = this.game.gameState.players[playerIndex];
+    let text = `Player ${playerIndex + 1}`;
+
+    if (player.type === "ai") {
+      text += " (AI)";
+    }
+
+    if (this.game.gameState.gameOver && this.game.gameState.playerHands[playerIndex].length === 0) {
+      this.displayMessage(`${text} wins in ${this.game.gameState.roundNumber} rounds`, "info");
+      text += " (Winner!)";
+    } else if (this.game.gameState.currentPlayer === playerIndex) {
+      text += " (Your Turn)";
+    }
+    if (handDiv) {
+      handDiv.innerHTML = `<h2>${text}</h2>`;
+    }
+
+    if (typeof document !== "undefined") {
+      const gamesWonEl = document.createElement("p");
+      gamesWonEl.classList.add("games-won");
+      gamesWonEl.textContent = `Games won: ${this.game.gameState.gamesWon[playerIndex]}`;
+      if (handDiv) handDiv.appendChild(gamesWonEl);
+
+      const roundsWonEl = document.createElement("p");
+      roundsWonEl.classList.add("rounds-won");
+      roundsWonEl.textContent = `Rounds won: ${this.game.gameState.roundsWon[playerIndex]}`;
+      if (handDiv) handDiv.appendChild(roundsWonEl);
+    }
+
+    const preRender = (cardSpan, card) => {
+      const currentPlayer = this.game.gameState.players[playerIndex];
+      if (playerIndex === this.game.gameState.currentPlayer && currentPlayer.type === "human") {
+        if (cardSpan && cardSpan.addEventListener) {
+          cardSpan.addEventListener("click", currentPlayer.handleCardClick.bind(currentPlayer));
+        }
+      }
+      if (this.game.gameState.selectedCards.some((selectedCard) => selectedCard.value === card.value)) {
+        if (cardSpan) cardSpan.classList.add("selected");
+      }
+    };
+    const playerHand = this.game.gameState.playerHands[playerIndex];
+    this.renderCardsContainer(playerHand, handDiv, preRender);
+
+    if (typeof document !== "undefined") {
+      const cardCountEl = document.createElement("p");
+      cardCountEl.classList.add("card-count");
+      cardCountEl.textContent = `Cards remaining: ${playerHand.length}`;
+      if (handDiv) handDiv.appendChild(cardCountEl);
+    }
+  }
+
+  /**
+   * Renders all player hands in the DOM.
+   */
+  renderPlayerHands() {
+    if (this.playersHands) {
+      this.playersHands.innerHTML = ""; // Clear the hands
+      this.game.gameState.playerHands.forEach((hand, i) => {
+        if (typeof document !== "undefined") {
+          const playerHandDiv = document.createElement("div");
+          playerHandDiv.id = `player-hand-${i}`;
+          playerHandDiv.classList.add("player-hand");
+          playerHandDiv.classList.add(this.game.gameState.players[i].type); // Add 'human' or 'ai' class
+          if (i === this.game.gameState.currentPlayer) {
+            playerHandDiv.classList.add("current");
+          }
+          this.playersHands.appendChild(playerHandDiv);
+          this.renderPlayerHand(i, playerHandDiv);
+        }
+      });
+    }
+  }
+
+  /**
+   * Updates the state of the play, pass, and new game buttons.
+   */
+  updateButtonStates() {
+    const isHumanPlayerTurn = this.game.gameState.players[this.game.gameState.currentPlayer]?.type === "human";
+
+    if (this.game.gameState.gameOver) {
+      if (this.playButton) this.playButton.style.display = "none";
+      if (this.passButton) this.passButton.style.display = "none";
+      if (this.newGameButton) this.newGameButton.style.display = "block";
+      if (this.startGameButton) this.startGameButton.style.display = "none";
+    } else if (!this.game.gameState.gameStarted) {
+      // Game has not started yet, show start button
+      if (this.playButton) this.playButton.style.display = "none";
+      if (this.passButton) this.passButton.style.display = "none";
+      if (this.newGameButton) this.newGameButton.style.display = "none";
+      if (this.startGameButton) this.startGameButton.style.display = "block";
+    } else {
+      // Game is in progress
+      if (this.playButton) {
+        this.playButton.style.display = "block";
+        this.playButton.disabled = !isHumanPlayerTurn;
+      }
+      if (this.passButton) {
+        this.passButton.style.display = "block";
+        this.passButton.disabled = !isHumanPlayerTurn;
+      }
+      if (this.newGameButton) this.newGameButton.style.display = "none";
+      if (this.startGameButton) this.startGameButton.style.display = "none";
+    }
+  }
+
+  /**
+   * Updates the 'selected' class on all card DOM elements in the current player's hand
+   * based on the game's selectedCards.
+   */
+  renderSelectedCards() {
+    if (typeof document === "undefined") {
+      return;
+    }
+    const currentPlayerHandDiv = document.getElementById(`player-hand-${this.game.gameState.currentPlayer}`);
+    if (!currentPlayerHandDiv) {
+      return;
+    }
+
+    const cardElements = currentPlayerHandDiv.querySelectorAll(".card");
+    cardElements.forEach((cardEl) => {
+      const card = JSON.parse(cardEl.dataset.card);
+      const isSelected = this.game.gameState.selectedCards.some(
+        (selectedCard) => selectedCard.rank === card.rank && selectedCard.suit === card.suit
+      );
+
+      if (isSelected) {
+        cardEl.classList.add("selected");
+      } else {
+        cardEl.classList.remove("selected");
+      }
+    });
+  }
+}
+
+export default UI;

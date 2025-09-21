@@ -1,3 +1,57 @@
+:root {
+  /* Colors */
+  --color-primary-green: #2e7d32;
+  --color-white: white;
+  --color-black: #000000;
+  --color-red: #b22222;
+  --color-light-gray: #f0f0f0;
+  --color-dark-gray: #ccc;
+  --color-medium-gray: #666;
+  --color-darker-gray: #333;
+  --color-light-blue: #eaf2fa;
+  --color-blue: #337ab7;
+  --color-primary-blue: #007bff;
+  --color-shadow-light: rgba(0, 0, 0, 0.1);
+  --color-shadow-medium: rgba(0, 0, 0, 0.2);
+  --color-error-background: #f8d7da;
+  --color-error-text: #721c24;
+  --color-error-border: #f5c6cb;
+  --color-info-background: #d4edda;
+  --color-info-text: #155724;
+  --color-info-border: #c3e6cb;
+  --color-disabled-background: #cccccc;
+  --color-disabled-text: #666666;
+  --color-disabled-border: #cccccc;
+  --color-play-button: #4caf50;
+  --color-pass-button: #f44336;
+  --color-new-game-button: #008cba;
+
+  /* Spacing */
+  --spacing-xxs: 3px;
+  --spacing-xs: 5px;
+  --spacing-s: 10px;
+  --spacing-m: 15px;
+  --spacing-l: 20px;
+  --spacing-xl: 25px;
+  --spacing-xxl: 80px;
+
+  /* Font Sizes */
+  --font-size-xxs: 0.8em;
+  --font-size-xs: 0.9em;
+  --font-size-s: 1em;
+  --font-size-m: 1.2em;
+  --font-size-l: 1.5em;
+  --font-size-xl: 2.5em;
+
+  /* Other */
+  --border-radius-s: 5px;
+  --border-radius-m: 8px;
+  --box-shadow-s: 2px 2px 5px var(--color-shadow-light);
+  --box-shadow-m: 4px 4px 10px var(--color-shadow-medium);
+  --transition-ease: all 0.2s ease-in-out;
+  --transition-background: background-color 0.2s ease-in-out;
+}
+
 *,
 *::before,
 *::after {
@@ -13,8 +67,8 @@ body {
 
 body {
   font-family: sans-serif;
-  background-color: #f0f0f0;
-  padding-bottom: 80px;
+  background-color: var(--color-light-gray);
+  padding-bottom: var(--spacing-xxl);
 }
 
 #game-container {
@@ -24,10 +78,10 @@ body {
 }
 
 header {
-  background-color: #2e7d32;
+  background-color: var(--color-primary-green);
   padding: 0.5em 0;
   text-align: center;
-  color: white;
+  color: var(--color-white);
   flex-shrink: 0;
 }
 
@@ -38,34 +92,34 @@ header {
 }
 
 h1 {
-  font-size: 1.5em;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  font-size: var(--font-size-l);
+  text-shadow: 2px 2px 4px var(--color-shadow-light);
   margin: 0;
 }
 
 h2 {
-  font-size: 1em;
+  font-size: var(--font-size-s);
   margin: 0;
-  margin-bottom: 5px;
+  margin-bottom: var(--spacing-xs);
 }
 
 #game-board {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 5px 0;
+  padding: var(--spacing-xs) 0;
   flex-grow: 1;
 }
 
 #play-area {
-  margin-bottom: 10px;
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  margin-bottom: var(--spacing-s);
+  padding: var(--spacing-s);
+  border: 1px solid var(--color-dark-gray);
+  border-radius: var(--border-radius-m);
   width: 90%;
   max-width: 800px;
-  background-color: white;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  background-color: var(--color-white);
+  box-shadow: var(--box-shadow-s);
 }
 
 #players-hands {
@@ -74,41 +128,51 @@ h2 {
   align-items: center;
   width: 95%;
   max-width: 800px;
-  gap: 10px;
+  gap: var(--spacing-s);
 }
 
 .player-hand {
   flex: 1;
   position: relative;
-  border: 1px solid #ccc;
-  border-radius: 8px;
+  border: 1px solid var(--color-dark-gray);
+  border-radius: var(--border-radius-m);
   background-color: #f9f9f9;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--box-shadow-s);
   width: 95%;
   max-width: 800px;
-  padding: 5px;
-  padding-bottom: 20px;
+  padding: var(--spacing-xs);
+  padding-bottom: var(--spacing-l);
   height: 200px;
 }
 
+.player-hand.ai .card {
+  filter: blur(5px);
+}
+
 .player-hand.current {
-  border: 2px solid #337ab7;
-  background-color: #eaf2fa;
+  border: 2px solid var(--color-blue);
+  background-color: var(--color-light-blue);
 }
 
 .games-won {
-  font-size: 1em;
-  color: #333;
+  font-size: var(--font-size-s);
+  color: var(--color-darker-gray);
   font-weight: bold;
   margin-bottom: 0;
-  padding: 0 15px;
+  padding: 0 var(--spacing-m);
 }
 
 .rounds-won {
-  font-size: 0.9em;
-  color: #666;
+  font-size: var(--font-size-xs);
+  color: var(--color-medium-gray);
   margin: 0;
-  padding: 0 15px;
+  padding: 0 var(--spacing-m);
+}
+
+.combination-type-indicator {
+  font-size: var(--font-size-xxs);
+  color: var(--color-medium-gray);
+  margin-left: var(--spacing-xs);
 }
 
 .cards-container {
@@ -116,7 +180,7 @@ h2 {
   flex-wrap: nowrap;
   justify-content: center;
   overflow-x: hidden;
-  padding: 15px 15px;
+  padding: var(--spacing-m) var(--spacing-m);
 }
 
 #play-area .cards-container {
@@ -129,15 +193,15 @@ h2 {
 .card {
   display: inline-block;
   padding: 16px 8px;
-  margin: 3px;
+  margin: var(--spacing-xxs);
   margin-left: -20px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background-color: white;
+  border: 1px solid var(--color-dark-gray);
+  border-radius: var(--border-radius-m);
+  background-color: var(--color-white);
   cursor: pointer;
-  font-size: 1em;
-  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s ease-in-out;
+  font-size: var(--font-size-s);
+  box-shadow: var(--box-shadow-s);
+  transition: var(--transition-ease);
   width: 50px;
   text-align: center;
   transform: translateY(0px);
@@ -148,16 +212,16 @@ h2 {
 }
 
 .card:hover {
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
-  transform: translateY(-3px);
+  box-shadow: var(--box-shadow-m);
+  transform: translateY(calc(var(--spacing-xxs) * -1));
 }
 
 .card.black {
-  color: #000000;
+  color: var(--color-black);
 }
 
 .card.red {
-  color: #b22222;
+  color: var(--color-red);
 }
 
 .card:not(.selected) {
@@ -165,29 +229,29 @@ h2 {
 }
 
 .card.selected {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
-  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.2);
-  transform: translateY(-10px);
+  background-color: var(--color-primary-blue);
+  color: var(--color-white);
+  border-color: var(--color-primary-blue);
+  box-shadow: var(--box-shadow-m);
+  transform: translateY(calc(var(--spacing-s) * -1));
 }
 
 .card-count {
   position: absolute;
   bottom: 0;
-  left: 25px;
+  left: var(--spacing-xl);
   right: 0;
-  font-size: 0.8em;
-  color: #666;
+  font-size: var(--font-size-xxs);
+  color: var(--color-medium-gray);
   text-align: left;
 }
 
 #game-messages {
   text-align: center;
-  padding: 10px;
-  margin: 10px auto;
-  line-height: 1.5rem;
-  border-radius: 5px;
+  padding: var(--spacing-s);
+  margin: var(--spacing-s) auto;
+  line-height: var(--font-size-l);
+  border-radius: var(--border-radius-s);
   font-weight: bold;
   max-width: 800px;
   width: 95%;
@@ -197,7 +261,7 @@ h2 {
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px var(--color-shadow-medium);
   z-index: 1000;
   opacity: 0;
   pointer-events: none;
@@ -211,15 +275,15 @@ h2 {
 }
 
 #game-messages.error {
-  background-color: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+  background-color: var(--color-error-background);
+  color: var(--color-error-text);
+  border: 1px solid var(--color-error-border);
 }
 
 #game-messages.info {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
+  background-color: var(--color-info-background);
+  color: var(--color-info-text);
+  border: 1px solid var(--color-info-border);
 }
 
 #controls {
@@ -227,13 +291,13 @@ h2 {
   bottom: 0;
   left: 0;
   right: 0;
-  background-color: #f0f0f0;
-  padding: 10px 20px;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+  background-color: var(--color-light-gray);
+  padding: var(--spacing-s) var(--spacing-l);
+  box-shadow: 0 -2px 5px var(--color-shadow-light);
   z-index: 1000;
   display: flex;
   justify-content: space-around;
-  gap: 10px;
+  gap: var(--spacing-s);
 }
 
 #controls button {
@@ -242,12 +306,12 @@ h2 {
 }
 
 button {
-  padding: 10px 20px;
-  font-size: 1em;
+  padding: var(--spacing-s) var(--spacing-l);
+  font-size: var(--font-size-s);
   cursor: pointer;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  transition: background-color 0.2s ease-in-out;
+  border: 1px solid var(--color-dark-gray);
+  border-radius: var(--border-radius-s);
+  transition: var(--transition-background);
 }
 
 button:hover {
@@ -255,30 +319,30 @@ button:hover {
 }
 
 #play-button {
-  background-color: #4caf50;
-  color: white;
-  border-color: #4caf50;
+  background-color: var(--color-play-button);
+  color: var(--color-white);
+  border-color: var(--color-play-button);
 }
 
 #pass-button {
-  background-color: #f44336;
-  color: white;
-  border-color: #f44336;
+  background-color: var(--color-pass-button);
+  color: var(--color-white);
+  border-color: var(--color-pass-button);
 }
 
 #new-game-button {
-  background-color: #008cba;
-  color: white;
-  border-color: #008cba;
+  background-color: var(--color-new-game-button);
+  color: var(--color-white);
+  border-color: var(--color-new-game-button);
 }
 
 button:disabled,
 #play-button:disabled,
 #pass-button:disabled {
-  background-color: #cccccc;
-  color: #666666;
+  background-color: var(--color-disabled-background);
+  color: var(--color-disabled-text);
   cursor: not-allowed;
-  border-color: #cccccc;
+  border-color: var(--color-disabled-border);
 }
 
 @media (min-width: 576px) {
@@ -304,31 +368,31 @@ button:disabled,
   }
 
   h1 {
-    font-size: 2.5em;
+    font-size: var(--font-size-xl);
   }
 
   #game-board {
-    padding: 10px 0;
+    padding: var(--spacing-s) 0;
   }
 
   #play-area {
-    margin-bottom: 20px;
+    margin-bottom: var(--spacing-l);
   }
 
   .rounds-won {
-    margin-bottom: 10px;
+    margin-bottom: var(--spacing-s);
   }
 
   #players-hands {
     flex-direction: row;
-    gap: 20px;
+    gap: var(--spacing-l);
   }
 
   .player-hand {
-    padding: 15px;
+    padding: var(--spacing-m);
     height: 400px;
     width: 45%;
-    padding-bottom: 30px;
+    padding-bottom: var(--spacing-xxl);
   }
 
   .cards-container {
@@ -339,18 +403,18 @@ button:disabled,
   }
 
   .cards-container .card:first-child {
-    margin-left: 5px;
+    margin-left: var(--spacing-xs);
   }
 
   .card {
-    font-size: 1.2em;
-    padding: 15px 10px;
-    margin-left: 5px;
+    font-size: var(--font-size-m);
+    padding: var(--spacing-m) var(--spacing-s);
+    margin-left: var(--spacing-xs);
     width: 60px;
   }
 
   .card.selected {
-    transform: translateY(-3px);
+    transform: translateY(calc(var(--spacing-xxs) * -1));
   }
 
   #game-messages.visible {
@@ -377,9 +441,9 @@ button:disabled,
     position: static;
     box-shadow: none;
     justify-content: center;
-    gap: 20px;
+    gap: var(--spacing-l);
     width: auto;
-    margin-top: 20px;
+    margin-top: var(--spacing-l);
     padding: 0;
     z-index: auto;
     bottom: auto;
@@ -387,6 +451,6 @@ button:disabled,
 
   #controls button {
     flex: none;
-    margin: 0 5px;
+    margin: 0 var(--spacing-xs);
   }
 }

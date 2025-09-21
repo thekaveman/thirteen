@@ -7,6 +7,16 @@
       "name": "Launch via NPM",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["start"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug npm test",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["test"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
+      "skipFiles": ["<node_internals>/**"]
     }
   ]
 }

@@ -53,9 +53,11 @@ _Goal: Make the game playable for two humans in "hot-seat" mode._
 
 _Goal: Create a simple computer opponent to play against._
 
-- [ ] AI Turn Logic
-  - [ ] Create an `executeAITurn()` function
-  - [ ] Inside this function, program the AI to scan its hand for the lowest possible valid move it can play on the `playPile`
-  - [ ] If it finds a move, it plays it; if not, it passes
-- [ ] Integration
-  - [ ] Update the game loop: when it's the AI's turn, call the `executeAITurn()` function
+- [x] AI Turn Logic
+  - [x] Create helper functions to execute turns for human and AI
+  - [x] Implement a simple AI player that scans its hand for the lowest possible valid move it can play
+  - [x] If it finds a move, it plays it; if not, it passes
+- [x] Integration
+  - [x] Update the game loop
+  - [ ] Before a new game starts, display UI to decide if Player1 and/or Player2 are human or AI
+  - [ ] Keep new UI minimal and consider the existing UI for controls, etc.
