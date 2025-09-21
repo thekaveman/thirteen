@@ -250,7 +250,6 @@ export class UI {
    * Updates the state of the play, pass, and new game buttons.
    */
   updateButtonStates() {
-    const gameStarted = this.game.gameState.currentTurn > 0;
     const isHumanPlayerTurn = this.game.gameState.players[this.game.gameState.currentPlayer]?.type === "human";
 
     if (this.game.gameState.gameOver) {
@@ -258,21 +257,12 @@ export class UI {
       if (this.passButton) this.passButton.style.display = "none";
       if (this.newGameButton) this.newGameButton.style.display = "block";
       if (this.startGameButton) this.startGameButton.style.display = "none";
-    } else if (!gameStarted) {
-      // Game has not started yet
-      if (isHumanPlayerTurn) {
-        // Human player is first, show play/pass buttons
-        if (this.playButton) this.playButton.style.display = "block";
-        if (this.passButton) this.passButton.style.display = "block";
-        if (this.newGameButton) this.newGameButton.style.display = "none";
-        if (this.startGameButton) this.startGameButton.style.display = "none";
-      } else {
-        // AI player is first, show start button
-        if (this.playButton) this.playButton.style.display = "none";
-        if (this.passButton) this.passButton.style.display = "none";
-        if (this.newGameButton) this.newGameButton.style.display = "none";
-        if (this.startGameButton) this.startGameButton.style.display = "block";
-      }
+    } else if (!this.game.gameState.gameStarted) {
+      // Game has not started yet, show start button
+      if (this.playButton) this.playButton.style.display = "none";
+      if (this.passButton) this.passButton.style.display = "none";
+      if (this.newGameButton) this.newGameButton.style.display = "none";
+      if (this.startGameButton) this.startGameButton.style.display = "block";
     } else {
       // Game is in progress
       if (this.playButton) {
