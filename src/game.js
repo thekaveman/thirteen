@@ -296,6 +296,7 @@ export class Game {
     if (currentPlayerHand.length === 0) {
       log(`Player ${this.gameState.currentPlayer + 1} wins the game!`);
       this.gameState.gamesWon[this.gameState.currentPlayer]++;
+      this.gameState.roundsWon[this.gameState.currentPlayer]++; // Increment roundsWon here
       this.gameState.gameOver = true;
     }
 
