@@ -115,6 +115,12 @@ h2 {
   padding: 0 15px;
 }
 
+.combination-type-indicator {
+  font-size: 0.8em;
+  color: #666;
+  margin-left: 5px;
+}
+
 .cards-container {
   display: flex;
   flex-wrap: nowrap;

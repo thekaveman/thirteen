@@ -1,6 +1,7 @@
 import { log } from "./utils.js";
 import { Card } from "./deck.js";
 import { Game } from "./game.js";
+import { COMBINATION_TYPES } from "./constants.js";
 
 export class UI {
   constructor(game) {
@@ -73,6 +74,30 @@ export class UI {
   }
 
   /**
+   * Returns a character-based indicator for the given combination type.
+   * @param {string} combinationType The combination type (e.g., COMBINATION_TYPES.SINGLE).
+   * @returns {string} The character indicator.
+   */
+  getCombinationTypeIndicator(combinationType) {
+    switch (combinationType) {
+      case COMBINATION_TYPES.SINGLE:
+        return "3♠"; // Three of Spades (single card)
+      case COMBINATION_TYPES.PAIR:
+        return "3♦3♣"; // Two different 3s (pair)
+      case COMBINATION_TYPES.TRIPLE:
+        return "3♦3♣3♥"; // Three different 3s (triple)
+      case COMBINATION_TYPES.STRAIGHT:
+        return "Q♦K♣A♥"; // Queen, King, Ace (straight)
+      case COMBINATION_TYPES.FOUR_OF_A_KIND:
+        return "💣"; // Bomb indicator for Four of a Kind
+      case COMBINATION_TYPES.CONSECUTIVE_PAIRS:
+        return "💣"; // Bomb indicator for Consecutive Pairs
+      default:
+        return "Open"; // Default for an empty play pile or invalid combination
+    }
+  }
+
+  /**
    * Creates a card element.
    * @param {Card} card The card object.
    * @returns {HTMLElement} The card element.
@@ -132,7 +157,9 @@ export class UI {
    */
   renderPlayArea() {
     if (this.gameContent) {
-      this.gameContent.innerHTML = `<h2>Play Area (Round ${this.game.gameState.roundNumber})</h2>`;
+      const combinationType = this.game.getCombinationType(this.game.gameState.playPile);
+      const indicator = this.getCombinationTypeIndicator(combinationType);
+      this.gameContent.innerHTML = `<h2>Play Area (Round ${this.game.gameState.roundNumber}) <span class="combination-type-indicator">${indicator}</span></h2>`;
       this.renderCardsContainer(this.game.gameState.playPile, this.gameContent);
     }
   }

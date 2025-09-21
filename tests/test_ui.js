@@ -113,7 +113,7 @@ function test_renderPlayArea_clearsGameContentBeforeRendering() {
 
   ui.renderPlayArea();
 
-  assert(ui.gameContent.innerHTML.includes("<h2>Play Area (Round 1)</h2>"), "Should clear the play area before rendering");
+  assert(ui.gameContent.innerHTML.includes("<h2>Play Area (Round 1) <span class=\"combination-type-indicator\">Open</span></h2>"), "Should clear the play area before rendering");
   testTeardown();
 }
 
