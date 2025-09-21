@@ -552,6 +552,18 @@ function test_isValidPlay_tripleBeatsLowerTriple() {
   );
 }
 
+function test_nextPlayer_switchesPlayer() {
+  const game = new Game();
+  game.gameState.currentPlayer = 0;
+  game.gameState.numPlayers = 2;
+  game.nextPlayer();
+  assert(game.gameState.currentPlayer === 1, "Should switch to the next player");
+  game.nextPlayer();
+  assert(game.gameState.currentPlayer === 0, "Should switch back to the first player");
+  game.nextPlayer();
+  assert(game.gameState.currentPlayer === 1, "Should switch to the next player");
+}
+
 function test_passTurn_endsRoundCorrectly() {
   const game = new Game();
   game.gameState.numPlayers = 3;
@@ -623,6 +635,20 @@ function test_playCards_updatesGameState() {
   assert(game.gameState.gameOver === true, "Should set gameOver to true when player wins");
 }
 
+function test_playCards_updatesGamesWon() {
+  const game = new Game();
+  game.gameState.currentPlayer = 0;
+  game.gameState.numPlayers = 2;
+  const cardToPlay = new Card("4", "♠");
+  game.gameState.playerHands = [[cardToPlay], []];
+  game.gameState.selectedCards = [cardToPlay];
+  game.gameState.gamesWon = [0, 0];
+
+  game.playCards();
+
+  assert(game.gameState.gamesWon[0] === 1, "Should increment games won for the winner");
+}
+
 function test_reset() {
   const game = new Game();
   game.gameState.numPlayers = 3;
@@ -659,30 +685,25 @@ function test_reset() {
   assert(game.gameState.gameOver === false, "Reset gameOver should be false");
 }
 
-function test_nextPlayer_switchesPlayer() {
+function test_start_initializesGameState() {
   const game = new Game();
-  game.gameState.currentPlayer = 0;
-  game.gameState.numPlayers = 2;
-  game.nextPlayer();
-  assert(game.gameState.currentPlayer === 1, "Should switch to the next player");
-  game.nextPlayer();
-  assert(game.gameState.currentPlayer === 0, "Should switch back to the first player");
-  game.nextPlayer();
-  assert(game.gameState.currentPlayer === 1, "Should switch to the next player");
-}
+  const mockDeck = {
+    shuffle: () => {},
+    deal: (numPlayers) => {
+      return Array.from({ length: numPlayers }, () => []);
+    },
+  };
+  const players = [{ type: "human" }, { type: "ai" }];
 
-function test_playCards_updatesGamesWon() {
-  const game = new Game();
-  game.gameState.currentPlayer = 0;
-  game.gameState.numPlayers = 2;
-  const cardToPlay = new Card("4", "♠");
-  game.gameState.playerHands = [[cardToPlay], []];
-  game.gameState.selectedCards = [cardToPlay];
-  game.gameState.gamesWon = [0, 0];
+  game.start(mockDeck, players);
 
-  game.playCards();
-
-  assert(game.gameState.gamesWon[0] === 1, "Should increment games won for the winner");
+  assert(game.gameState.numPlayers === players.length, "numPlayers should be initialized with the correct length");
+  assert(game.gameState.players.length === players.length, "players should be initialized with the correct length");
+  assert(game.gameState.roundsWon.length === players.length, "roundsWon should be initialized with the correct length");
+  assert(
+    game.gameState.roundsWon.every((count) => count === 0),
+    "roundsWon should be filled with zeros"
+  );
 }
 
 export const gameTests = [
@@ -731,11 +752,12 @@ export const gameTests = [
   test_isValidPlay_straightBeatsLowerStraight,
   test_isValidPlay_threeConsecutivePairsBeatsSingle2,
   test_isValidPlay_tripleBeatsLowerTriple,
+  test_nextPlayer_switchesPlayer,
   test_passTurn_endsRoundCorrectly,
   test_passTurn_firstPlayOfRound,
   test_passTurn_incrementsPassesAndSwitchesPlayer,
   test_playCards_updatesGameState,
   test_playCards_updatesGamesWon,
   test_reset,
-  test_nextPlayer_switchesPlayer,
+  test_start_initializesGameState,
 ];

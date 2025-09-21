@@ -33,11 +33,13 @@ export class Game {
   findStartingPlayer(hands) {
     let startingPlayer = 0;
     const lowestCard = Card.findLowest(hands);
-    const lowestCardValue = lowestCard.value;
+    if (lowestCard) {
+      const lowestCardValue = lowestCard.value;
 
-    for (let i = 0; i < hands.length; i++) {
-      if (hands[i][0].value == lowestCardValue) {
-        startingPlayer = i;
+      for (let i = 0; i < hands.length; i++) {
+        if (hands[i][0].value == lowestCardValue) {
+          startingPlayer = i;
+        }
       }
     }
 
@@ -323,9 +325,6 @@ export class Game {
     this.gameState.lastPlayerToPlay = -1;
     this.gameState.roundNumber = 1;
     this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
-    if (this.gameState.gamesWon.length === 0) {
-      this.gameState.gamesWon = new Array(this.gameState.numPlayers).fill(0);
-    }
     this.gameState.gameOver = false;
   }
 
@@ -339,6 +338,11 @@ export class Game {
     this.gameState.players = players;
     this.gameState.playerTypes = players.map((p) => p.type);
     this.gameState.numPlayers = players.length;
+
+    this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
+    if (this.gameState.gamesWon.length !== this.gameState.numPlayers) {
+      this.gameState.gamesWon = new Array(this.gameState.numPlayers).fill(0);
+    }
 
     this.gameState.playerHands = deck.deal(this.gameState.numPlayers);
     this.gameState.playerHands.forEach(Card.sort);
