@@ -107,16 +107,25 @@ export class MockUI {
       addEventListener: (event, handler) => {
         this.playButton.handler = handler;
       },
+      style: { display: "" },
     };
     this.passButton = {
       addEventListener: (event, handler) => {
         this.passButton.handler = handler;
       },
+      style: { display: "" },
     };
     this.newGameButton = {
       addEventListener: (event, handler) => {
         this.newGameButton.handler = handler;
       },
+      style: { display: "" },
+    };
+    this.startGameButton = {
+      addEventListener: (event, handler) => {
+        this.startGameButton.handler = handler;
+      },
+      style: { display: "" },
     };
     this.gameMessages = { textContent: "", classList: { add: () => {}, remove: () => {} } };
     this.playersHands = { innerHTML: "", appendChild: () => {} };

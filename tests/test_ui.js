@@ -46,9 +46,10 @@ function testSetup() {
   uiInstance.init(game);
 
   // Ensure buttons are in a known state for tests that check them
-  uiInstance.playButton.disabled = false;
-  uiInstance.passButton.disabled = false;
+  uiInstance.playButton.style.display = "block";
+  uiInstance.passButton.style.display = "block";
   uiInstance.newGameButton.style.display = "none";
+  uiInstance.startGameButton.style.display = "none";
 
   return uiInstance; // Return the ui instance
 }
@@ -146,21 +147,39 @@ function test_updateButtonStates_gameOver() {
 
   ui.updateButtonStates();
 
-  assert(ui.playButton.disabled, "Play button should be disabled");
-  assert(ui.passButton.disabled, "Pass button should be disabled");
+  assert(ui.playButton.style.display === "none", "Play button should be hidden");
+  assert(ui.passButton.style.display === "none", "Pass button should be hidden");
   assert(ui.newGameButton.style.display === "block", "New game button should be visible");
+  assert(ui.startGameButton.style.display === "none", "Start game button should be hidden");
   testTeardown();
 }
 
 function test_updateButtonStates_gameNotOver() {
   const ui = testSetup();
   ui.game.gameState.gameOver = false;
+  ui.game.gameState.currentTurn = 1; // Simulate game in progress
 
   ui.updateButtonStates();
 
-  assert(!ui.playButton.disabled, "Play button should be enabled");
-  assert(!ui.passButton.disabled, "Pass button should be enabled");
+  assert(ui.playButton.style.display === "block", "Play button should be visible");
+  assert(ui.passButton.style.display === "block", "Pass button should be visible");
   assert(ui.newGameButton.style.display === "none", "New game button should be hidden");
+  assert(ui.startGameButton.style.display === "none", "Start game button should be hidden");
+  testTeardown();
+}
+
+function test_updateButtonStates_gameNotStarted() {
+  const ui = testSetup();
+  ui.game.gameState.gameOver = false;
+  ui.game.gameState.currentTurn = 0; // Simulate game not started
+  ui.game.gameState.currentPlayer = 0; // Human player is first
+
+  ui.updateButtonStates();
+
+  assert(ui.playButton.style.display === "block", "Play button should be visible");
+  assert(ui.passButton.style.display === "block", "Pass button should be visible");
+  assert(ui.newGameButton.style.display === "none", "New game button should be hidden");
+  assert(ui.startGameButton.style.display === "none", "Start game button should be hidden");
   testTeardown();
 }
 
@@ -172,4 +191,5 @@ export const uiTests = [
   test_renderPlayerHands_rendersCorrectNumberOfHands,
   test_updateButtonStates_gameOver,
   test_updateButtonStates_gameNotOver,
+  test_updateButtonStates_gameNotStarted,
 ];

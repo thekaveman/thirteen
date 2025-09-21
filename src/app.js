@@ -21,6 +21,9 @@ export class App {
     if (currentSetTimeout != null) {
       this.setTimeout = currentSetTimeout;
     }
+    this.ui.init(this.game);
+
+    // Initial game setup for display (hands dealt, starting player determined)
     this.game.reset();
     const playerTypes = ["human", "ai"];
     const players = playerTypes.map((type, index) => {
@@ -31,19 +34,22 @@ export class App {
     });
     this.game.start(this.deck, players);
 
-    log(`New game started`);
+    this.ui.render(); // Render initial UI with dealt hands and start button
+    this.ui.startGameButton.addEventListener("click", () => this.startGame());
 
-    this.ui.init(this.game);
-    this.ui.render();
-
+    // Set up event listeners for play/pass/new game buttons
     const humanPlayer = this.game.gameState.players.find((p) => p.type === "human");
     if (humanPlayer) {
       this.ui.playButton.addEventListener("click", () => this.handleHumanPlay());
       this.ui.passButton.addEventListener("click", () => this.handleHumanPass());
     }
-
     this.ui.newGameButton.addEventListener("click", () => this.init());
+  }
 
+  startGame() {
+    log(`Game started`);
+
+    this.ui.render(); // Update UI after game officially starts
     this.nextTurn();
   }
 

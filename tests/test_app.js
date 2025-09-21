@@ -24,6 +24,8 @@ function test_handleAITurn_playsCardsWhenMoveIsAvailable() {
   app.init((handler, delay) => {
     handler();
   });
+  app.ui.startGameButton.handler(); // Simulate clicking the start button
+
   app.game.gameState.currentPlayer = 1; // the AI player
   const aiPlayer = app.game.gameState.players[1];
   const takeTurnSpy = spyOn(aiPlayer.ai, "takeTurn");
@@ -68,6 +70,7 @@ function test_handleAITurn_passesTurnWhenNoMoveIsAvailable() {
 
   // Mock setTimeout to prevent immediate execution of nextTurn during init
   app.init((handler, delay) => {});
+  app.ui.startGameButton.handler(); // Simulate clicking the start button
 
   app.game.gameState.currentPlayer = 1; // Set current player to AI
   app.nextTurn = originalNextTurn; // Restore nextTurn
@@ -93,6 +96,8 @@ function test_handleHumanPlay_callsPlayButtonClickAndNextTurn() {
 
   const app = new App(MockDeck, game, new MockAI(game), new MockUI(game));
   app.init();
+  app.ui.startGameButton.handler(); // Simulate clicking the start button
+
   app.game.gameState.currentPlayer = 0; // the human player
 
   const humanPlayer = app.game.gameState.players[0];
@@ -111,6 +116,8 @@ function test_handleHumanPass_callsPassButtonClickAndNextTurn() {
 
   const app = new App(MockDeck, game, new MockAI(game), new MockUI(game));
   app.init();
+  app.ui.startGameButton.handler(); // Simulate clicking the start button
+
   app.game.gameState.currentPlayer = 0; // the human player
 
   const humanPlayer = app.game.gameState.players[0];
@@ -134,14 +141,19 @@ function test_init_initializesGameStateCorrectly() {
 
   app.init();
 
-  assert(app.game.resetCalled, "game.reset should be called");
-  assert(app.game.startCalled, "game.start should be called");
-  assert(app.game.gameState.players.length === 2, "init should initialize 2 players");
-  assert(app.game.gameState.playerTypes[0] === "human", "First player should be human");
-  assert(app.game.gameState.playerTypes[1] === "ai", "Second player should be AI");
-  assert(app.game.findStartingPlayerCalled, "findStartingPlayer should be called");
   assert(app.ui.initCalled, "ui.init should be called");
-  assert(app.ui.renderCalled, "ui.render should be called");
+  assert(app.ui.startGameButton.handler, "Start game button event listener should be set");
+
+  // Simulate clicking the start button
+  app.ui.startGameButton.handler();
+
+  assert(app.game.resetCalled, "game.reset should be called after start button click");
+  assert(app.game.startCalled, "game.start should be called after start button click");
+  assert(app.game.gameState.players.length === 2, "init should initialize 2 players after start button click");
+  assert(app.game.gameState.playerTypes[0] === "human", "First player should be human after start button click");
+  assert(app.game.gameState.playerTypes[1] === "ai", "Second player should be AI after start button click");
+  assert(app.game.findStartingPlayerCalled, "findStartingPlayer should be called after start button click");
+  assert(app.ui.renderCalled, "ui.render should be called after start button click");
 }
 
 function test_nextTurn_callsHandleAITurnForAIPlayer() {
@@ -155,6 +167,8 @@ function test_nextTurn_callsHandleAITurnForAIPlayer() {
   app.init((handler, delay) => {
     handler();
   });
+  app.ui.startGameButton.handler(); // Simulate clicking the start button
+
   const playedCard = new Card("3", "♠");
   app.game.gameState.playPile = [playedCard];
   app.game.gameState.currentPlayer = 1; // Assuming AI is next
@@ -174,6 +188,8 @@ function test_nextTurn_doesNotCallHandleAITurnForHumanPlayer() {
   const handleAITurnSpy = spyOn(app, "handleAITurn");
 
   app.init();
+  app.ui.startGameButton.handler(); // Simulate clicking the start button
+
   app.game.gameState.currentPlayer = 0; // the human player
 
   app.nextTurn();
