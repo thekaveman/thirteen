@@ -26,7 +26,7 @@ dom.window.document.body.innerHTML = html;
 import { Game } from "../src/game.js";
 
 // Load deck module
-import { createDeck } from "../src/deck.js";
+import { Deck } from "../src/deck.js";
 
 // Load player module
 import { HumanPlayer, AIPlayer } from "../src/player.js";
@@ -54,10 +54,12 @@ for (const [name, tests] of Object.entries(TEST_CONFIG)) {
   let testsRun = 0;
   let testsPassed = 0;
   // Create a new Game instance for each test suite
-  const gameInstance = new Game();
-  const deck = createDeck();
-  const app = new App(deck, gameInstance, LowestCardAI, UI);
+  const game = new Game();
+  const deck = new Deck();
+  const ai = new LowestCardAI(game);
+  const ui = new UI(game);
 
+  const app = new App(deck, game, ai, ui);
   app.init();
 
   process.stdout.write(`\n== Running tests: ${name} [${tests.length}]\n`);
@@ -77,7 +79,7 @@ for (const [name, tests] of Object.entries(TEST_CONFIG)) {
       }
     },
   };
-  runTests(tests, mockResults, { gameInstance });
+  runTests(tests, mockResults, { gameInstance: game });
   process.stdout.write(`Result: [${testsPassed} / ${testsRun}] passed\n`);
 }
 

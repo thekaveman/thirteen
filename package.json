@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "node tests/cli_runner.js",
+    "test": "node tests/runner_cli.js",
     "start": "live-server"
   },
   "repository": {
