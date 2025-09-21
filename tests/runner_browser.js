@@ -3,7 +3,7 @@ import { TEST_CONFIG } from "./config.js";
 import { runTests } from "./utils.js";
 import { LowestCardAI } from "../src/ai.js";
 import { App } from "../src/app.js";
-import * as deck from "../src/deck.js";
+import { Deck } from "../src/deck.js";
 import { Game } from "../src/game.js";
 import { UI } from "../src/ui.js";
 
@@ -27,11 +27,14 @@ if (typeof window !== "undefined") {
     });
 
     // Create a new Game instance for each test suite
-    const gameInstance = new Game();
-    const app = new App(deck.createDeck(), gameInstance, LowestCardAI, UI);
+    const game = new Game();
+    const deck = new Deck();
+    const ai = new LowestCardAI(game);
+    const ui = new UI(game);
 
-    // Initialize the app with actual dependencies, but mockUI for UI
-    app.init(window.setTimeout);
+    // Initialize the app with actual dependencies
+    const app = new App(deck, game, ai, ui);
+    app.init(window.setTimeout.bind(window));
 
     for (const [name, tests] of Object.entries(TEST_CONFIG)) {
       log(`Running tests: ${name} [${tests.length}]`);
@@ -54,7 +57,7 @@ if (typeof window !== "undefined") {
       const resultsList = document.createElement("ul");
       const resultText = document.createElement("p");
 
-      runTests(tests, resultsList);
+      runTests(tests, resultsList, { gameInstance: game });
 
       heading.textContent = `${name} [${testsRun}]`;
       body.appendChild(heading);
@@ -72,8 +75,10 @@ if (typeof window !== "undefined") {
     const overallResults = document.createElement("p");
     if (allTestsRun == allTestsPassed) {
       overallResults.textContent = `All tests passed [${allTestsPassed} / ${allTestsRun}]`;
+      overallResults.style.color = "green";
     } else {
       overallResults.textContent = `Some tests failed [${allTestsRun - allTestsPassed} / ${allTestsRun}]`;
+      overallResults.style.color = "red";
     }
     lastRun.appendChild(overallResults);
 
