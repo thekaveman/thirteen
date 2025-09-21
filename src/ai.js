@@ -1,5 +1,5 @@
 import { RANKS } from "./constants.js";
-import { sortHand } from "./deck.js";
+import { Card } from "./deck.js";
 
 export class AI {
   constructor(game) {
@@ -8,11 +8,11 @@ export class AI {
 
   /**
    * Executes the AI's turn and returns the chosen move.
-   * @param {Array<object>} playerHand The AI player's hand.
-   * @param {Array<object>} playPile The current play pile.
+   * @param {Array<Card>} playerHand The AI player's hand.
+   * @param {Array<Card>} playPile The current play pile.
    * @param {number} currentTurn The current turn number.
-   * @param {Array<Array<object>>} allPlayerHands All players' hands.
-   * @returns {Array<object> | null} The cards to play, or an empty array if the AI passes.
+   * @param {Array<Array<Card>>} allPlayerHands All players' hands.
+   * @returns {Array<Card> | null} The cards to play, or an empty array if the AI passes.
    */
   takeTurn(playerHand, playPile, currentTurn, allPlayerHands) {
     throw new Error("Subclasses must implement takeTurn");
@@ -20,12 +20,12 @@ export class AI {
 
   /**
    * Finds all valid moves of a specific combination type for the AI player.
-   * @param {Array<object>} hand The AI player's hand.
-   * @param {Array<object>} playPile The current play pile.
+   * @param {Array<Card>} hand The AI player's hand.
+   * @param {Array<Card>} playPile The current play pile.
    * @param {string} combinationType The type of combination to find.
    * @param {number} currentTurn The current turn number.
-   * @param {Array<Array<object>>} allPlayerHands All players' hands.
-   * @returns {Array<Array<object>>} An array of valid moves.
+   * @param {Array<Array<Card>>} allPlayerHands All players' hands.
+   * @returns {Array<Array<Card>>} An array of valid moves.
    */
   _findValidMoves(hand, playPile, combinationType, currentTurn, allPlayerHands) {
     const potentialMoves = this._generateCombinations(hand, combinationType);
@@ -41,9 +41,9 @@ export class AI {
 
   /**
    * Generates all possible combinations of a given type from a player's hand.
-   * @param {Array<object>} hand The player's hand.
+   * @param {Array<Card>} hand The player's hand.
    * @param {string} type The type of combination to generate.
-   * @returns {Array<Array<object>>} An array of combinations.
+   * @returns {Array<Array<Card>>} An array of combinations.
    */
   _generateCombinations(hand, type) {
     let combinations = [];
@@ -68,15 +68,15 @@ export class AI {
         break;
     }
 
-    combinations.forEach(sortHand);
+    combinations.forEach(Card.sort);
     combinations.sort((a, b) => a[0].value - b[0].value);
     return combinations;
   }
 
   /**
    * Generates all possible single cards from a hand.
-   * @param {Array<object>} hand The player's hand.
-   * @returns {Array<Array<object>>} An array of single card combinations.
+   * @param {Array<Card>} hand The player's hand.
+   * @returns {Array<Array<Card>>} An array of single card combinations.
    */
   _generateSingles(hand) {
     return hand.map((card) => [card]);
@@ -84,8 +84,8 @@ export class AI {
 
   /**
    * Generates all possible pairs from a hand.
-   * @param {Array<object>} hand The player's hand.
-   * @returns {Array<Array<object>>} An array of pair combinations.
+   * @param {Array<Card>} hand The player's hand.
+   * @returns {Array<Array<Card>>} An array of pair combinations.
    */
   _generatePairs(hand) {
     const combinations = [];
@@ -101,8 +101,8 @@ export class AI {
 
   /**
    * Generates all possible triples from a hand.
-   * @param {Array<object>} hand The player's hand.
-   * @returns {Array<Array<object>>} An array of triple combinations.
+   * @param {Array<Card>} hand The player's hand.
+   * @returns {Array<Array<Card>>} An array of triple combinations.
    */
   _generateTriples(hand) {
     const combinations = [];
@@ -120,13 +120,13 @@ export class AI {
 
   /**
    * Generates all possible straights from a hand.
-   * @param {Array<object>} hand The player's hand.
-   * @returns {Array<Array<object>>} An array of straight combinations.
+   * @param {Array<Card>} hand The player's hand.
+   * @returns {Array<Array<Card>>} An array of straight combinations.
    */
   _generateStraights(hand) {
     const combinations = [];
     const sortedHand = [...hand];
-    sortHand(sortedHand);
+    Card.sort(sortedHand);
 
     const uniqueSortedCardsWithoutTwos = this._getUniqueSortedRanksWithoutTwos(sortedHand);
     const maximalStraights = this._findMaximalStraights(uniqueSortedCardsWithoutTwos);
@@ -139,8 +139,8 @@ export class AI {
 
   /**
    * Extracts unique ranks (excluding '2's) from a sorted hand.
-   * @param {Array<object>} sortedHand The sorted hand.
-   * @returns {Array<object>} An array of cards with unique ranks.
+   * @param {Array<Card>} sortedHand The sorted hand.
+   * @returns {Array<Card>} An array of cards with unique ranks.
    */
   _getUniqueSortedRanksWithoutTwos(sortedHand) {
     const uniqueRanks = [];
@@ -155,8 +155,8 @@ export class AI {
 
   /**
    * Builds the longest possible consecutive straight starting from a given index in uniqueRanks.
-   * @param {Array<object>} uniqueRanks An array of cards with unique ranks.
-   * @returns {Array<object>} The longest consecutive straight found.
+   * @param {Array<Card>} uniqueRanks An array of cards with unique ranks.
+   * @returns {Array<Card>} The longest consecutive straight found.
    */
   _findMaximalStraights(uniqueRanks) {
     const maximalStraights = [];
@@ -180,8 +180,8 @@ export class AI {
 
   /**
    * Extracts all sub-straights of length 3 or more from a given straight.
-   * @param {Array<object>} maximalStraight The straight to extract sub-straights from.
-   * @returns {Array<Array<object>>} An array of sub-straights.
+   * @param {Array<Card>} maximalStraight The straight to extract sub-straights from.
+   * @returns {Array<Array<Card>>} An array of sub-straights.
    */
   _deriveSubStraights(maximalStraight) {
     const subStraights = [];
@@ -197,8 +197,8 @@ export class AI {
 
   /**
    * Generates all possible four of a kind combinations from a hand.
-   * @param {Array<object>} hand The player's hand.
-   * @returns {Array<Array<object>>} An array of four of a kind combinations.
+   * @param {Array<Card>} hand The player's hand.
+   * @returns {Array<Array<Card>>} An array of four of a kind combinations.
    */
   _generateFourOfAKind(hand) {
     const combinations = [];
@@ -218,13 +218,13 @@ export class AI {
 
   /**
    * Generates all possible consecutive pairs (double straights) from a hand.
-   * @param {Array<object>} hand The player's hand.
-   * @returns {Array<Array<object>>} An array of consecutive pair combinations.
+   * @param {Array<Card>} hand The player's hand.
+   * @returns {Array<Array<Card>>} An array of consecutive pair combinations.
    */
   _generateConsecutivePairs(hand) {
     const combinations = [];
     const sortedHand = [...hand];
-    sortHand(sortedHand);
+    Card.sort(sortedHand);
 
     const rankToCards = new Map();
     for (const card of sortedHand) {
@@ -271,8 +271,8 @@ export class AI {
 
   /**
    * Extracts all sub-consecutive pairs of length 3 or more from a given sequence of consecutive pairs.
-   * @param {Array<Array<object>>} maximalConsecutivePairs The sequence of consecutive pairs to extract sub-sequences from.
-   * @returns {Array<Array<object>>} An array of sub-consecutive pair combinations.
+   * @param {Array<Array<Card>>} maximalConsecutivePairs The sequence of consecutive pairs to extract sub-sequences from.
+   * @returns {Array<Array<Card>>} An array of sub-consecutive pair combinations.
    */
   _deriveSubConsecutivePairs(maximalConsecutivePairs) {
     const subConsecutivePairs = [];
@@ -294,11 +294,11 @@ export class LowestCardAI extends AI {
 
   /**
    * Executes the AI's turn by finding the lowest valid move.
-   * @param {Array<object>} playerHand The AI player's hand.
-   * @param {Array<object>} playPile The current play pile.
+   * @param {Array<Card>} playerHand The AI player's hand.
+   * @param {Array<Card>} playPile The current play pile.
    * @param {number} currentTurn The current turn number.
-   * @param {Array<Array<object>>} allPlayerHands All players' hands.
-   * @returns {Array<object>} The cards to play, or an empty array if the AI passes.
+   * @param {Array<Array<Card>>} allPlayerHands All players' hands.
+   * @returns {Array<Card>} The cards to play, or an empty array if the AI passes.
    */
   takeTurn(playerHand, playPile, currentTurn, allPlayerHands) {
     const move = this._findLowestValidMove(playerHand, playPile, currentTurn, allPlayerHands);
@@ -307,11 +307,11 @@ export class LowestCardAI extends AI {
 
   /**
    * Finds the lowest valid move for the AI player.
-   * @param {Array<object>} hand The AI player's hand.
-   * @param {Array<object>} playPile The current play pile.
+   * @param {Array<Card>} hand The AI player's hand.
+   * @param {Array<Card>} playPile The current play pile.
    * @param {number} currentTurn The current turn number.
-   * @param {Array<Array<object>>} allPlayerHands All players' hands.
-   * @returns {Array<object>} The cards to play, or an empty array if no valid move is found.
+   * @param {Array<Array<Card>>} allPlayerHands All players' hands.
+   * @returns {Array<Card>} The cards to play, or an empty array if no valid move is found.
    */
   _findLowestValidMove(hand, playPile, currentTurn, allPlayerHands) {
     let allValidMoves = [];

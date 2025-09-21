@@ -1,5 +1,5 @@
 import { COMBINATION_TYPES, RANKS } from "./constants.js";
-import { allCardsHaveSameRank, findLowestCardInHands, deal, sortHand, shuffleDeck } from "./deck.js";
+import { Card, Deck } from "./deck.js";
 import { log } from "./utils.js";
 
 export class Game {
@@ -24,12 +24,12 @@ export class Game {
 
   /**
    * Finds the player who should start the game based on the lowest card.
-   * @param {Array<Array<object>>} hands An array of sorted player hands.
+   * @param {Array<Array<Card>>} hands An array of sorted player hands.
    * @returns {number} The index of the player who should start.
    */
   findStartingPlayer(hands) {
     let startingPlayer = 0;
-    const lowestCard = findLowestCardInHands(hands);
+    const lowestCard = Card.findLowest(hands);
     const lowestCardValue = lowestCard.value;
 
     for (let i = 0; i < hands.length; i++) {
@@ -43,7 +43,7 @@ export class Game {
 
   /**
    * Determines the combination type of a set of cards.
-   * @param {Array<object>} cards The cards to check.
+   * @param {Array<Card>} cards The cards to check.
    * @returns {string} The combination type.
    */
   getCombinationType(cards) {
@@ -59,7 +59,7 @@ export class Game {
   /**
    * Checks if a combination of cards is a bomb that can beat a pair of 2s.
    * A bomb against a pair of 2s is four consecutive pairs.
-   * @param {Array<object>} cards The cards to check.
+   * @param {Array<Card>} cards The cards to check.
    * @returns {boolean} True if the cards form a bomb that beats a pair of 2s.
    */
   isBombForPairOfTwos(cards) {
@@ -73,7 +73,7 @@ export class Game {
   /**
    * Checks if a combination of cards is a bomb that can beat a single 2.
    * A bomb against a single 2 is either a four-of-a-kind or three consecutive pairs.
-   * @param {Array<object>} cards The cards to check.
+   * @param {Array<Card>} cards The cards to check.
    * @returns {boolean} True if the cards form a bomb that beats a single 2.
    */
   isBombForSingleTwo(cards) {
@@ -89,7 +89,7 @@ export class Game {
 
   /**
    * Checks if a combination is consecutive pairs.
-   * @param {Array<object>} cards The cards to check.
+   * @param {Array<Card>} cards The cards to check.
    * @returns {boolean} True if the combination is consecutive pairs.
    */
   isConsecutivePairs(cards) {
@@ -116,25 +116,25 @@ export class Game {
 
   /**
    * Checks if a combination is a four-of-a-kind.
-   * @param {Array<object>} cards The cards to check.
+   * @param {Array<Card>} cards The cards to check.
    * @returns {boolean} True if the combination is a four-of-a-kind.
    */
   isFourOfAKind(cards) {
-    return cards.length === 4 && allCardsHaveSameRank(cards);
+    return cards.length === 4 && Card.allSameRank(cards);
   }
 
   /**
    * Checks if a combination is a pair.
-   * @param {Array<object>} cards The cards to check.
+   * @param {Array<Card>} cards The cards to check.
    * @returns {boolean} True if the combination is a pair.
    */
   isPair(cards) {
-    return cards.length === 2 && allCardsHaveSameRank(cards);
+    return cards.length === 2 && Card.allSameRank(cards);
   }
 
   /**
    * Checks if a combination is a single card.
-   * @param {Array<object>} cards The cards to check.
+   * @param {Array<Card>} cards The cards to check.
    * @returns {boolean} True if the combination is a single.
    */
   isSingle(cards) {
@@ -143,7 +143,7 @@ export class Game {
 
   /**
    * Checks if a combination is a straight.
-   * @param {Array<object>} cards The cards to check.
+   * @param {Array<Card>} cards The cards to check.
    * @returns {boolean} True if the combination is a straight.
    */
   isStraight(cards) {
@@ -165,18 +165,18 @@ export class Game {
 
   /**
    * Checks if a combination is a triple.
-   * @param {Array<object>} cards The cards to check.
+   * @param {Array<Card>} cards The cards to check.
    * @returns {boolean} True if the combination is a triple.
    */
   isTriple(cards) {
-    return cards.length === 3 && allCardsHaveSameRank(cards);
+    return cards.length === 3 && Card.allSameRank(cards);
   }
 
   /**
    * Checks if a play is valid according to the game rules.
-   * @param {Array<object>} selectedCards The cards the player has selected.
-   * @param {Array<object>} playPile The cards currently in the play pile.
-   * @param {Array<object>} playerHand The hand of the player making the play.
+   * @param {Array<Card>} selectedCards The cards the player has selected.
+   * @param {Array<Card>} playPile The cards currently in the play pile.
+   * @param {Array<Card>} playerHand The hand of the player making the play.
    * @returns {boolean} True if the play is valid.
    */
   isValidPlay(selectedCards, playPile, playerHand, currentTurn, allPlayerHands) {
@@ -216,7 +216,7 @@ export class Game {
     // Standard play validation
     if (playPile.length === 0) {
       if (currentTurn === 0) {
-        const lowestCard = findLowestCardInHands(allPlayerHands);
+        const lowestCard = Card.findLowest(allPlayerHands);
         return selectedCards.some((card) => card.value === lowestCard.value);
       }
       return true;
@@ -234,6 +234,13 @@ export class Game {
     const highestPlayPileCard = playPile.reduce((max, card) => (card.value > max.value ? card : max));
 
     return highestSelectedCard.value > highestPlayPileCard.value;
+  }
+
+  /**
+   * Switches to the next player.
+   */
+  nextPlayer() {
+    this.gameState.currentPlayer = (this.gameState.currentPlayer + 1) % this.gameState.numPlayers;
   }
 
   /**
@@ -257,7 +264,7 @@ export class Game {
       this.gameState.currentPlayer = this.gameState.lastPlayerToPlay;
       this.gameState.roundNumber++;
     } else {
-      this.switchToNextPlayer();
+      this.nextPlayer();
     }
 
     this.gameState.currentTurn++;
@@ -295,7 +302,7 @@ export class Game {
 
     // Switch to next player
     if (!this.gameState.gameOver) {
-      this.switchToNextPlayer();
+      this.nextPlayer();
     }
     this.gameState.currentTurn++;
   }
@@ -321,20 +328,13 @@ export class Game {
 
   /**
    * Initializes the game by dealing hands and setting the starting player.
-   * @param {object} deck The deck instance.
+   * @param {Deck} deck The deck instance.
    */
   start(deck) {
-    shuffleDeck(deck);
-    this.gameState.playerHands = deal(deck, this.gameState.numPlayers);
-    this.gameState.playerHands.forEach(sortHand);
+    deck.shuffle();
+    this.gameState.playerHands = deck.deal(this.gameState.numPlayers);
+    this.gameState.playerHands.forEach(Card.sort);
     this.gameState.currentPlayer = this.findStartingPlayer(this.gameState.playerHands);
     this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
-  }
-
-  /**
-   * Switches to the next player.
-   */
-  switchToNextPlayer() {
-    this.gameState.currentPlayer = (this.gameState.currentPlayer + 1) % this.gameState.numPlayers;
   }
 }

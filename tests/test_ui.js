@@ -1,77 +1,73 @@
 import { assert } from "./utils.js";
-import { createCard } from "../src/deck.js";
-import { Player } from "../src/player.js";
+import { Card } from "../src/deck.js";
+import { HumanPlayer } from "../src/player.js";
 import { UI } from "../src/ui.js";
+import { Game } from "../src/game.js";
 
 const TEST_UI_ID = "test-ui";
 
-let humanPlayer;
-let game; // Declare a global variable to hold the game instance
-let ui;
-
 const mockDeck = {
-  createDeck: () => [
-    createCard("3", "♠"),
-    createCard("4", "♦"),
-    createCard("5", "♣"),
-    createCard("6", "♥"),
-    createCard("7", "♠"),
-    createCard("8", "♦"),
-    createCard("9", "♣"),
-    createCard("10", "♥"),
-    createCard("J", "♠"),
-    createCard("Q", "♦"),
-    createCard("K", "♣"),
-    createCard("A", "♥"),
-    createCard("2", "♠"),
-    createCard("3", "♦"),
-    createCard("4", "♣"),
-    createCard("5", "♥"),
-    createCard("6", "♠"),
-    createCard("7", "♦"),
-    createCard("8", "♣"),
-    createCard("9", "♥"),
-    createCard("10", "♠"),
-    createCard("J", "♦"),
-    createCard("Q", "♣"),
-    createCard("K", "♥"),
-    createCard("A", "♠"),
-    createCard("2", "♦"),
+  cards: [
+    new Card("3", "♠"),
+    new Card("4", "♦"),
+    new Card("5", "♣"),
+    new Card("6", "♥"),
+    new Card("7", "♠"),
+    new Card("8", "♦"),
+    new Card("9", "♣"),
+    new Card("10", "♥"),
+    new Card("J", "♠"),
+    new Card("Q", "♦"),
+    new Card("K", "♣"),
+    new Card("A", "♥"),
+    new Card("2", "♠"),
+    new Card("3", "♦"),
+    new Card("4", "♣"),
+    new Card("5", "♥"),
+    new Card("6", "♠"),
+    new Card("7", "♦"),
+    new Card("8", "♣"),
+    new Card("9", "♥"),
+    new Card("10", "♠"),
+    new Card("J", "♦"),
+    new Card("Q", "♣"),
+    new Card("K", "♥"),
+    new Card("A", "♠"),
+    new Card("2", "♦"),
   ],
   deal: () => [
     [
-      createCard("3", "♠"),
-      createCard("4", "♦"),
-      createCard("5", "♣"),
-      createCard("6", "♥"),
-      createCard("7", "♠"),
-      createCard("8", "♦"),
-      createCard("9", "♣"),
-      createCard("10", "♥"),
-      createCard("J", "♠"),
-      createCard("Q", "♦"),
-      createCard("K", "♣"),
-      createCard("A", "♥"),
-      createCard("2", "♠"),
+      new Card("3", "♠"),
+      new Card("4", "♦"),
+      new Card("5", "♣"),
+      new Card("6", "♥"),
+      new Card("7", "♠"),
+      new Card("8", "♦"),
+      new Card("9", "♣"),
+      new Card("10", "♥"),
+      new Card("J", "♠"),
+      new Card("Q", "♦"),
+      new Card("K", "♣"),
+      new Card("A", "♥"),
+      new Card("2", "♠"),
     ],
     [
-      createCard("3", "♦"),
-      createCard("4", "♣"),
-      createCard("5", "♥"),
-      createCard("6", "♠"),
-      createCard("7", "♦"),
-      createCard("8", "♣"),
-      createCard("9", "♥"),
-      createCard("10", "♠"),
-      createCard("J", "♦"),
-      createCard("Q", "♣"),
-      createCard("K", "♥"),
-      createCard("A", "♠"),
-      createCard("2", "♦"),
+      new Card("3", "♦"),
+      new Card("4", "♣"),
+      new Card("5", "♥"),
+      new Card("6", "♠"),
+      new Card("7", "♦"),
+      new Card("8", "♣"),
+      new Card("9", "♥"),
+      new Card("10", "♠"),
+      new Card("J", "♦"),
+      new Card("Q", "♣"),
+      new Card("K", "♥"),
+      new Card("A", "♠"),
+      new Card("2", "♦"),
     ],
   ],
-  shuffleDeck: () => {},
-  sortHand: () => {},
+  shuffle: () => {},
 };
 
 let originalSetTimeout;
@@ -81,52 +77,51 @@ let setTimeoutCalls = [];
 /**
   Setup function to run before each test
 */
-function testSetup(context) {
-  game = context.gameInstance; // Store game instance globally for tests
+function testSetup() {
+  const game = new Game();
 
   // Mock setTimeout and clearTimeout
-  originalSetTimeout = global.setTimeout;
-  originalClearTimeout = global.clearTimeout;
+  originalSetTimeout = window.setTimeout;
+  originalClearTimeout = window.clearTimeout;
   setTimeoutCalls = [];
-  global.setTimeout = (handler, delay) => {
+  window.setTimeout = (handler, delay) => {
     setTimeoutCalls.push({ handler, delay });
     return setTimeoutCalls.length - 1; // Return a mock timeout ID
   };
-  global.clearTimeout = (id) => {
+  window.clearTimeout = (id) => {
     if (setTimeoutCalls[id]) {
       setTimeoutCalls[id].cleared = true;
     }
   };
 
+  // Reset game state for a clean test environment
+  game.playerTypes = ["human", "human"];
+  game.reset();
+  game.start(mockDeck);
+
   // create mock UI elements
-  ui = new UI(game);
+  const uiInstance = new UI(game);
+  uiInstance.game.players = game.playerTypes.map((type, index) => new HumanPlayer(game, index, uiInstance));
 
   const container = document.createElement("div");
   container.id = TEST_UI_ID;
   container.style.display = "none";
 
-  for (const [_, value] of Object.entries(ui.id)) {
+  for (const [_, value] of Object.entries(uiInstance.id)) {
     const el = document.createElement("div");
     el.id = value;
     container.appendChild(el);
   }
   document.body.appendChild(container);
 
-  ui.init(game);
-
-  // Reset game state for a clean test environment
-  game.reset();
-  const deck = mockDeck.createDeck();
-  game.start(deck);
-
-  game.playerTypes = ["human", "human"];
-  game.players = game.playerTypes.map((type) => new Player(type, game, null, ui));
-  humanPlayer = game.players[0];
+  uiInstance.init(game);
 
   // Ensure buttons are in a known state for tests that check them
-  ui.playButton.disabled = false;
-  ui.passButton.disabled = false;
-  ui.newGameButton.style.display = "none";
+  uiInstance.playButton.disabled = false;
+  uiInstance.passButton.disabled = false;
+  uiInstance.newGameButton.style.display = "none";
+
+  return uiInstance; // Return the ui instance
 }
 
 /**
@@ -137,14 +132,14 @@ function testTeardown() {
   if (testUI) {
     testUI.remove();
   }
-  ui = null;
   // Restore original setTimeout and clearTimeout
-  global.setTimeout = originalSetTimeout;
-  global.clearTimeout = originalClearTimeout;
+  window.setTimeout = originalSetTimeout;
+  window.clearTimeout = originalClearTimeout;
 }
 
 function test_createCardElement() {
-  const card = createCard("A", "♠");
+  const ui = testSetup();
+  const card = new Card("A", "♠");
   const cardElement = ui.createCardElement(card);
 
   assert(cardElement.textContent.includes(card.rank), "Should create a card element with the correct rank");
@@ -152,16 +147,18 @@ function test_createCardElement() {
   assert(cardElement.classList.contains("card"), "Should have the card class");
   assert(cardElement.classList.contains("black"), "Should have the black class for a spade");
   assert(cardElement.dataset.card === JSON.stringify(card), "Should have the card data attribute");
+  testTeardown();
 }
 
 function test_render_displaysGameInfo() {
+  const ui = testSetup();
   ui.gameContent.innerHTML = "";
   ui.playersHands.innerHTML = "";
 
-  game.gameState.roundNumber = 5;
-  game.gameState.roundsWon = [2, 3];
-  game.gameState.gamesWon = [1, 0];
-  game.gameState.playerHands = [[], []];
+  ui.game.gameState.roundNumber = 5;
+  ui.game.gameState.roundsWon = [2, 3];
+  ui.game.gameState.gamesWon = [1, 0];
+  ui.game.gameState.playerHands = [[], []];
 
   ui.render();
 
@@ -178,57 +175,72 @@ function test_render_displaysGameInfo() {
   assert(player2RoundsWon.textContent === "Rounds won: 3", "Should display player 2 rounds won");
   const player2GamesWon = player2Hand.querySelector(".games-won");
   assert(player2GamesWon.textContent === "Games won: 0", "Should display player 2 games won");
+  testTeardown();
 }
 
 function test_renderPlayArea_clearsGameContentBeforeRendering() {
-  game.gameState.playPile = [];
-  game.gameState.roundNumber = 1;
+  const ui = testSetup();
+  ui.game.gameState.playPile = [];
+  ui.game.gameState.roundNumber = 1;
 
   ui.renderPlayArea();
 
   assert(ui.gameContent.innerHTML.includes("<h2>Play Area (Round 1)</h2>"), "Should clear the play area before rendering");
+  testTeardown();
 }
 
 function test_renderPlayerHand_rendersCards() {
+  const ui = testSetup();
   const playerHandDiv = document.createElement("div");
-  game.gameState.playerHands = [[createCard("A", "♠")]];
-  game.gameState.roundsWon = [0];
-  game.gameState.gamesWon = [0];
+  ui.game.gameState.playerHands = [[new Card("A", "♠")]];
+  ui.game.gameState.roundsWon = [0];
+  ui.game.gameState.gamesWon = [0];
+  ui.game.gameState.players = ui.game.gameState.playerTypes.map((type, index) => new HumanPlayer(ui.game, index, ui));
+
+  // Ensure player 0 is the current player for this test
+  ui.game.gameState.currentPlayer = 0;
 
   ui.renderPlayerHand(0, playerHandDiv);
 
   const cardElement = playerHandDiv.querySelector(".card");
   assert(cardElement, "Should render a card element");
+  testTeardown();
 }
 
 function test_renderPlayerHands_rendersCorrectNumberOfHands() {
+  const ui = testSetup();
   ui.playersHands.innerHTML = "";
-  game.gameState.playerHands = [[], [], []];
+  ui.game.gameState.playerHands = [[], [], []];
 
   ui.renderPlayerHands();
 
   const playerHandElements = ui.playersHands.querySelectorAll(".player-hand");
   assert(playerHandElements.length === 3, "Should render the correct number of player hands");
+  testTeardown();
 }
 
 function test_updateButtonStates_gameOver() {
-  game.gameState.gameOver = true;
+  const ui = testSetup();
+  ui.game.gameState.gameOver = true;
 
   ui.updateButtonStates();
 
   assert(ui.playButton.disabled, "Play button should be disabled");
   assert(ui.passButton.disabled, "Pass button should be disabled");
   assert(ui.newGameButton.style.display === "block", "New game button should be visible");
+  testTeardown();
 }
 
 function test_updateButtonStates_gameNotOver() {
-  game.gameState.gameOver = false;
+  const ui = testSetup();
+  ui.game.gameState.gameOver = false;
 
   ui.updateButtonStates();
 
   assert(!ui.playButton.disabled, "Play button should be enabled");
   assert(!ui.passButton.disabled, "Pass button should be enabled");
   assert(ui.newGameButton.style.display === "none", "New game button should be hidden");
+  testTeardown();
 }
 
 export const uiTests = [
@@ -240,25 +252,3 @@ export const uiTests = [
   test_updateButtonStates_gameOver,
   test_updateButtonStates_gameNotOver,
 ];
-
-uiTests.forEach((test) => {
-  if (!test.beforeEach) {
-    test.beforeEach = testSetup;
-  } else {
-    const funcBefore = test.beforeEach;
-    test.beforeEach = function (context) {
-      testSetup(context);
-      funcBefore();
-    };
-  }
-
-  if (!test.afterEach) {
-    test.afterEach = testTeardown;
-  } else {
-    const funcAfter = test.afterEach;
-    test.afterEach = function () {
-      funcAfter();
-      testTeardown();
-    };
-  }
-});

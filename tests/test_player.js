@@ -1,6 +1,6 @@
 import { assert } from "./utils.js";
 import { HumanPlayer, AIPlayer } from "../src/player.js";
-import { createCard } from "../src/deck.js";
+import { Card } from "../src/deck.js";
 import { Game } from "../src/game.js";
 import { TestAI } from "./test_ai.js";
 import { MockUI } from "./test_app.js";
@@ -33,8 +33,8 @@ function test_HumanPlayer_handleCardClick_preventsSelectionOfOtherPlayersCards()
   game.gameState.currentPlayer = 0;
   game.gameState.numPlayers = 2;
   game.gameState.playerHands = [
-    [createCard("3", "♠")], // Player 0's hand
-    [createCard("4", "♦")], // Player 1's hand
+    [new Card("3", "♠")], // Player 0's hand
+    [new Card("4", "♦")], // Player 1's hand
   ];
   game.gameState.selectedCards = [];
 
@@ -62,7 +62,7 @@ function test_HumanPlayer_handleCardClick_selectsAndDeselectsCard() {
   const game = new Game();
   const ui = new MockUI();
   const humanPlayer = new HumanPlayer(game, 0, ui);
-  const card = createCard("A", "♠");
+  const card = new Card("A", "♠");
   // Setup initial game state for the current player
   game.gameState.currentPlayer = 0;
   game.gameState.playerHands = [
@@ -92,7 +92,7 @@ function test_HumanPlayer_handlePassButtonClick_endsRoundCorrectly() {
   game.gameState.lastPlayerToPlay = 1; // Player 2 was the last to play
   game.gameState.consecutivePasses = 1; // Player 1 already passed
   game.gameState.roundNumber = 1;
-  game.gameState.playPile = [createCard("A", "♠")];
+  game.gameState.playPile = [new Card("A", "♠")];
 
   humanPlayer.handlePassButtonClick();
 
@@ -122,8 +122,8 @@ function test_HumanPlayer_handlePassButtonClick_incrementsPassesAndSwitchesPlaye
   game.gameState.numPlayers = 3;
   game.gameState.currentPlayer = 0;
   game.gameState.consecutivePasses = 0;
-  game.gameState.playPile = [createCard("3", "♠")]; // Not the first play
-  game.gameState.selectedCards = [createCard("A", "♠")];
+  game.gameState.playPile = [new Card("3", "♠")]; // Not the first play
+  game.gameState.selectedCards = [new Card("A", "♠")];
 
   humanPlayer.handlePassButtonClick();
 
@@ -139,8 +139,8 @@ function test_HumanPlayer_handlePlayButtonClick_showsMessageOnInvalidPlay() {
   // Set up an invalid game state to make isValidPlay return false.
   game.gameState.numPlayers = 2;
   game.gameState.playerHands = [[], []];
-  game.gameState.selectedCards = [createCard("3", "♠")];
-  game.gameState.playPile = [createCard("A", "♠")];
+  game.gameState.selectedCards = [new Card("3", "♠")];
+  game.gameState.playPile = [new Card("A", "♠")];
 
   humanPlayer.handlePlayButtonClick();
 
@@ -154,7 +154,7 @@ function test_HumanPlayer_handlePlayButtonClick_updatesGameStateOnValidPlay() {
   // Set up a valid game state to make isValidPlay return true.
   game.gameState.currentPlayer = 0;
   game.gameState.numPlayers = 2;
-  const cardToPlay = createCard("4", "♠");
+  const cardToPlay = new Card("4", "♠");
   game.gameState.playerHands = [[cardToPlay], []];
   game.gameState.selectedCards = [cardToPlay];
   game.gameState.playPile = [];
@@ -178,7 +178,7 @@ function test_AIPlayer_takeTurn_ai() {
   const game = new Game();
   game.gameState.currentPlayer = 0;
   game.gameState.playerHands = [[]];
-  const move = [createCard("5", "♦")];
+  const move = [new Card("5", "♦")];
   const ai = new TestAI(game, move);
   const player = new AIPlayer(game, 0, ai);
   const selectedMove = player.takeTurn();

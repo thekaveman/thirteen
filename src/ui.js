@@ -1,4 +1,6 @@
 import { log } from "./utils.js";
+import { Card } from "./deck.js";
+import { Game } from "./game.js";
 
 export class UI {
   constructor(game) {
@@ -26,7 +28,7 @@ export class UI {
 
   /**
    * Initializes elements in the ui object.
-   * @param {object} game The game instance.
+   * @param {Game} game The game instance.
    */
   init(game) {
     this.game = game;
@@ -72,7 +74,7 @@ export class UI {
 
   /**
    * Creates a card element.
-   * @param {object} card The card object.
+   * @param {Card} card The card object.
    * @returns {HTMLElement} The card element.
    */
   createCardElement(card) {
@@ -103,9 +105,9 @@ export class UI {
 
   /**
    * Renders cards to a target element.
-   * @param {Array<object>} card The array of cards.
+   * @param {Array<Card>} cards The array of cards.
    * @param {HTMLElement} targetElement The element in which to render.
-   * @param {(cardSpan:HTMLElement, card:object) => void} preRender An optional function to run on each card element before rendering.
+   * @param {(cardSpan:HTMLElement, card:Card) => void} preRender An optional function to run on each card element before rendering.
    */
   renderCardsContainer(cards, targetElement, preRender = null) {
     if (typeof document === "undefined") {

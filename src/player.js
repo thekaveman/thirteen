@@ -1,4 +1,4 @@
-import { sortHand } from "./deck.js";
+import { Card } from "./deck.js";
 import { log } from "./utils.js";
 
 export class Player {
@@ -45,7 +45,7 @@ export class HumanPlayer extends Player {
     } else {
       this.game.gameState.selectedCards.push(card);
     }
-    sortHand(this.game.gameState.selectedCards);
+    Card.sort(this.game.gameState.selectedCards);
     this.ui.renderSelectedCards();
   }
 
