@@ -12,20 +12,10 @@
       <button id="rerun-button">Re-run tests</button>
       <a href="../src/" style="color: #007bff">Go to game</a>
     </div>
-    <div id="game-ui-container" style="display: none">
-      <div id="game-board">
-        <div id="play-area">
-          <div id="game-content"></div>
-          <div id="game-messages"></div>
-        </div>
-        <div id="players-hands"></div>
-        <div id="controls">
-          <button id="play-button">Play</button>
-          <button id="pass-button">Pass</button>
-          <button id="new-game-button" style="display: none">New Game</button>
-        </div>
-      </div>
-    </div>
-    <script type="module" src="runner_browser.js"></script>
+    <script type="module">
+      document.addEventListener("DOMContentLoaded", () => {
+        import("./runner_browser.js");
+      });
+    </script>
   </body>
 </html>
