@@ -27,19 +27,6 @@ export class Game {
     };
   }
 
-  setPlayers(players) {
-    this.gameState.players = players;
-    this.gameState.numPlayers = players.length;
-    this.gameState.playerTypes = players.map((p) => p.type);
-    this.gameState.roundsWon = new Array(players.length).fill(0);
-    this.gameState.gamesWon = new Array(players.length).fill(0);
-    this.deck.shuffle();
-    this.gameState.playerHands = this.deck.deal(this.gameState.numPlayers);
-    this.gameState.playerHands.forEach(Card.sort);
-    this.gameState.currentPlayer = this.findStartingPlayer(this.gameState.playerHands);
-    this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
-  }
-
   /**
    * Finds the player who should start the game based on the lowest card.
    * @param {Array<Array<Card>>} hands An array of sorted player hands.
@@ -347,12 +334,26 @@ export class Game {
     this.gameState.gameStarted = false;
   }
 
+  setPlayers(players) {
+    this.gameState.players = players;
+    this.gameState.numPlayers = players.length;
+    this.gameState.playerTypes = players.map((p) => p.type);
+    this.gameState.roundsWon = new Array(players.length).fill(0);
+    if (this.gameState.gamesWon.length !== players.length) {
+      // Only initialize if not already initialized
+      this.gameState.gamesWon = new Array(players.length).fill(0);
+    }
+    this.deck.shuffle();
+    this.gameState.playerHands = this.deck.deal(this.gameState.numPlayers);
+    this.gameState.playerHands.forEach(Card.sort);
+    this.gameState.currentPlayer = this.findStartingPlayer(this.gameState.playerHands);
+    this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
+  }
+
   /**
    * Initializes the game by dealing hands and setting the starting player.
    */
   start() {
     this.gameState.gameStarted = true;
-    this.gameState.currentPlayer = this.findStartingPlayer(this.gameState.playerHands);
-    this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
   }
 }

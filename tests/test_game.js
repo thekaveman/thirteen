@@ -662,6 +662,8 @@ function test_reset() {
   game.gameState.lastPlayerToPlay = 0;
   game.gameState.roundNumber = 2;
   game.gameState.roundsWon = [1, 0, 0];
+  const gamesWon = [1, 1, 0];
+  game.gameState.gamesWon = gamesWon;
   game.gameState.gameOver = true;
 
   game.reset();
@@ -683,6 +685,10 @@ function test_reset() {
     game.gameState.roundsWon.every((r) => r === 0),
     "Reset roundsWon should all be 0"
   );
+  assert(
+    game.gameState.gamesWon.every((value, index) => value === gamesWon[index]),
+    "Reset should not overwrite gamesWon"
+  );
   assert(game.gameState.gameOver === false, "Reset gameOver should be false");
 }
 
@@ -698,6 +704,16 @@ function test_setPlayers_initializesPlayersAndHands() {
   assert(
     game.gameState.roundsWon.every((count) => count === 0),
     "roundsWon should be filled with zeros"
+  );
+  assert(game.gameState.gamesWon.length === players.length, "gamesWon should be initialized with the correct length");
+
+  const gamesWon = [2, 1];
+  game.gameState.gamesWon = gamesWon;
+  game.setPlayers(players);
+
+  assert(
+    game.gameState.gamesWon.every((value, index) => value === gamesWon[index]),
+    "gamesWon should not be overwritten by setPlayers"
   );
 }
 
