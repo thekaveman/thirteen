@@ -54,13 +54,11 @@ for (const [name, tests] of Object.entries(TEST_CONFIG)) {
   let testsRun = 0;
   let testsPassed = 0;
   // Create a new Game instance for each test suite
-  const game = new Game();
   const deck = new Deck();
+  const game = new Game(deck);
   const ai = new LowestCardAI(game);
   const ui = new UI(game);
-  game.gameState.playerTypes = ["human", "human"];
-
-  const app = new App(deck, game, ai, ui);
+  const app = new App(game, ai, ui);
 
   // Mock setTimeout for app initialization
   mockSetTimeout();

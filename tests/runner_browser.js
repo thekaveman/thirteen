@@ -27,13 +27,11 @@ if (typeof window !== "undefined") {
     });
 
     // Create a new Game instance for each test suite
-    const game = new Game();
     const deck = new Deck();
+    const game = new Game(deck);
     const ai = new LowestCardAI(game);
     const ui = new UI(game);
-
-    // Initialize the app with actual dependencies
-    const app = new App(deck, game, ai, ui);
+    const app = new App(game, ai, ui);
 
     // Mock setTimeout for app initialization
     mockSetTimeout();

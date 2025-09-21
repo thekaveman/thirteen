@@ -39,8 +39,8 @@
       import { UI } from "./ui.js";
 
       const deck = new Deck();
-      const game = new Game();
-      const app = new App(deck, game, new LowestCardAI(game), new UI(game));
+      const game = new Game(deck);
+      const app = new App(game, new LowestCardAI(game), new UI(game));
       app.init();
     </script>
   </body>

@@ -6,7 +6,8 @@ export class Game {
   /**
    * Initializes a new game.
    */
-  constructor() {
+  constructor(deck) {
+    this.deck = deck;
     this.gameState = {
       numPlayers: 0,
       players: [],
@@ -21,8 +22,22 @@ export class Game {
       roundsWon: [],
       gamesWon: [],
       gameOver: false,
+      gameStarted: false,
       playerTypes: [],
     };
+  }
+
+  setPlayers(players) {
+    this.gameState.players = players;
+    this.gameState.numPlayers = players.length;
+    this.gameState.playerTypes = players.map((p) => p.type);
+    this.gameState.roundsWon = new Array(players.length).fill(0);
+    this.gameState.gamesWon = new Array(players.length).fill(0);
+    this.deck.shuffle();
+    this.gameState.playerHands = this.deck.deal(this.gameState.numPlayers);
+    this.gameState.playerHands.forEach(Card.sort);
+    this.gameState.currentPlayer = this.findStartingPlayer(this.gameState.playerHands);
+    this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
   }
 
   /**
@@ -329,26 +344,14 @@ export class Game {
     this.gameState.roundNumber = 1;
     this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
     this.gameState.gameOver = false;
+    this.gameState.gameStarted = false;
   }
 
   /**
    * Initializes the game by dealing hands and setting the starting player.
-   * @param {Deck} deck The deck instance.
-   * @param {Array<Player>} players The players for this game.
    */
-  start(deck, players) {
-    deck.shuffle();
-    this.gameState.players = players;
-    this.gameState.playerTypes = players.map((p) => p.type);
-    this.gameState.numPlayers = players.length;
-
-    this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
-    if (this.gameState.gamesWon.length !== this.gameState.numPlayers) {
-      this.gameState.gamesWon = new Array(this.gameState.numPlayers).fill(0);
-    }
-
-    this.gameState.playerHands = deck.deal(this.gameState.numPlayers);
-    this.gameState.playerHands.forEach(Card.sort);
+  start() {
+    this.gameState.gameStarted = true;
     this.gameState.currentPlayer = this.findStartingPlayer(this.gameState.playerHands);
     this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
   }

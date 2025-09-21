@@ -4,13 +4,11 @@ import { HumanPlayer, AIPlayer } from "./player.js";
 export class App {
   /**
    * Creates a new app instance with dependencies.
-   * @param {Deck} deck
    * @param {Game} game
    * @param {AI} ai
    * @param {UI} ui
    */
-  constructor(deck, game, ai, ui) {
-    this.deck = deck;
+  constructor(game, ai, ui) {
     this.game = game;
     this.ai = ai;
     this.ui = ui;
@@ -32,10 +30,10 @@ export class App {
       }
       return new HumanPlayer(this.game, index, this.ui);
     });
-    this.game.start(this.deck, players);
+    this.game.setPlayers(players);
 
     this.ui.render(); // Render initial UI with dealt hands and start button
-    this.ui.startGameButton.addEventListener("click", () => this.startGame());
+    this.ui.startGameButton.addEventListener("click", () => this.handleStartGameClick());
 
     // Set up event listeners for play/pass/new game buttons
     const humanPlayer = this.game.gameState.players.find((p) => p.type === "human");
@@ -46,9 +44,9 @@ export class App {
     this.ui.newGameButton.addEventListener("click", () => this.init());
   }
 
-  startGame() {
+  handleStartGameClick() {
     log(`Game started`);
-
+    this.game.start();
     this.ui.render(); // Update UI after game officially starts
     this.nextTurn();
   }

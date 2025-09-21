@@ -67,8 +67,8 @@ export const MockDeck = {
 };
 
 export class MockGame extends Game {
-  constructor() {
-    super();
+  constructor(deck) {
+    super(deck);
     this.resetCalled = false;
     this.findStartingPlayerCalled = false;
     this.playCardsCalled = false;
@@ -92,9 +92,9 @@ export class MockGame extends Game {
     this.passTurnCalled = true;
     return super.passTurn();
   }
-  start(deck, players) {
+  start() {
     this.startCalled = true;
-    super.start(deck, players);
+    super.start();
   }
 }
 

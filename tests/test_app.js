@@ -6,11 +6,10 @@ import { MockDeck, MockGame, MockUI, MockAI } from "./mocks.js";
 // Test cases
 
 function test_handleAITurn_playsCardsWhenMoveIsAvailable() {
-  const game = new MockGame();
+  const game = new MockGame(MockDeck);
   game.gameState.playerTypes = ["human", "ai"];
 
   const app = new App(
-    MockDeck,
     game,
     new MockAI(game, [new Card("3", "♠")]), // AI will play 3♠
     new MockUI(game)
@@ -49,11 +48,10 @@ function test_handleAITurn_playsCardsWhenMoveIsAvailable() {
 }
 
 function test_handleAITurn_passesTurnWhenNoMoveIsAvailable() {
-  const game = new MockGame();
+  const game = new MockGame(MockDeck);
   game.gameState.playerTypes = ["human", "ai"];
 
   const app = new App(
-    MockDeck,
     game,
     new MockAI(game, []), // AI will pass
     new MockUI(game)
@@ -91,10 +89,10 @@ function test_handleAITurn_passesTurnWhenNoMoveIsAvailable() {
 }
 
 function test_handleHumanPlay_callsPlayButtonClickAndNextTurn() {
-  const game = new MockGame();
+  const game = new MockGame(MockDeck);
   game.gameState.playerTypes = ["human", "ai"];
 
-  const app = new App(MockDeck, game, new MockAI(game), new MockUI(game));
+  const app = new App(game, new MockAI(game), new MockUI(game));
   app.init();
   app.ui.startGameButton.handler(); // Simulate clicking the start button
 
@@ -111,10 +109,10 @@ function test_handleHumanPlay_callsPlayButtonClickAndNextTurn() {
 }
 
 function test_handleHumanPass_callsPassButtonClickAndNextTurn() {
-  const game = new MockGame();
+  const game = new MockGame(MockDeck);
   game.gameState.playerTypes = ["human", "ai"];
 
-  const app = new App(MockDeck, game, new MockAI(game), new MockUI(game));
+  const app = new App(game, new MockAI(game), new MockUI(game));
   app.init();
   app.ui.startGameButton.handler(); // Simulate clicking the start button
 
@@ -134,10 +132,8 @@ function test_handleHumanPass_callsPassButtonClickAndNextTurn() {
 }
 
 function test_init_initializesGameStateCorrectly() {
-  const game = new MockGame();
-  game.gameState.playerTypes = ["human", "ai"];
-
-  const app = new App(MockDeck, game, new MockAI(game), new MockUI(game));
+  const game = new MockGame(MockDeck);
+  const app = new App(game, new MockAI(game), new MockUI(game));
 
   app.init();
 
@@ -157,10 +153,10 @@ function test_init_initializesGameStateCorrectly() {
 }
 
 function test_nextTurn_callsHandleAITurnForAIPlayer() {
-  const game = new MockGame();
+  const game = new MockGame(MockDeck);
   game.gameState.playerTypes = ["human", "ai"];
 
-  const app = new App(MockDeck, game, new MockAI(game, [new Card("3", "♦")]), new MockUI(game));
+  const app = new App(game, new MockAI(game, [new Card("3", "♦")]), new MockUI(game));
   const handleAITurnSpy = spyOn(app, "handleAITurn");
 
   // Set up playPile and currentPlay for the AI to respond to
@@ -181,10 +177,10 @@ function test_nextTurn_callsHandleAITurnForAIPlayer() {
 }
 
 function test_nextTurn_doesNotCallHandleAITurnForHumanPlayer() {
-  const game = new MockGame();
+  const game = new MockGame(MockDeck);
   game.gameState.playerTypes = ["human", "ai"];
 
-  const app = new App(MockDeck, game, new MockAI(game), new MockUI(game));
+  const app = new App(game, new MockAI(game), new MockUI(game));
   const handleAITurnSpy = spyOn(app, "handleAITurn");
 
   app.init();
@@ -200,7 +196,7 @@ function test_nextTurn_doesNotCallHandleAITurnForHumanPlayer() {
 }
 
 function test_spyOn_MockAI_takeTurn() {
-  const game = new MockGame();
+  const game = new MockGame(MockDeck);
   const ai = new MockAI(game);
   const takeTurnSpy = spyOn(ai, "takeTurn");
 

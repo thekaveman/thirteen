@@ -10,7 +10,7 @@ const TEST_UI_ID = "test-ui";
   Setup function to run before each test
 */
 function testSetup() {
-  const game = new MockGame();
+  const game = new MockGame(MockDeck);
   const uiInstance = new UI(game);
 
   // Mock setTimeout and clearTimeout
@@ -31,7 +31,8 @@ function testSetup() {
   // Reset game state for a clean test environment
   game.reset();
   const players = [new HumanPlayer(game, 0, uiInstance), new AIPlayer(game, 1, uiInstance), new HumanPlayer(game, 2, uiInstance)];
-  game.start(MockDeck, players);
+  game.setPlayers(players);
+  game.start();
 
   // Set consistent initial game state for UI tests
   game.gameState.playerHands = [
