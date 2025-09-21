@@ -58,6 +58,7 @@ for (const [name, tests] of Object.entries(TEST_CONFIG)) {
   const deck = new Deck();
   const ai = new LowestCardAI(game);
   const ui = new UI(game);
+  game.gameState.playerTypes = ["human", "human"];
 
   const app = new App(deck, game, ai, ui);
 

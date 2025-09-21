@@ -22,13 +22,14 @@ export class App {
       this.setTimeout = currentSetTimeout;
     }
     this.game.reset();
-    this.game.start(this.deck);
-    this.game.gameState.players = this.game.gameState.playerTypes.map((type, index) => {
+    const playerTypes = ["human", "ai"];
+    const players = playerTypes.map((type, index) => {
       if (type === "ai") {
         return new AIPlayer(this.game, index, this.ai);
       }
       return new HumanPlayer(this.game, index, this.ui);
     });
+    this.game.start(this.deck, players);
 
     log(`New game started`);
 

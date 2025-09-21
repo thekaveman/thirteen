@@ -3,9 +3,12 @@ import { Card, Deck } from "./deck.js";
 import { log } from "./utils.js";
 
 export class Game {
+  /**
+   * Initializes a new game.
+   */
   constructor() {
     this.gameState = {
-      numPlayers: 2,
+      numPlayers: 0,
       players: [],
       playerHands: [],
       playPile: [],
@@ -18,7 +21,7 @@ export class Game {
       roundsWon: [],
       gamesWon: [],
       gameOver: false,
-      playerTypes: ["human", "ai"], // Default to one human and one AI player
+      playerTypes: [],
     };
   }
 
@@ -329,9 +332,14 @@ export class Game {
   /**
    * Initializes the game by dealing hands and setting the starting player.
    * @param {Deck} deck The deck instance.
+   * @param {Array<Player>} players The players for this game.
    */
-  start(deck) {
+  start(deck, players) {
     deck.shuffle();
+    this.gameState.players = players;
+    this.gameState.playerTypes = players.map((p) => p.type);
+    this.gameState.numPlayers = players.length;
+
     this.gameState.playerHands = deck.deal(this.gameState.numPlayers);
     this.gameState.playerHands.forEach(Card.sort);
     this.gameState.currentPlayer = this.findStartingPlayer(this.gameState.playerHands);

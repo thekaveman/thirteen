@@ -7,7 +7,8 @@ import { MockDeck, MockGame, MockUI, MockAI } from "./mocks.js";
 
 function test_handleAITurn_playsCardsWhenMoveIsAvailable() {
   const game = new MockGame();
-  // Pass the AI's move directly to the MockAI constructor
+  game.gameState.playerTypes = ["human", "ai"];
+
   const app = new App(
     MockDeck,
     game,
@@ -47,7 +48,8 @@ function test_handleAITurn_playsCardsWhenMoveIsAvailable() {
 
 function test_handleAITurn_passesTurnWhenNoMoveIsAvailable() {
   const game = new MockGame();
-  // Pass the AI's move directly to the MockAI constructor
+  game.gameState.playerTypes = ["human", "ai"];
+
   const app = new App(
     MockDeck,
     game,
@@ -87,6 +89,8 @@ function test_handleAITurn_passesTurnWhenNoMoveIsAvailable() {
 
 function test_handleHumanPlay_callsPlayButtonClickAndNextTurn() {
   const game = new MockGame();
+  game.gameState.playerTypes = ["human", "ai"];
+
   const app = new App(MockDeck, game, new MockAI(game), new MockUI(game));
   app.init();
   app.game.gameState.currentPlayer = 0; // the human player
@@ -103,7 +107,7 @@ function test_handleHumanPlay_callsPlayButtonClickAndNextTurn() {
 
 function test_handleHumanPass_callsPassButtonClickAndNextTurn() {
   const game = new MockGame();
-  const app = new App(mockDeck, game, new MockAI(game), new MockUI(game));
+  game.gameState.playerTypes = ["human", "ai"];
 
   const app = new App(MockDeck, game, new MockAI(game), new MockUI(game));
   app.init();
@@ -124,6 +128,7 @@ function test_handleHumanPass_callsPassButtonClickAndNextTurn() {
 
 function test_init_initializesGameStateCorrectly() {
   const game = new MockGame();
+  game.gameState.playerTypes = ["human", "ai"];
 
   const app = new App(MockDeck, game, new MockAI(game), new MockUI(game));
 
@@ -141,7 +146,7 @@ function test_init_initializesGameStateCorrectly() {
 
 function test_nextTurn_callsHandleAITurnForAIPlayer() {
   const game = new MockGame();
-  const app = new App(mockDeck, game, new MockAI(game, [new Card("3", "♦")]), new MockUI(game));
+  game.gameState.playerTypes = ["human", "ai"];
 
   const app = new App(MockDeck, game, new MockAI(game, [new Card("3", "♦")]), new MockUI(game));
   const handleAITurnSpy = spyOn(app, "handleAITurn");
@@ -163,6 +168,8 @@ function test_nextTurn_callsHandleAITurnForAIPlayer() {
 
 function test_nextTurn_doesNotCallHandleAITurnForHumanPlayer() {
   const game = new MockGame();
+  game.gameState.playerTypes = ["human", "ai"];
+
   const app = new App(MockDeck, game, new MockAI(game), new MockUI(game));
   const handleAITurnSpy = spyOn(app, "handleAITurn");
 

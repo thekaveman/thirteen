@@ -14,7 +14,7 @@ function test_findStartingPlayer_findsPlayerWithLowestCard() {
 
 function test_gameState() {
   const game = new Game();
-  assert(game.gameState.numPlayers === 2, "Initial numPlayers should be 2");
+  assert(game.gameState.numPlayers === 0, "Initial numPlayers should be 0");
   assert(Array.isArray(game.gameState.playerHands), "Initial playerHands should be an array");
   assert(game.gameState.playerHands.length === 0, "Initial playerHands should be empty");
   assert(Array.isArray(game.gameState.playPile), "Initial playPile should be an array");
