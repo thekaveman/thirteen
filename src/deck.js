@@ -63,13 +63,15 @@ export class Card {
 }
 
 export class Deck {
-  constructor() {
-    this.cards = [];
-    SUITS.forEach((suit) => {
-      RANKS.forEach((rank) => {
-        this.cards.push(new Card(rank, suit));
+  constructor(cards = []) {
+    this.cards = cards || [];
+    if (this.cards.length < 1) {
+      SUITS.forEach((suit) => {
+        RANKS.forEach((rank) => {
+          this.cards.push(new Card(rank, suit));
+        });
       });
-    });
+    }
   }
 
   /**
