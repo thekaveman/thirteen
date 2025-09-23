@@ -21,8 +21,22 @@ export class App {
     }
     this.ui.init(this.game);
 
+    // Attempt to load game state
+    if (this.game.load(this.ai, this.ui) && !this.game.gameState.gameOver) {
+      this.ui.render();
+      this.ui.startGameButton.addEventListener("click", () => this.handleStartGameClick());
+      const humanPlayer = this.game.gameState.players.find((p) => p.type === "human");
+      if (humanPlayer) {
+        this.ui.playButton.addEventListener("click", () => this.handleHumanPlay());
+        this.ui.passButton.addEventListener("click", () => this.handleHumanPass());
+      }
+      this.ui.newGameButton.addEventListener("click", () => this.init());
+      return;
+    }
+
     // Initial game setup for display (hands dealt, starting player determined)
     this.game.reset();
+
     const playerTypes = ["human", "ai"];
     const players = playerTypes.map((type, index) => {
       if (type === "ai") {
