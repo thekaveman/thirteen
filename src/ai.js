@@ -26,14 +26,14 @@ export class AI {
    * @param {Array<Array<Card>>} allPlayerHands All players' hands.
    * @returns {Array<Array<Card>>} The cards to play, or an empty array if no valid move is found.
    */
-  _findAllValidMoves(hand, playPile, currentTurn, allPlayerHands) {
+  findAllValidMoves(hand, playPile, currentTurn, allPlayerHands) {
     let allValidMoves = [];
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "single", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "pair", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "triple", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "straight", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "four_of_a_kind", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "consecutive_pairs", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(this.findValidMoves(hand, playPile, "single", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(this.findValidMoves(hand, playPile, "pair", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(this.findValidMoves(hand, playPile, "triple", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(this.findValidMoves(hand, playPile, "straight", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(this.findValidMoves(hand, playPile, "four_of_a_kind", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(this.findValidMoves(hand, playPile, "consecutive_pairs", currentTurn, allPlayerHands));
     return allValidMoves;
   }
 
@@ -46,8 +46,8 @@ export class AI {
    * @param {Array<Array<Card>>} allPlayerHands All players' hands.
    * @returns {Array<Array<Card>>} An array of valid moves.
    */
-  _findValidMoves(hand, playPile, combinationType, currentTurn, allPlayerHands) {
-    const potentialMoves = this._generateCombinations(hand, combinationType);
+  findValidMoves(hand, playPile, combinationType, currentTurn, allPlayerHands) {
+    const potentialMoves = this.generateCombinations(hand, combinationType);
     const validMoves = [];
 
     for (const potentialPlay of potentialMoves) {
@@ -64,7 +64,7 @@ export class AI {
    * @param {string} type The type of combination to generate.
    * @returns {Array<Array<Card>>} An array of combinations.
    */
-  _generateCombinations(hand, type) {
+  generateCombinations(hand, type) {
     let combinations = [];
     switch (type) {
       case "single":
@@ -275,7 +275,7 @@ export class AI {
   }
 
   /**
-   * Extracts all sub-consecutive pairs of length 3 or more from a given sequence of consecutive pairs.
+   * Extracts all sub-consecutive pairs of length 3 or 4 from a given sequence of consecutive pairs.
    * @param {Array<Array<Card>>} maximalConsecutivePairs The sequence of consecutive pairs to extract sub-sequences from.
    * @returns {Array<Array<Card>>} An array of sub-consecutive pair combinations.
    */
@@ -283,7 +283,7 @@ export class AI {
     const subConsecutivePairs = [];
     if (maximalConsecutivePairs.length >= 3) {
       for (let i = 0; i <= maximalConsecutivePairs.length - 3; i++) {
-        for (let j = i + 3; j <= maximalConsecutivePairs.length; j++) {
+        for (let j = i + 3; j <= i + 4 && j <= maximalConsecutivePairs.length; j++) {
           subConsecutivePairs.push(maximalConsecutivePairs.slice(i, j).flat());
         }
       }
@@ -319,7 +319,7 @@ export class LowestCardAI extends AI {
    * @returns {Array<Card>} The cards to play, or an empty array if no valid move is found.
    */
   _findLowestValidMove(hand, playPile, currentTurn, allPlayerHands) {
-    const allValidMoves = this._findAllValidMoves(hand, playPile, currentTurn, allPlayerHands);
+    const allValidMoves = this.findAllValidMoves(hand, playPile, currentTurn, allPlayerHands);
 
     allValidMoves.sort((a, b) => a[0].value - b[0].value);
 

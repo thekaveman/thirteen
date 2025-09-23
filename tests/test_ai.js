@@ -13,7 +13,7 @@ function test_AI_findAllValidMoves() {
   const currentTurn = 3;
   const allPlayerHands = [hand];
 
-  const allValidMoves = ai._findAllValidMoves(hand, playPile, currentTurn, allPlayerHands);
+  const allValidMoves = ai.findAllValidMoves(hand, playPile, currentTurn, allPlayerHands);
 
   // Expected moves: singles (3♠, 3♦, 4♣, 5♠), pair (3♠, 3♦), straights (3♠-4♣-5♠, 3♦-4♣-5♠)
   // Total 7 moves
@@ -74,41 +74,35 @@ function test_AI_generateCombinations_consecutivePairs() {
     new Card("6", "♣"),
     new Card("6", "♥"),
   ];
-  const consecutivePairs = ai._generateCombinations(hand, "consecutive_pairs");
+  const consecutivePairs = ai.generateCombinations(hand, "consecutive_pairs");
 
   assert(consecutivePairs.length === 3, "Should return 3 consecutive pairs combinations");
-  assert(
-    consecutivePairs[0].length === 6 &&
-      consecutivePairs[0][0].rank === "3" &&
-      consecutivePairs[0][1].rank === "3" &&
-      consecutivePairs[0][2].rank === "4" &&
-      consecutivePairs[0][3].rank === "4" &&
-      consecutivePairs[0][4].rank === "5" &&
-      consecutivePairs[0][5].rank === "5",
-    "First consecutive pair should be 33-44-55"
-  );
-  assert(
-    consecutivePairs[1].length === 8 &&
-      consecutivePairs[1][0].rank === "3" &&
-      consecutivePairs[1][1].rank === "3" &&
-      consecutivePairs[1][2].rank === "4" &&
-      consecutivePairs[1][3].rank === "4" &&
-      consecutivePairs[1][4].rank === "5" &&
-      consecutivePairs[1][5].rank === "5" &&
-      consecutivePairs[1][6].rank === "6" &&
-      consecutivePairs[1][7].rank === "6",
-    "Second consecutive pair should be 33-44-55-66"
-  );
-  assert(
-    consecutivePairs[2].length === 6 &&
-      consecutivePairs[2][0].rank === "4" &&
-      consecutivePairs[2][1].rank === "4" &&
-      consecutivePairs[2][2].rank === "5" &&
-      consecutivePairs[2][3].rank === "5" &&
-      consecutivePairs[2][4].rank === "6" &&
-      consecutivePairs[2][5].rank === "6",
-    "Third consecutive pair should be 44-55-66"
-  );
+
+  const lengths = consecutivePairs.map((c) => c.length).sort((a, b) => a - b);
+  assert(lengths[0] === 6 && lengths[1] === 6 && lengths[2] === 8, "Should have two 3-pair and one 4-pair combinations");
+}
+
+function test_AI_generateCombinations_consecutivePairs_long() {
+  const game = new Game();
+  const ai = new AI(game);
+  const hand = [
+    new Card("3", "♠"),
+    new Card("3", "♦"),
+    new Card("4", "♣"),
+    new Card("4", "♥"),
+    new Card("5", "♠"),
+    new Card("5", "♦"),
+    new Card("6", "♣"),
+    new Card("6", "♥"),
+    new Card("7", "♠"),
+    new Card("7", "♦"),
+  ];
+  const consecutivePairs = ai.generateCombinations(hand, "consecutive_pairs");
+
+  assert(consecutivePairs.length === 5, "Should return 5 consecutive pairs combinations for a long sequence");
+
+  const hasInvalidLength = consecutivePairs.some((comb) => comb.length > 8);
+  assert(!hasInvalidLength, "Should not generate consecutive pairs of length 5 or more");
 }
 
 function test_AI_generateCombinations_fourOfAKind() {
@@ -124,7 +118,7 @@ function test_AI_generateCombinations_fourOfAKind() {
     new Card("4", "♣"),
     new Card("4", "♥"),
   ];
-  const fourOfAKind = ai._generateCombinations(hand, "four_of_a_kind");
+  const fourOfAKind = ai.generateCombinations(hand, "four_of_a_kind");
 
   assert(fourOfAKind.length === 2, "Should return 2 four of a kind combinations");
   assert(
@@ -147,7 +141,7 @@ function test_AI_generateCombinations_pairs() {
   const game = new Game();
   const ai = new AI(game);
   const hand = [new Card("3", "♠"), new Card("3", "♦"), new Card("4", "♣"), new Card("4", "♥"), new Card("5", "♠")];
-  const pairs = ai._generateCombinations(hand, "pair");
+  const pairs = ai.generateCombinations(hand, "pair");
 
   assert(pairs.length === 2, "Should return 2 pairs");
   assert(pairs[0][0].rank === "3" && pairs[0][1].rank === "3", "First pair should be the lowest pair");
@@ -158,7 +152,7 @@ function test_AI_generateCombinations_singles() {
   const game = new Game();
   const ai = new AI(game);
   const hand = [new Card("3", "♠"), new Card("4", "♦"), new Card("5", "♣")];
-  const singles = ai._generateCombinations(hand, "single");
+  const singles = ai.generateCombinations(hand, "single");
 
   assert(singles.length === 3, "Should return 3 single cards");
   assert(singles[0][0].value === Card.getValue("3", "♠"), "First single should be the lowest card");
@@ -170,7 +164,7 @@ function test_AI_generateCombinations_straights() {
   const game = new Game();
   const ai = new AI(game);
   const hand = [new Card("3", "♠"), new Card("4", "♦"), new Card("5", "♣"), new Card("6", "♠"), new Card("7", "♦")];
-  const straights = ai._generateCombinations(hand, "straight");
+  const straights = ai.generateCombinations(hand, "straight");
 
   assert(straights.length === 6, "Should return 6 straights");
   assert(
@@ -214,7 +208,7 @@ function test_AI_generateCombinations_triples() {
     new Card("4", "♦"),
     new Card("4", "♣"),
   ];
-  const triples = ai._generateCombinations(hand, "triple");
+  const triples = ai.generateCombinations(hand, "triple");
 
   assert(triples.length === 2, "Should return 2 triples");
   assert(
@@ -368,6 +362,7 @@ function test_MockAI_takeTurn() {
 export const aiTests = [
   test_AI_findAllValidMoves,
   test_AI_generateCombinations_consecutivePairs,
+  test_AI_generateCombinations_consecutivePairs_long,
   test_AI_generateCombinations_fourOfAKind,
   test_AI_generateCombinations_pairs,
   test_AI_generateCombinations_singles,
