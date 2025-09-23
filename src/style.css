@@ -169,7 +169,7 @@ h2 {
   padding: 0 var(--spacing-m);
 }
 
-.combination-type-indicator {
+.combination-type {
   font-size: var(--font-size-xxs);
   color: var(--color-medium-gray);
   margin-left: var(--spacing-xs);

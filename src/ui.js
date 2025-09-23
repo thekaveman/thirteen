@@ -84,19 +84,19 @@ export class UI {
   getCombinationTypeIndicator(combinationType) {
     switch (combinationType) {
       case COMBINATION_TYPES.SINGLE:
-        return "3♠"; // Three of Spades (single card)
+        return "🃏";
       case COMBINATION_TYPES.PAIR:
-        return "3♦3♣"; // Two different 3s (pair)
+        return "🃏🃏";
       case COMBINATION_TYPES.TRIPLE:
-        return "3♦3♣3♥"; // Three different 3s (triple)
+        return "🃏🃏🃏";
       case COMBINATION_TYPES.STRAIGHT:
-        return "Q♦K♣A♥"; // Queen, King, Ace (straight)
+        return "🪜";
       case COMBINATION_TYPES.FOUR_OF_A_KIND:
         return "💣"; // Bomb indicator for Four of a Kind
       case COMBINATION_TYPES.CONSECUTIVE_PAIRS:
         return "💣"; // Bomb indicator for Consecutive Pairs
       default:
-        return "Open"; // Default for an empty play pile or invalid combination
+        return "🟢"; // Default for an empty play pile or invalid combination
     }
   }
 
@@ -162,7 +162,7 @@ export class UI {
     if (this.gameContent) {
       const combinationType = this.game.getCombinationType(this.game.gameState.playPile);
       const indicator = this.getCombinationTypeIndicator(combinationType);
-      this.gameContent.innerHTML = `<h2>Play Area (Round ${this.game.gameState.roundNumber}) <span class="combination-type-indicator">${indicator}</span></h2>`;
+      this.gameContent.innerHTML = `<h2>Play Area (Round ${this.game.gameState.roundNumber}) <span class="combination-type">${indicator}</span></h2>`;
       this.renderCardsContainer(this.game.gameState.playPile, this.gameContent);
     }
   }
