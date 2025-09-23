@@ -52,6 +52,9 @@ export class App {
   }
 
   nextTurn() {
+    if (this.game.gameState.gameOver) {
+      return;
+    }
     const currentPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
     if (currentPlayer.type === "ai") {
       this.setTimeout(() => this.handleAITurn(), 1000);
