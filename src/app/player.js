@@ -6,10 +6,12 @@ export class Player {
    * @param {string} type The type of player (human or ai).
    * @param {object} game The game instance.
    */
-  constructor(type, game, id) {
+  constructor(type, game, number) {
     this.type = type;
     this.game = game;
-    this.id = id;
+    this.number = number;
+    this.id = crypto.randomUUID();
+  }
   }
 
   takeTurn() {
@@ -18,8 +20,8 @@ export class Player {
 }
 
 export class HumanPlayer extends Player {
-  constructor(game, id, ui) {
-    super("human", game, id);
+  constructor(game, number, ui) {
+    super("human", game, number);
     this.ui = ui;
   }
 
@@ -79,8 +81,8 @@ export class HumanPlayer extends Player {
 }
 
 export class AIPlayer extends Player {
-  constructor(game, id, ai) {
-    super("ai", game, id);
+  constructor(game, number, ai) {
+    super("ai", game, number);
     this.ai = ai;
   }
 

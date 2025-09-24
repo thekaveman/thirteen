@@ -30,6 +30,7 @@ export class Game {
       gameStarted: false,
       playerTypes: [],
     };
+    this.id = crypto.randomUUID();
     this.stateKey = stateKey;
   }
 

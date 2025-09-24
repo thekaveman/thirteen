@@ -2,8 +2,11 @@ import { RANKS } from "./constants.js";
 import { Card } from "./deck.js";
 
 export class AI {
-  constructor(game) {
+  constructor(game, type) {
     this.game = game;
+    this.type = type;
+    this.id = crypto.randomUUID();
+  }
   }
 
   /**
@@ -294,7 +297,7 @@ export class AI {
 
 export class LowestCardAI extends AI {
   constructor(game) {
-    super(game);
+    super(game, "lowest-card");
   }
 
   /**
