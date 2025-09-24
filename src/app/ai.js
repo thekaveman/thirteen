@@ -7,6 +7,9 @@ export class AI {
     this.type = type;
     this.id = crypto.randomUUID();
   }
+
+  data() {
+    return { game: this.game.id, id: this.id, type: this.type };
   }
 
   /**

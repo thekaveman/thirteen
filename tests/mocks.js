@@ -9,6 +9,15 @@ export class MockAI extends AI {
     this.takeTurnCalled = false;
   }
 
+  data() {
+    return {
+      id: this.id,
+      type: this.type,
+      name: this.name,
+      isHuman: this.isHuman,
+    };
+  }
+
   takeTurn(hand, playPile, currentTurn, playerHands) {
     this.takeTurnCalled = true;
     return this.move;
@@ -136,8 +145,23 @@ export class MockLocalStorage {
   getItem(key) {
     return null;
   }
-  setItem(key, value) {}
-  removeItem(key) {}
+}
+
+export class MockPlayer extends Player {
+  constructor(name, hand, isHuman = false) {
+    super(name, hand, isHuman);
+  }
+
+  data() {
+    return {
+      id: this.id,
+      type: this.type,
+      name: this.name,
+      isHuman: this.isHuman,
+    };
+  }
+
+  handleCardClick(event) {}
 }
 
 export class MockUI {

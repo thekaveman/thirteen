@@ -12,6 +12,9 @@ export class Player {
     this.number = number;
     this.id = crypto.randomUUID();
   }
+
+  data() {
+    return { game: this.game.id, id: this.id, number: this.number, type: this.type };
   }
 
   takeTurn() {
@@ -84,6 +87,12 @@ export class AIPlayer extends Player {
   constructor(game, number, ai) {
     super("ai", game, number);
     this.ai = ai;
+  }
+
+  data() {
+    const d = super.data();
+    d.ai = this.ai.data();
+    return d;
   }
 
   takeTurn() {

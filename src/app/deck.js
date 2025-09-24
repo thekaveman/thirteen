@@ -21,6 +21,15 @@ export class Card {
   }
 
   /**
+   * Get a data representation of the cards.
+   * @param {Array<Card>} cards The cards to transform.
+   * @returns {Array<object>} The pure data representation of the cards.
+   */
+  static listToObjects(cards) {
+    return cards.map((card) => card.data());
+  }
+
+  /**
    * Finds the lowest card in the list of hands.
    * @param {Array<Array<Card>>} hands An array of player hands.
    * @returns {Card} The lowest card object.
@@ -64,11 +73,28 @@ export class Card {
   }
 
   /**
+   * Parse an array of objects into an array of Card instances.
+   * @param {Array<object>} list Array containing card data.
+   * @returns {Array<Card>} The parsed array of Card instances.
+   */
+  static objectsToList(list) {
+    return list.map((c) => new Card(c.rank, c.suit));
+  }
+
+  /**
    * Sorts a hand of cards by value.
    * @param {Array<Card>} hand The hand to sort.
    */
   static sort(hand) {
     hand.sort((a, b) => a.value - b.value);
+  }
+
+  /**
+   * Get a data representation of this card.
+   * @returns {object} The pure data representation of the card.
+   */
+  data() {
+    return { rank: this.rank, suit: this.suit, value: this.value };
   }
 }
 
