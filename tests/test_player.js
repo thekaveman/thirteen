@@ -154,23 +154,22 @@ function test_HumanPlayer_handlePlayButtonClick_updatesGameStateOnValidPlay() {
   game.gameState.currentPlayer = 0;
   game.gameState.numPlayers = 2;
   const cardToPlay = new Card("4", "♠");
-  game.gameState.playerHands = [[cardToPlay], []];
+  game.gameState.playerHands = [[cardToPlay, new Card("5", "♠")], []];
   game.gameState.selectedCards = [cardToPlay];
   game.gameState.playPile = [];
   game.gameState.currentTurn = 1;
   game.gameState.consecutivePasses = 1; // Should be reset
-  game.gameState.gameOver = false; // Ensure game is not over initially
 
   humanPlayer.handlePlayButtonClick();
 
-  assert(game.gameState.playerHands[0].length === 0, "Should remove card from player's hand");
+  assert(game.gameState.playerHands[0].length === 1, "Should remove card from player's hand");
   assert(game.gameState.playPile.length === 1, "Should add card to play pile");
   assert(game.gameState.playPile[0].value === 4, "Should add correct card to play pile");
   assert(game.gameState.selectedCards.length === 0, "Should clear selected cards");
-  assert(game.gameState.currentPlayer === 0, "Current player should remain the winner");
+  assert(game.gameState.currentPlayer === 1, "Should switch to next player");
   assert(game.gameState.consecutivePasses === 0, "Should reset consecutive passes");
   assert(game.gameState.lastPlayerToPlay === 0, "Should set the last player to play");
-  assert(game.gameState.gameOver === true, "Should set gameOver to true when player wins");
+  assert(game.gameState.gameOver === false, "Should not set gameOver to true when player does not win");
 }
 
 function test_AIPlayer_takeTurn_ai() {
