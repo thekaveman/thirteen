@@ -351,6 +351,26 @@ function test_LowestCardAI_takeTurn_returnsEmptyArrayWhenNoValidMove() {
   assert(move.length === 0, "Should return an empty array when no valid move is found");
 }
 
+function test_LowestCardAI_takeTurn_choosesLowestValueCombination() {
+  const game = new Game();
+  const ai = new LowestCardAI(game);
+  const playerHand = [
+    new Card("3", "♠"), // Value 0
+    new Card("4", "♦"), // Value 5
+    new Card("5", "♣"), // Value 10
+    new Card("6", "♥"), // Value 15
+  ];
+  const playPile = []; // Empty play pile, so AI can play anything
+  const currentTurn = 1;
+  const allPlayerHands = [playerHand];
+
+  const move = ai.takeTurn(playerHand, playPile, currentTurn, allPlayerHands);
+
+  // Expected behavior: AI should choose the single 3♠ as it's the lowest value card.
+  assert(move.length === 1, "AI should choose a single card");
+  assert(move[0].rank === "3" && move[0].suit === "♠", "AI should choose the 3♠ as the lowest value move");
+}
+
 function test_MockAI_takeTurn() {
   const game = new Game();
   const move = [new Card("5", "♦")];
@@ -368,6 +388,7 @@ export const aiTests = [
   test_AI_generateCombinations_singles,
   test_AI_generateCombinations_straights,
   test_AI_generateCombinations_triples,
+  test_LowestCardAI_takeTurn_choosesLowestValueCombination,
   test_LowestCardAI_takeTurn_LowestConsecutivePairs,
   test_LowestCardAI_takeTurn_LowestFourOfAKind,
   test_LowestCardAI_takeTurn_LowestPair,
