@@ -1,6 +1,6 @@
 import { assert } from "./utils.js";
-import { SUITS, RANKS } from "../src/constants.js";
-import { Deck, Card } from "../src/deck.js";
+import { SUITS, RANKS } from "../src/app/constants.js";
+import { Deck, Card } from "../src/app/deck.js";
 
 function test_Card_allSameRank_returnsFalseForDifferentRank() {
   const cards = [new Card("K", "♦"), new Card("A", "♠"), new Card("A", "♣")];

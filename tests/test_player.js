@@ -1,6 +1,6 @@
-import { Card } from "../src/deck.js";
-import { Game } from "../src/game.js";
-import { HumanPlayer, AIPlayer } from "../src/player.js";
+import { Card } from "../src/app/deck.js";
+import { Game } from "../src/app/game.js";
+import { HumanPlayer, AIPlayer } from "../src/app/player.js";
 import { assert } from "./utils.js";
 import { MockAI, MockUI } from "./mocks.js";
 

@@ -1,8 +1,8 @@
-import { UI } from "./ui.js";
-import { Card, Deck } from "./deck.js";
-import { Game } from "./game.js";
-import { AI } from "./ai.js";
-import { RANKS, SUITS } from "./constants.js";
+import { AI } from "./app/ai.js";
+import { RANKS, SUITS } from "./app/constants.js";
+import { Card, Deck } from "./app/deck.js";
+import { Game } from "./app/game.js";
+import { UI } from "./app/ui.js";
 
 class Help {
   constructor() {

@@ -6,9 +6,9 @@ import {
   restoreAddEventListener,
   getAddEventListenerCalls,
 } from "./utils.js";
-import { Card } from "../src/deck.js";
-import { HumanPlayer, AIPlayer } from "../src/player.js";
-import { UI } from "../src/ui.js";
+import { Card } from "../src/app/deck.js";
+import { HumanPlayer, AIPlayer } from "../src/app/player.js";
+import { UI } from "../src/app/ui.js";
 import { MockDeck, MockGame } from "./mocks.js";
 
 const TEST_UI_ID = "test-ui";

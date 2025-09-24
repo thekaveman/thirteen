@@ -1,6 +1,6 @@
 import { assert } from "./utils.js";
-import { Card } from "../src/deck.js";
-import { Game } from "../src/game.js";
+import { Card } from "../src/app/deck.js";
+import { Game } from "../src/app/game.js";
 import { MockDeck } from "./mocks.js";
 
 function test_findStartingPlayer_findsPlayerWithLowestCard() {

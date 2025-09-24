@@ -1,7 +1,7 @@
-import { AI, LowestCardAI } from "../src/ai.js";
-import { Card } from "../src/deck.js";
-import { Game } from "../src/game.js";
-import { log } from "../src/utils.js";
+import { AI, LowestCardAI } from "../src/app/ai.js";
+import { Card } from "../src/app/deck.js";
+import { Game } from "../src/app/game.js";
+import { log } from "../src/app/utils.js";
 import { MockAI } from "./mocks.js";
 import { assert } from "./utils.js";
 

@@ -33,16 +33,8 @@
       </div>
     </div>
     <script type="module">
-      import { App } from "./app.js";
-      import { Deck } from "./deck.js";
-      import { Game } from "./game.js";
-      import { LowestCardAI } from "./ai.js";
-      import { UI } from "./ui.js";
-
-      const deck = new Deck();
-      const game = new Game(deck);
-      const app = new App(game, new LowestCardAI(game), new UI(game));
-      app.init();
+      import { init } from "./app/app.js";
+      init();
     </script>
   </body>
 </html>

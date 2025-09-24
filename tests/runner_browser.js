@@ -1,11 +1,7 @@
-import { log } from "../src/utils.js";
+import { init } from "../src/app/app.js";
+import { log } from "../src/app/utils.js";
 import { TEST_CONFIG } from "./config.js";
 import { runTests, mockSetTimeout, restoreSetTimeout } from "./utils.js";
-import { LowestCardAI } from "../src/ai.js";
-import { App } from "../src/app.js";
-import { Deck } from "../src/deck.js";
-import { Game } from "../src/game.js";
-import { UI } from "../src/ui.js";
 
 if (typeof window !== "undefined") {
   let allTestsRun = 0;
@@ -40,18 +36,9 @@ if (typeof window !== "undefined") {
         document.body.appendChild(gameContainer);
       }
 
-      const deck = new Deck();
-      const game = new Game(deck, stateKey);
-      const ai = new LowestCardAI(game);
-      const ui = new UI(game);
-      const app = new App(game, ai, ui);
-
       // Mock setTimeout for app initialization
       mockSetTimeout();
-      app.init((handler, delay) => {
-        // This handler is called by app.init, but we don't want it to actually set a timeout
-        // We just want to ensure the app's internal setTimeout is mocked.
-      });
+      init();
       restoreSetTimeout();
 
       for (const [name, tests] of Object.entries(TEST_CONFIG)) {
@@ -76,7 +63,7 @@ if (typeof window !== "undefined") {
         const resultsList = document.createElement("ul");
         const resultText = document.createElement("p");
 
-        runTests(tests, resultsList, { gameInstance: game });
+        runTests(tests, resultsList);
 
         heading.textContent = `${name} [${testsRun}]`;
         body.appendChild(heading);

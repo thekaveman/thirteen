@@ -1,6 +1,6 @@
 import { assert, spyOn } from "./utils.js";
-import { Card } from "../src/deck.js";
-import { App } from "../src/app.js";
+import { Card } from "../src/app/deck.js";
+import { App } from "../src/app/app.js";
 import { MockAI, MockDeck, MockGame, MockUI } from "./mocks.js";
 
 function testSetup(ai) {

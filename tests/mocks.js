@@ -1,6 +1,6 @@
-import { AI } from "../src/ai.js";
-import { Card } from "../src/deck.js";
-import { Game } from "../src/game.js";
+import { AI } from "../src/app/ai.js";
+import { Card } from "../src/app/deck.js";
+import { Game } from "../src/app/game.js";
 
 export class MockAI extends AI {
   constructor(game, move) {

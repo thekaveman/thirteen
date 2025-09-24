@@ -23,22 +23,22 @@ global.alert = () => {}; // Provide a no-op mock for alert
 dom.window.document.body.innerHTML = html;
 
 // Load game module
-import { Game } from "../src/game.js";
+import { Game } from "../src/app/game.js";
 
 // Load deck module
-import { Deck } from "../src/deck.js";
+import { Deck } from "../src/app/deck.js";
 
 // Load player module
-import { HumanPlayer, AIPlayer } from "../src/player.js";
+import { HumanPlayer, AIPlayer } from "../src/app/player.js";
 
 // Load UI module
-import { UI } from "../src/ui.js";
+import { UI } from "../src/app/ui.js";
 
 // Load AI module
-import { LowestCardAI } from "../src/ai.js";
+import { LowestCardAI } from "../src/app/ai.js";
 
 // Load app module
-import { App } from "../src/app.js";
+import { App } from "../src/app/app.js";
 
 // Load test utilities
 import { assert, runTests } from "./utils.js";

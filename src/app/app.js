@@ -1,5 +1,9 @@
-import { log } from "./utils.js";
+import { LowestCardAI } from "./ai.js";
+import { Deck } from "./deck.js";
+import { Game } from "./game.js";
 import { HumanPlayer, AIPlayer } from "./player.js";
+import { UI } from "./ui.js";
+import { log } from "./utils.js";
 
 export class App {
   /**
@@ -115,3 +119,10 @@ export class App {
     }
   }
 }
+
+export const init = function () {
+  const deck = new Deck();
+  const game = new Game(deck);
+  const app = new App(game, new LowestCardAI(game), new UI(game));
+  app.init();
+};
