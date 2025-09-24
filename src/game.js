@@ -6,6 +6,7 @@ import { log } from "./utils.js";
 export class Game {
   /**
    * Initializes a new game.
+   * @param {Deck} deck The Deck instance for this game.
    */
   constructor(deck) {
     this.deck = deck;
@@ -26,6 +27,14 @@ export class Game {
       gameStarted: false,
       playerTypes: [],
     };
+  }
+
+  /**
+   * Deals player hands for each player.
+   */
+  deal() {
+    this.gameState.playerHands = this.deck.deal(this.gameState.numPlayers);
+    this.gameState.playerHands.forEach(Card.sort);
   }
 
   /**
@@ -349,17 +358,18 @@ export class Game {
    * Resets the game state to its initial values.
    */
   reset() {
-    this.gameState.playerHands = [];
-    this.gameState.playPile = [];
     this.gameState.currentPlayer = 0;
     this.gameState.currentTurn = 0;
-    this.gameState.selectedCards = [];
     this.gameState.consecutivePasses = 0;
-    this.gameState.lastPlayerToPlay = -1;
-    this.gameState.roundNumber = 1;
-    this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
     this.gameState.gameOver = false;
     this.gameState.gameStarted = false;
+    this.gameState.lastPlayerToPlay = -1;
+    this.gameState.playPile = [];
+    this.gameState.roundNumber = 1;
+    this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
+    this.gameState.selectedCards = [];
+
+    this.deal();
   }
 
   /**
@@ -381,9 +391,7 @@ export class Game {
       if (this.gameState.gamesWon.length !== players.length) {
         this.gameState.gamesWon = new Array(players.length).fill(0);
       }
-      this.deck.shuffle();
-      this.gameState.playerHands = this.deck.deal(this.gameState.numPlayers);
-      this.gameState.playerHands.forEach(Card.sort);
+      this.deal();
       this.gameState.currentPlayer = this.findStartingPlayer(this.gameState.playerHands);
       this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
     } else {

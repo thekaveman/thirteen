@@ -617,23 +617,22 @@ function test_playCards_updatesGameState() {
   game.gameState.currentPlayer = 0;
   game.gameState.numPlayers = 2;
   const cardToPlay = new Card("4", "♠");
-  game.gameState.playerHands = [[cardToPlay], []];
+  game.gameState.playerHands = [[cardToPlay, new Card("5", "♠")], []];
   game.gameState.selectedCards = [cardToPlay];
   game.gameState.playPile = [];
   game.gameState.currentTurn = 1;
-  game.gameState.consecutivePasses = 1; // Should be reset
-  game.gameState.gameOver = false; // Ensure game is not over initially
+  game.gameState.consecutivePasses = 1;
 
   game.playCards();
 
-  assert(game.gameState.playerHands[0].length === 0, "Should remove card from player's hand");
+  assert(game.gameState.playerHands[0].length === 1, "Should remove card from player's hand");
   assert(game.gameState.playPile.length === 1, "Should add card to play pile");
   assert(game.gameState.playPile[0].value === 4, "Should add correct card to play pile");
   assert(game.gameState.selectedCards.length === 0, "Should clear selected cards");
-  assert(game.gameState.currentPlayer === 0, "Current player should remain the winner");
+  assert(game.gameState.currentPlayer === 1, "Should switch to next player");
   assert(game.gameState.consecutivePasses === 0, "Should reset consecutive passes");
   assert(game.gameState.lastPlayerToPlay === 0, "Should set the last player to play");
-  assert(game.gameState.gameOver === true, "Should set gameOver to true when player wins");
+  assert(game.gameState.gameOver === false, "Should not set gameOver to true when player does not win");
 }
 
 function test_playCards_updatesGamesWon() {
@@ -650,26 +649,27 @@ function test_playCards_updatesGamesWon() {
   assert(game.gameState.gamesWon[0] === 1, "Should increment games won for the winner");
 }
 
-function test_reset() {
+function test_reset_resetsGame() {
   const game = new Game(MockDeck);
-  game.gameState.numPlayers = 3;
-  game.gameState.playerHands = [[], [], []];
-  game.gameState.playPile = [new Card("A", "♠")];
+  game.gameState.numPlayers = 2;
+  game.gameState.playerHands = [[], [new Card("A", "♠")]];
+  game.gameState.playPile = [new Card("7", "♠")];
   game.gameState.currentPlayer = 1;
   game.gameState.currentTurn = 5;
   game.gameState.selectedCards = [new Card("A", "♠")];
   game.gameState.consecutivePasses = 1;
   game.gameState.lastPlayerToPlay = 0;
   game.gameState.roundNumber = 2;
-  game.gameState.roundsWon = [1, 0, 0];
-  const gamesWon = [1, 1, 0];
+  game.gameState.roundsWon = [1, 0];
+  const gamesWon = [1, 1];
   game.gameState.gamesWon = gamesWon;
+  game.gameState.gameStarted = true;
   game.gameState.gameOver = true;
 
   game.reset();
 
   assert(Array.isArray(game.gameState.playerHands), "Reset playerHands should be an array");
-  assert(game.gameState.playerHands.length === 0, "Reset playerHands should be empty");
+  assert(game.gameState.playerHands.length === game.gameState.numPlayers, "Reset playerHands should be dealt");
   assert(Array.isArray(game.gameState.playPile), "Reset playPile should be an array");
   assert(game.gameState.playPile.length === 0, "Reset playPile should be empty");
   assert(game.gameState.currentPlayer === 0, "Reset currentPlayer should be 0");
@@ -680,7 +680,7 @@ function test_reset() {
   assert(game.gameState.lastPlayerToPlay === -1, "Reset lastPlayerToPlay should be -1");
   assert(game.gameState.roundNumber === 1, "Reset roundNumber should be 1");
   assert(Array.isArray(game.gameState.roundsWon), "Reset roundsWon should be an array");
-  assert(game.gameState.roundsWon.length === 3, "Reset roundsWon should have the correct length");
+  assert(game.gameState.roundsWon.length === 2, "Reset roundsWon should have the correct length");
   assert(
     game.gameState.roundsWon.every((r) => r === 0),
     "Reset roundsWon should all be 0"
@@ -689,6 +689,7 @@ function test_reset() {
     game.gameState.gamesWon.every((value, index) => value === gamesWon[index]),
     "Reset should not overwrite gamesWon"
   );
+  assert(game.gameState.gameStarted === false, "Reset gameStarted should be false");
   assert(game.gameState.gameOver === false, "Reset gameOver should be false");
 }
 
@@ -783,7 +784,7 @@ export const gameTests = [
   test_passTurn_incrementsPassesAndSwitchesPlayer,
   test_playCards_updatesGameState,
   test_playCards_updatesGamesWon,
-  test_reset,
+  test_reset_resetsGame,
   test_setPlayers_initializesPlayersAndHands,
   test_start_initializesGameState,
 ];
