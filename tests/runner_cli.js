@@ -49,24 +49,14 @@ import { TEST_CONFIG } from "./config.js";
 let allTestsRun = 0;
 let allTestsPassed = 0;
 let allTestsFailed = [];
+const stateKey = `${Game.STATE_KEY}-tests`;
 
 for (const [name, tests] of Object.entries(TEST_CONFIG)) {
   let testsRun = 0;
   let testsPassed = 0;
   // Create a new Game instance for each test suite
   const deck = new Deck();
-  const game = new Game(deck);
-  const ai = new LowestCardAI(game);
-  const ui = new UI(game);
-  const app = new App(game, ai, ui);
-
-  // Mock setTimeout for app initialization
-  mockSetTimeout();
-  app.init((handler, delay) => {
-    // This handler is called by app.init, but we don't want it to actually set a timeout
-    // We just want to ensure the app's internal setTimeout is mocked.
-  });
-  restoreSetTimeout();
+  const game = new Game(deck, stateKey);
 
   process.stdout.write(`\n== Running tests: ${name} [${tests.length}]\n`);
   const mockResults = {

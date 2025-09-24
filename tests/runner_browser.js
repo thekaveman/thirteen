@@ -11,6 +11,9 @@ if (typeof window !== "undefined") {
   let allTestsRun = 0;
   let allTestsPassed = 0;
 
+  const stateKey = `${Game.STATE_KEY}-tests`;
+  window.localStorage.removeItem(stateKey);
+
   log("Running tests");
 
   const body = document.getElementById("root");
@@ -37,9 +40,8 @@ if (typeof window !== "undefined") {
         document.body.appendChild(gameContainer);
       }
 
-      // Create a new Game instance for each test suite
       const deck = new Deck();
-      const game = new Game(deck);
+      const game = new Game(deck, stateKey);
       const ai = new LowestCardAI(game);
       const ui = new UI(game);
       const app = new App(game, ai, ui);
@@ -58,6 +60,7 @@ if (typeof window !== "undefined") {
         let testsPassed = 0;
         tests.forEach((test) => {
           test.beforeEach = () => {
+            window.localStorage.removeItem(stateKey);
             allTestsRun++;
             testsRun++;
           };
@@ -102,5 +105,8 @@ if (typeof window !== "undefined") {
     })
     .catch((error) => {
       console.error("Error loading game container:", error);
+    })
+    .finally(() => {
+      window.localStorage = originalLocalStorage;
     });
 }

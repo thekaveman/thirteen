@@ -7,7 +7,7 @@ import { RANKS, SUITS } from "./constants.js";
 class Help {
   constructor() {
     this.deck = new Deck();
-    this.game = new Game(this.deck);
+    this.game = new Game(this.deck, Game.STATE_KEY + "-help");
     this.ai = new AI(this.game);
 
     this.ui = new UI(this.game);

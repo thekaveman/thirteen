@@ -4,11 +4,14 @@ import { AIPlayer, HumanPlayer } from "./player.js";
 import { log } from "./utils.js";
 
 export class Game {
+  STATE_KEY = "13gs";
+
   /**
    * Initializes a new game.
    * @param {Deck} deck The Deck instance for this game.
+   * @param {string} [stateKey=this.STATE_KEY] The key used to save and load state in localStorage.
    */
-  constructor(deck) {
+  constructor(deck, stateKey = this.STATE_KEY) {
     this.deck = deck;
     this.gameState = {
       numPlayers: 0,
@@ -27,6 +30,7 @@ export class Game {
       gameStarted: false,
       playerTypes: [],
     };
+    this.stateKey = stateKey;
   }
 
   /**
@@ -341,7 +345,7 @@ export class Game {
    * @returns {boolean} True if a saved game was loaded, false otherwise.
    */
   load(ai, ui) {
-    const savedState = localStorage.getItem("13gs");
+    const savedState = localStorage.getItem(this.stateKey);
     const parsedState = savedState ? JSON.parse(savedState) : null;
     if (parsedState && ai && ui) {
       const parsedState = JSON.parse(savedState);
@@ -378,7 +382,7 @@ export class Game {
   save() {
     const serializableGameState = { deck: { ...this.deck }, gameState: { ...this.gameState } };
     delete serializableGameState.gameState.players; // Remove circular reference
-    localStorage.setItem("13gs", JSON.stringify(serializableGameState));
+    localStorage.setItem(this.stateKey, JSON.stringify(serializableGameState));
     log("Game saved to localStorage.");
   }
 

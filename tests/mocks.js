@@ -2,6 +2,19 @@ import { AI } from "../src/ai.js";
 import { Card } from "../src/deck.js";
 import { Game } from "../src/game.js";
 
+export class MockAI extends AI {
+  constructor(game, move) {
+    super(game);
+    this.move = move;
+    this.takeTurnCalled = false;
+  }
+
+  takeTurn(hand, playPile, currentTurn, playerHands) {
+    this.takeTurnCalled = true;
+    return this.move;
+  }
+}
+
 export const MockDeck = {
   cards: [
     new Card("3", "♠"),
@@ -67,22 +80,32 @@ export const MockDeck = {
 };
 
 export class MockGame extends Game {
-  constructor(deck) {
-    super(deck);
-    this.resetCalled = false;
+  constructor(deck, stateKey) {
+    super(deck, stateKey);
     this.findStartingPlayerCalled = false;
+    this.loadCalled = false;
     this.playCardsCalled = false;
     this.passTurnCalled = false;
+    this.resetCalled = false;
+    this.saveCalled = false;
     this.startCalled = false;
+
+    // For testing load scenarios
+    this.loadWillSucceed = false;
+    this.gameOverOnLoad = false;
   }
 
-  reset() {
-    this.resetCalled = true;
-    super.reset();
-  }
   findStartingPlayer(hands) {
     this.findStartingPlayerCalled = true;
     return super.findStartingPlayer(hands);
+  }
+  load() {
+    this.loadCalled = true;
+    if (this.loadWillSucceed) {
+      this.gameState.gameOver = this.gameOverOnLoad;
+      return true;
+    }
+    return false;
   }
   playCards() {
     this.playCardsCalled = true;
@@ -92,10 +115,29 @@ export class MockGame extends Game {
     this.passTurnCalled = true;
     return super.passTurn();
   }
+  reset() {
+    this.resetCalled = true;
+    super.reset();
+  }
+  save() {
+    this.saveCalled = true;
+    super.save();
+  }
   start() {
     this.startCalled = true;
     super.start();
   }
+}
+
+export class MockLocalStorage {
+  constructor() {}
+
+  clear() {}
+  getItem(key) {
+    return null;
+  }
+  setItem(key, value) {}
+  removeItem(key) {}
 }
 
 export class MockUI {
@@ -152,17 +194,4 @@ export class MockUI {
   renderPlayerHands() {}
   updateButtonStates() {}
   renderSelectedCards() {}
-}
-
-export class MockAI extends AI {
-  constructor(game, move) {
-    super(game);
-    this.move = move;
-    this.takeTurnCalled = false;
-  }
-
-  takeTurn(hand, playPile, currentTurn, playerHands) {
-    this.takeTurnCalled = true;
-    return this.move;
-  }
 }
