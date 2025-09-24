@@ -28,6 +28,26 @@ export function restoreSetTimeout() {
   window.clearTimeout = originalClearTimeout;
 }
 
+let originalAddEventListener;
+let addEventListenerCalls = [];
+
+export function mockAddEventListener() {
+  originalAddEventListener = HTMLElement.prototype.addEventListener;
+  addEventListenerCalls = [];
+  HTMLElement.prototype.addEventListener = function (event, handler) {
+    addEventListenerCalls.push({ target: this, event, handler });
+    originalAddEventListener.call(this, event, handler);
+  };
+}
+
+export function restoreAddEventListener() {
+  HTMLElement.prototype.addEventListener = originalAddEventListener;
+}
+
+export function getAddEventListenerCalls() {
+  return addEventListenerCalls;
+}
+
 export function runTests(tests, results, context = {}) {
   results.innerHTML = "";
 

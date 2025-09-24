@@ -4,6 +4,10 @@ import { Game } from "./game.js";
 import { COMBINATION_TYPES } from "./constants.js";
 
 export class UI {
+  /**
+   * Initialize a new UI instance.
+   * @param {Game} game The Game instance for this UI.
+   */
   constructor(game) {
     this.game = game;
     this.id = {
@@ -187,7 +191,9 @@ export class UI {
       text += " (Your Turn)";
     }
     if (handDiv) {
-      handDiv.innerHTML = `<h2>${text}</h2>`;
+      const h2 = document.createElement("h2");
+      h2.textContent = text;
+      handDiv.appendChild(h2);
     }
 
     if (typeof document !== "undefined") {
@@ -241,6 +247,12 @@ export class UI {
           }
           this.playersHands.appendChild(playerHandDiv);
           this.renderPlayerHand(i, playerHandDiv);
+          if (i === this.game.gameState.currentPlayer) {
+            const h2 = playerHandDiv.querySelector("h2");
+            if (h2) {
+              h2.textContent += " (Your Turn)";
+            }
+          }
         }
       });
     }
