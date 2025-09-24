@@ -246,6 +246,19 @@ function test_isValidPlay_allowsSingleCardOnEmptyPile() {
   );
 }
 
+function test_isValidPlay_bombCannotBePlayedOnNonTwo() {
+  const game = new Game(MockDeck);
+  const bomb = [new Card("3", "♠"), new Card("3", "♦"), new Card("3", "♣"), new Card("3", "♥")];
+  const currentPlayer = 0;
+  const playerHands = [bomb];
+  const playPile = [new Card("K", "♠")];
+  const currentTurn = 1;
+  assert(
+    !game.isValidPlay(bomb, playPile, playerHands[currentPlayer], currentTurn, playerHands),
+    "Bomb should not be playable on a non-two card"
+  );
+}
+
 function test_isValidPlay_cannotStartRoundWithConsecutivePairs() {
   const game = new Game(MockDeck);
   const selectedCards = [
@@ -331,6 +344,28 @@ function test_isValidPlay_fourConsecutivePairsBeatsPairOf2s() {
   );
 }
 
+function test_isValidPlay_fourConsecutivePairsCannotBombSingleTwo() {
+  const game = new Game(MockDeck);
+  const bomb = [
+    new Card("3", "♠"),
+    new Card("3", "♦"),
+    new Card("4", "♣"),
+    new Card("4", "♥"),
+    new Card("5", "♠"),
+    new Card("5", "♦"),
+    new Card("6", "♠"),
+    new Card("6", "♦"),
+  ];
+  const currentPlayer = 0;
+  const playerHands = [bomb];
+  const playPile = [new Card("2", "♠")];
+  const currentTurn = 1;
+  assert(
+    !game.isValidPlay(bomb, playPile, playerHands[currentPlayer], currentTurn, playerHands),
+    "Four consecutive pairs should not be a valid bomb for a single two"
+  );
+}
+
 function test_isValidPlay_fourOfAKindBeatsSingle2() {
   const game = new Game(MockDeck);
   const selectedCards = [new Card("3", "♠"), new Card("3", "♦"), new Card("3", "♣"), new Card("3", "♥")];
@@ -341,6 +376,19 @@ function test_isValidPlay_fourOfAKindBeatsSingle2() {
   assert(
     game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
     "Four of a kind should beat a single 2"
+  );
+}
+
+function test_isValidPlay_fourOfAKindCannotBombPairOfTwos() {
+  const game = new Game(MockDeck);
+  const bomb = [new Card("3", "♠"), new Card("3", "♦"), new Card("3", "♣"), new Card("3", "♥")];
+  const currentPlayer = 0;
+  const playerHands = [bomb];
+  const playPile = [new Card("2", "♠"), new Card("2", "♦")];
+  const currentTurn = 1;
+  assert(
+    !game.isValidPlay(bomb, playPile, playerHands[currentPlayer], currentTurn, playerHands),
+    "Four of a kind should not be a valid bomb for a pair of twos"
   );
 }
 
@@ -540,6 +588,26 @@ function test_isValidPlay_threeConsecutivePairsBeatsSingle2() {
   );
 }
 
+function test_isValidPlay_threeConsecutivePairsCannotBombPairOfTwos() {
+  const game = new Game(MockDeck);
+  const bomb = [
+    new Card("3", "♠"),
+    new Card("3", "♦"),
+    new Card("4", "♣"),
+    new Card("4", "♥"),
+    new Card("5", "♠"),
+    new Card("5", "♦"),
+  ];
+  const currentPlayer = 0;
+  const playerHands = [bomb];
+  const playPile = [new Card("2", "♠"), new Card("2", "♦")];
+  const currentTurn = 1;
+  assert(
+    !game.isValidPlay(bomb, playPile, playerHands[currentPlayer], currentTurn, playerHands),
+    "Three consecutive pairs should not be a valid bomb for a pair of twos"
+  );
+}
+
 function test_isValidPlay_tripleBeatsLowerTriple() {
   const game = new Game(MockDeck);
   const selectedCards = [new Card("A", "♠"), new Card("A", "♦"), new Card("A", "♣")];
@@ -732,6 +800,24 @@ function test_start_initializesGameState() {
   );
 }
 
+function test_win_updatesGameState() {
+  const game = new Game(MockDeck);
+  game.gameState.numPlayers = 2;
+  game.gameState.currentPlayer = 0;
+  game.gameState.gamesWon = [0, 0];
+  game.gameState.roundsWon = [0, 0];
+  game.gameState.playPile = [new Card("A", "♠")];
+  game.gameState.gameStarted = true;
+
+  game.win();
+
+  assert(game.gameState.gameOver, "gameOver should be true after a win");
+  assert(!game.gameState.gameStarted, "gameStarted should be false after a win");
+  assert(game.gameState.gamesWon[0] === 1, "Winner's gamesWon should be incremented");
+  assert(game.gameState.roundsWon[0] === 1, "Winner's roundsWon should be incremented");
+  assert(game.gameState.playPile.length === 0, "Play pile should be cleared after a win");
+}
+
 export const gameTests = [
   test_findStartingPlayer_findsPlayerWithLowestCard,
   test_gameState,
@@ -757,12 +843,15 @@ export const gameTests = [
   test_isTriple_returnsFalseForNotTriple,
   test_isTriple_returnsTrueForTriple,
   test_isValidPlay_allowsSingleCardOnEmptyPile,
+  test_isValidPlay_bombCannotBePlayedOnNonTwo,
   test_isValidPlay_cannotStartRoundWithConsecutivePairs,
   test_isValidPlay_consecutivePairsCannotBeatLowerConsecutivePairs,
   test_isValidPlay_disallowsPlayingCardsNotInOwnHand,
   test_isValidPlay_firstTurnMustPlayLowestCard,
   test_isValidPlay_fourConsecutivePairsBeatsPairOf2s,
+  test_isValidPlay_fourConsecutivePairsCannotBombSingleTwo,
   test_isValidPlay_fourOfAKindBeatsSingle2,
+  test_isValidPlay_fourOfAKindCannotBombPairOfTwos,
   test_isValidPlay_fourOfAKindOnlyValidAsBomb,
   test_isValidPlay_higherSingleBeatsLowerSingle,
   test_isValidPlay_lowerConsecutivePairsDoesNotBeatHigherConsecutivePairs,
@@ -777,6 +866,7 @@ export const gameTests = [
   test_isValidPlay_returnsFalseForLowerRankSingle,
   test_isValidPlay_straightBeatsLowerStraight,
   test_isValidPlay_threeConsecutivePairsBeatsSingle2,
+  test_isValidPlay_threeConsecutivePairsCannotBombPairOfTwos,
   test_isValidPlay_tripleBeatsLowerTriple,
   test_nextPlayer_switchesPlayer,
   test_passTurn_endsRoundCorrectly,
@@ -787,4 +877,5 @@ export const gameTests = [
   test_reset_resetsGame,
   test_setPlayers_initializesPlayersAndHands,
   test_start_initializesGameState,
+  test_win_updatesGameState,
 ];
