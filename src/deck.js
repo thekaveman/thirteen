@@ -63,24 +63,11 @@ export class Card {
 }
 
 export class Deck {
-  constructor(cards = []) {
-    this.cards = cards || [];
-    if (this.cards.length < 1) {
-      SUITS.forEach((suit) => {
-        RANKS.forEach((rank) => {
-          this.cards.push(new Card(rank, suit));
-        });
-      });
-    }
-  }
-
-  /**
-   * Shuffles the deck of cards in place.
-   */
-  shuffle() {
-    for (let i = this.cards.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
+  constructor(cards = null) {
+    if (cards) {
+      this.cards = cards.map((card) => new Card(card.rank, card.suit));
+    } else {
+      this.cards = SUITS.flatMap((suit) => RANKS.map((rank) => new Card(rank, suit)));
     }
   }
 
@@ -90,10 +77,21 @@ export class Deck {
    * @returns {Array<Array<Card>>} An array of hands, where each hand is an array of cards.
    */
   deal(numPlayers) {
-    const hands = Array.from({ length: numPlayers }, () => []);
-    const cardsToDeal = Math.min(this.cards.length, numPlayers * 13);
-    for (let i = 0; i < cardsToDeal; i++) {
-      hands[i % numPlayers].push(this.cards[i]);
+    const hands = new Array(numPlayers).fill(0).map(() => []);
+    const shuffledCards = [...this.cards];
+
+    // Fisher-Yates shuffle on the copy
+    for (let i = shuffledCards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledCards[i], shuffledCards[j]] = [shuffledCards[j], shuffledCards[i]];
+    }
+
+    for (let i = 0; i < 13; i++) {
+      for (let j = 0; j < numPlayers; j++) {
+        if (shuffledCards.length > 0) {
+          hands[j].push(shuffledCards.pop());
+        }
+      }
     }
     return hands;
   }

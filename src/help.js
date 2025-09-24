@@ -36,7 +36,6 @@ class Help {
     let hands = [];
     let playPile = [];
     while (playPile.length === 0) {
-      this.game.deck.shuffle();
       hands = this.game.deck.deal(2);
       const combinations = this.ai.generateCombinations(hands[0], randomType);
       if (combinations.length > 0) {
@@ -88,7 +87,6 @@ class Help {
 
     const exampleContainer = document.getElementById("hand-container");
     if (exampleContainer) {
-      this.deck.shuffle();
       const hand = this.deck.deal(1)[0];
       Card.sort(hand);
       this.ui.renderCardsContainer(hand, exampleContainer);

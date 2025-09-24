@@ -108,12 +108,18 @@ function test_Deck_deal_dealsCorrectTotalCards() {
   assert(totalCardsInHands2 === 26, "Should deal 26 cards in total for 2 players");
 }
 
-function test_Deck_shuffle_shufflesDeck() {
-  const deck1 = new Deck();
-  const deck2 = new Deck();
-  deck2.shuffle();
-  assert(JSON.stringify(deck1.cards) !== JSON.stringify(deck2.cards), "Shuffled deck should be different from the original");
-  assert(deck1.cards.length === deck2.cards.length, "Shuffled deck should have the same number of cards");
+function test_Deck_deal_dealsShuffledCards() {
+  const deck = new Deck();
+  const hands1 = deck.deal(2);
+  const hands2 = deck.deal(2);
+  assert(JSON.stringify(hands1) !== JSON.stringify(hands2), "Dealt hands should be shuffled and different");
+}
+
+function test_Deck_deal_doesNotModifyDeck() {
+  const deck = new Deck();
+  const originalCards = [...deck.cards];
+  deck.deal(2);
+  assert(JSON.stringify(deck.cards) === JSON.stringify(originalCards), "Deck should not be modified after dealing");
 }
 
 export const deckTests = [
@@ -130,5 +136,6 @@ export const deckTests = [
   test_Deck_deal_deals13CardsToEachPlayer,
   test_Deck_deal_dealsCorrectNumberOfHands,
   test_Deck_deal_dealsCorrectTotalCards,
-  test_Deck_shuffle_shufflesDeck,
+  test_Deck_deal_dealsShuffledCards,
+  test_Deck_deal_doesNotModifyDeck,
 ];
