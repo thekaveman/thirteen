@@ -29,7 +29,7 @@ export class HumanPlayer extends Player {
   }
 
   handleCardClick(event) {
-    const card = JSON.parse(event.target.dataset.card);
+    const card = Card.parse(event.target.dataset.card);
 
     // Check if the clicked card belongs to the current player's hand
     const currentPlayerHand = this.game.gameState.playerHands[this.game.gameState.currentPlayer];

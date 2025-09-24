@@ -54,6 +54,16 @@ export class Card {
   }
 
   /**
+   * Parse a JSON string into a Card instance.
+   * @param {string} json JSON string containing card data.
+   * @returns {Card} The parsed Card instance.
+   */
+  static parse(json) {
+    const data = JSON.parse(json);
+    return new Card(data.rank, data.suit);
+  }
+
+  /**
    * Sorts a hand of cards by value.
    * @param {Array<Card>} hand The hand to sort.
    */

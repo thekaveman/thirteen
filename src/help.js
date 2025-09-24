@@ -156,7 +156,7 @@ class Help {
       playerHandContainer.addEventListener("click", (event) => {
         const cardEl = event.target.closest(".card");
         if (cardEl) {
-          const card = JSON.parse(cardEl.dataset.card);
+          const card = Card.parse(cardEl.dataset.card);
           const index = selectedCards.findIndex((c) => c.value === card.value);
           if (index > -1) {
             selectedCards.splice(index, 1);

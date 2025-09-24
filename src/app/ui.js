@@ -305,7 +305,7 @@ export class UI {
 
     const cardElements = currentPlayerHandDiv.querySelectorAll(".card");
     cardElements.forEach((cardEl) => {
-      const card = JSON.parse(cardEl.dataset.card);
+      const card = Card.parse(cardEl.dataset.card);
       const isSelected = this.game.gameState.selectedCards.some(
         (selectedCard) => selectedCard.rank === card.rank && selectedCard.suit === card.suit
       );

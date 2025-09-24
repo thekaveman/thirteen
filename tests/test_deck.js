@@ -34,6 +34,15 @@ function test_Card_getValue_returnsCorrectValue() {
   assert(Card.getValue("2", "♥") === 51, "2♥ should have value 51");
 }
 
+function test_Card_parse_returnsCard() {
+  const card = new Card("3", "♠");
+  const cardJson = JSON.stringify(card);
+
+  const parsed = Card.parse(cardJson);
+
+  assert(parsed.value === card.value);
+}
+
 function test_Card_sort_sortsByValue() {
   const hand = [new Card("A", "♠"), new Card("3", "♦"), new Card("K", "♣")];
   Card.sort(hand);
@@ -128,6 +137,7 @@ export const deckTests = [
   test_Card_createsCorrectCard,
   test_Card_findLowest_findsLowestCard,
   test_Card_getValue_returnsCorrectValue,
+  test_Card_parse_returnsCard,
   test_Card_sort_sortsByValue,
   test_Deck_constructor_has52Cards,
   test_Deck_constructor_has13CardsOfEachSuit,
