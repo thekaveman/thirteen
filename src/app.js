@@ -13,78 +13,18 @@ export class App {
     this.ai = ai;
     this.ui = ui;
     this.setTimeout = typeof window !== "undefined" ? window.setTimeout.bind(window) : setTimeout;
+
+    this.ui.init(this.game);
   }
 
-  init(currentSetTimeout = null) {
-    if (currentSetTimeout != null) {
-      this.setTimeout = currentSetTimeout;
-    }
-    this.ui.init(this.game);
-
-    // Attempt to load game state
-    if (this.game.load(this.ai, this.ui) && !this.game.gameState.gameOver) {
-      this.ui.render();
-      this.ui.startGameButton.addEventListener("click", () => this.handleStartGameClick());
-      const humanPlayer = this.game.gameState.players.find((p) => p.type === "human");
-      if (humanPlayer) {
-        this.ui.playButton.addEventListener("click", () => this.handleHumanPlay());
-        this.ui.passButton.addEventListener("click", () => this.handleHumanPass());
-      }
-      this.ui.newGameButton.addEventListener("click", () => this.init());
-      return;
-    }
-
-    // Initial game setup for display (hands dealt, starting player determined)
-    this.game.reset();
-
-    const playerTypes = ["human", "ai"];
-    const players = playerTypes.map((type, index) => {
-      if (type === "ai") {
-        return new AIPlayer(this.game, index, this.ai);
-      }
-      return new HumanPlayer(this.game, index, this.ui);
-    });
-    this.game.setPlayers(players);
-
-    this.ui.render(); // Render initial UI with dealt hands and start button
-    this.ui.startGameButton.addEventListener("click", () => this.handleStartGameClick());
-
-    // Set up event listeners for play/pass/new game buttons
+  attachHandlers() {
     const humanPlayer = this.game.gameState.players.find((p) => p.type === "human");
     if (humanPlayer) {
       this.ui.playButton.addEventListener("click", () => this.handleHumanPlay());
       this.ui.passButton.addEventListener("click", () => this.handleHumanPass());
     }
-    this.ui.newGameButton.addEventListener("click", () => this.init());
-  }
-
-  handleStartGameClick() {
-    log(`Game started`);
-    this.game.start();
-    this.ui.render(); // Update UI after game officially starts
-    this.nextTurn();
-  }
-
-  nextTurn() {
-    if (this.game.gameState.gameOver) {
-      return;
-    }
-    const currentPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
-    if (currentPlayer.type === "ai") {
-      this.setTimeout(() => this.handleAITurn(), 1000);
-    }
-  }
-
-  handleHumanPlay() {
-    const humanPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
-    humanPlayer.handlePlayButtonClick();
-    this.nextTurn();
-  }
-
-  handleHumanPass() {
-    const humanPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
-    humanPlayer.handlePassButtonClick();
-    this.nextTurn();
+    this.ui.startGameButton.addEventListener("click", () => this.handleStartGameClick());
+    this.ui.newGameButton.addEventListener("click", () => this.handleNewGameClick());
   }
 
   handleAITurn() {
@@ -104,5 +44,74 @@ export class App {
     this.ui.render();
 
     this.nextTurn();
+  }
+
+  handleNewGameClick() {
+    log(`Game initialized`);
+    this.init(this.setTimeout);
+    this.ui.render();
+  }
+
+  handleStartGameClick() {
+    log(`Game started`);
+    this.game.start();
+    this.attachHandlers();
+    this.ui.render();
+    this.nextTurn();
+  }
+
+  handleHumanPlay() {
+    const humanPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
+    humanPlayer.handlePlayButtonClick();
+    this.nextTurn();
+  }
+
+  handleHumanPass() {
+    const humanPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
+    humanPlayer.handlePassButtonClick();
+    this.nextTurn();
+  }
+
+  init(currentSetTimeout = null) {
+    if (currentSetTimeout != null) {
+      this.setTimeout = currentSetTimeout;
+    }
+
+    // Attempt to load game state
+    if (this.game.load(this.ai, this.ui) && !this.game.gameState.gameOver) {
+      // Render loaded UI
+      this.ui.render();
+      this.attachHandlers();
+      return;
+    }
+
+    // If no game loaded, or game was over, start a new one.
+    this.game.reset();
+
+    // Initial game setup for display (hands dealt, starting player determined)
+    const playerTypes = ["human", "ai"];
+    const players = playerTypes.map((type, index) => {
+      if (type === "ai") {
+        return new AIPlayer(this.game, index, this.ai);
+      }
+      return new HumanPlayer(this.game, index, this.ui);
+    });
+    // Set up players for a new game
+    this.game.setPlayers(players);
+    this.game.save();
+
+    // Render initial UI with dealt hands and start button
+    this.ui.render();
+    this.attachHandlers();
+  }
+
+  nextTurn() {
+    if (this.game.gameState.gameOver) {
+      return;
+    }
+    const currentPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
+    if (currentPlayer.type === "ai") {
+      this.setTimeout(() => this.handleAITurn(), 1000);
+    }
   }
 }

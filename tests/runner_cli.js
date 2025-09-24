@@ -41,10 +41,12 @@ import { LowestCardAI } from "../src/ai.js";
 import { App } from "../src/app.js";
 
 // Load test utilities
-import { assert, runTests, mockSetTimeout, restoreSetTimeout } from "./utils.js";
+import { assert, runTests } from "./utils.js";
 global.assert = assert; // Make assert globally available for test files
 
 import { TEST_CONFIG } from "./config.js";
+import { MockLocalStorage } from "./mocks.js";
+global.localStorage = new MockLocalStorage();
 
 let allTestsRun = 0;
 let allTestsPassed = 0;
