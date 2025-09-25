@@ -9,7 +9,7 @@ import {
 import { Card } from "../src/app/deck.js";
 import { HumanPlayer, AIPlayer } from "../src/app/player.js";
 import { UI } from "../src/app/ui.js";
-import { MockDeck, MockGame } from "./mocks.js";
+import { MockDeck, MockGame, MockAI } from "./mocks.js";
 
 const TEST_UI_ID = "test-ui";
 
@@ -38,7 +38,7 @@ function testSetup() {
 
   // Reset game state for a clean test environment
   game.reset();
-  const players = [new HumanPlayer(game, 0, uiInstance), new AIPlayer(game, 1, uiInstance), new HumanPlayer(game, 2, uiInstance)];
+  const players = [new HumanPlayer(game, 0, uiInstance), new AIPlayer(game, 1, new MockAI(game)), new HumanPlayer(game, 2, uiInstance)];
   game.setPlayers(players);
   game.start();
 

@@ -1,4 +1,5 @@
 import { init } from "../src/app/app.js";
+import { Game } from "../src/app/game.js";
 import { log } from "../src/app/utils.js";
 import { TEST_CONFIG } from "./config.js";
 import { runTests, mockSetTimeout, restoreSetTimeout } from "./utils.js";
@@ -38,7 +39,7 @@ if (typeof window !== "undefined") {
 
       // Mock setTimeout for app initialization
       mockSetTimeout();
-      init();
+      init(stateKey);
       restoreSetTimeout();
 
       for (const [name, tests] of Object.entries(TEST_CONFIG)) {
@@ -56,6 +57,7 @@ if (typeof window !== "undefined") {
               allTestsPassed++;
               testsPassed++;
             }
+            window.localStorage.removeItem(stateKey);
           };
         });
         const heading = document.createElement("h2");
@@ -92,8 +94,5 @@ if (typeof window !== "undefined") {
     })
     .catch((error) => {
       console.error("Error loading game container:", error);
-    })
-    .finally(() => {
-      window.localStorage = originalLocalStorage;
     });
 }

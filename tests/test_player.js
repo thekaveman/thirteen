@@ -1,11 +1,10 @@
 import { Card } from "../src/app/deck.js";
-import { Game } from "../src/app/game.js";
 import { HumanPlayer, AIPlayer } from "../src/app/player.js";
 import { assert } from "./utils.js";
-import { MockAI, MockUI } from "./mocks.js";
+import { MockAI, MockUI, MockGame } from "./mocks.js";
 
 function test_Player_constructor() {
-  const game = new Game();
+  const game = new MockGame();
 
   const humanPlayer = new HumanPlayer(game, 0, new MockUI());
   assert(humanPlayer.type === "human", "Player constructor should set the type to human");
@@ -18,7 +17,7 @@ function test_Player_constructor() {
 }
 
 function test_HumanPlayer_handleCardClick_preventsSelectionOfOtherPlayersCards() {
-  const game = new Game();
+  const game = new MockGame();
   const ui = new MockUI();
   ui.renderPlayerHand = (playerIndex, handDiv) => {
     const card = game.gameState.playerHands[playerIndex][0];
@@ -58,7 +57,7 @@ function test_HumanPlayer_handleCardClick_preventsSelectionOfOtherPlayersCards()
 }
 
 function test_HumanPlayer_handleCardClick_selectsAndDeselectsCard() {
-  const game = new Game();
+  const game = new MockGame();
   const ui = new MockUI();
   const humanPlayer = new HumanPlayer(game, 0, ui);
   const card = new Card("A", "♠");
@@ -83,7 +82,7 @@ function test_HumanPlayer_handleCardClick_selectsAndDeselectsCard() {
 }
 
 function test_HumanPlayer_handlePassButtonClick_endsRoundCorrectly() {
-  const game = new Game();
+  const game = new MockGame();
   const ui = new MockUI();
   const humanPlayer = new HumanPlayer(game, 0, ui);
   game.gameState.numPlayers = 3;
@@ -102,7 +101,7 @@ function test_HumanPlayer_handlePassButtonClick_endsRoundCorrectly() {
 }
 
 function test_HumanPlayer_handlePassButtonClick_firstPlayOfRound() {
-  const game = new Game();
+  const game = new MockGame();
   const ui = new MockUI();
   const humanPlayer = new HumanPlayer(game, 0, ui);
   game.gameState.playPile = []; // Empty play pile indicates the start of a round
@@ -115,7 +114,7 @@ function test_HumanPlayer_handlePassButtonClick_firstPlayOfRound() {
 }
 
 function test_HumanPlayer_handlePassButtonClick_incrementsPassesAndSwitchesPlayer() {
-  const game = new Game();
+  const game = new MockGame();
   const ui = new MockUI();
   const humanPlayer = new HumanPlayer(game, 0, ui);
   game.gameState.numPlayers = 3;
@@ -132,7 +131,7 @@ function test_HumanPlayer_handlePassButtonClick_incrementsPassesAndSwitchesPlaye
 }
 
 function test_HumanPlayer_handlePlayButtonClick_showsMessageOnInvalidPlay() {
-  const game = new Game();
+  const game = new MockGame();
   const ui = new MockUI();
   const humanPlayer = new HumanPlayer(game, 0, ui);
   // Set up an invalid game state to make isValidPlay return false.
@@ -147,7 +146,7 @@ function test_HumanPlayer_handlePlayButtonClick_showsMessageOnInvalidPlay() {
 }
 
 function test_HumanPlayer_handlePlayButtonClick_updatesGameStateOnValidPlay() {
-  const game = new Game();
+  const game = new MockGame();
   const ui = new MockUI();
   const humanPlayer = new HumanPlayer(game, 0, ui);
   // Set up a valid game state to make isValidPlay return true.
@@ -173,7 +172,7 @@ function test_HumanPlayer_handlePlayButtonClick_updatesGameStateOnValidPlay() {
 }
 
 function test_AIPlayer_takeTurn_ai() {
-  const game = new Game();
+  const game = new MockGame();
   game.gameState.currentPlayer = 0;
   game.gameState.playerHands = [[]];
   const move = [new Card("5", "♦")];
@@ -184,7 +183,7 @@ function test_AIPlayer_takeTurn_ai() {
 }
 
 function test_HumanPlayer_takeTurn_human() {
-  const game = new Game();
+  const game = new MockGame();
   const ui = new MockUI();
   const humanPlayer = new HumanPlayer(game, 0, ui);
   const move = humanPlayer.takeTurn();

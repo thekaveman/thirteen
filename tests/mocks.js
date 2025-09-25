@@ -167,11 +167,21 @@ export class MockGame extends Game {
 }
 
 export class MockLocalStorage {
-  constructor() {}
+  constructor() {
+    this.store = {};
+  }
 
-  clear() {}
+  clear() {
+    this.store = {};
+  }
   getItem(key) {
-    return null;
+    return this.store[key] || null;
+  }
+  setItem(key, value) {
+    this.store[key] = value;
+  }
+  removeItem(key) {
+    delete this.store[key];
   }
 }
 

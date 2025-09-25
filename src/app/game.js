@@ -25,6 +25,7 @@ export class Game {
       numPlayers: 0,
       players: [],
       playerHands: [],
+      playerTurns: [],
       playPile: [],
       currentPlayer: 0,
       currentTurn: 0,
@@ -40,6 +41,29 @@ export class Game {
     };
     this.id = crypto.randomUUID();
     this.stateKey = stateKey;
+  }
+
+  /**
+   * Create players from the game state's playerTypes.
+   * @param {AI} ai An AI instance for AIPlayers.
+   * @param {UI} ui A UI instance for HumanPlayers.
+   * @returns {Array<Player>} The list of players.
+   */
+  createPlayers(ai, ui) {
+    const playerIds = this.gameState.players.map((p) => p.id);
+    const players = this.gameState.playerTypes.map((type, index) => {
+      let player;
+      if (type === "ai") {
+        player = new AIPlayer(this, index, ai);
+      } else {
+        player = new HumanPlayer(this, index, ui);
+      }
+      if (playerIds.length > 0) {
+        player.id = playerIds[index];
+      }
+      return player;
+    });
+    return players;
   }
 
   /**
@@ -297,6 +321,7 @@ export class Game {
       return false;
     }
 
+    this.gameState.playerTurns[this.gameState.currentPlayer]++;
     this.gameState.consecutivePasses++;
     this.gameState.selectedCards = []; // Clear selected cards on pass
 
@@ -363,9 +388,17 @@ export class Game {
     const parsedState = savedState ? JSON.parse(savedState) : null;
     if (parsedState && ai && ui) {
       const parsedState = JSON.parse(savedState);
-      this.deck = new Deck(parsedState.deck.cards);
+      this.id = parsedState.id;
+      this.stateKey = parsedState.stateKey;
       this.gameState = parsedState.gameState;
-      this.setPlayers(null, ai, ui); // Re-hydrate players
+      // Re-hydrate deck
+      this.deck = new Deck(parsedState.deck.cards);
+      // Re-hydrate cards
+      this.gameState.playerHands = [...this.gameState.playerHands].map((h) => Card.objectsToList(h));
+      this.gameState.playPile = Card.objectsToList([...this.gameState.playPile]);
+      this.gameState.selectedCards = Card.objectsToList([...this.gameState.selectedCards]);
+      // Re-hydrate players
+      this.gameState.players = this.createPlayers(ai, ui);
       log("Game loaded from localStorage.");
       return true;
     }
@@ -385,6 +418,7 @@ export class Game {
     this.gameState.playPile = [];
     this.gameState.roundNumber = 1;
     this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
+    this.gameState.playerTurns = new Array(this.gameState.numPlayers).fill(0);
     this.gameState.selectedCards = [];
     this.deal();
     this.hooks.onGameReset(this);
@@ -394,13 +428,22 @@ export class Game {
    * Saves the current game state to localStorage.
    */
   save() {
-    const serializableGameState = { deck: { ...this.deck }, gameState: { ...this.gameState } };
-    delete serializableGameState.gameState.players; // Remove circular reference
+    const serializableGameState = {
+      id: this.id,
+      deck: { ...this.deck },
+      gameState: { ...this.gameState },
+      stateKey: this.stateKey,
+    };
+    serializableGameState.gameState.players = this.gameState.players.map((p) => p.data());
     localStorage.setItem(this.stateKey, JSON.stringify(serializableGameState));
     log("Game saved to localStorage.");
   }
 
-  setPlayers(players = null, ai = null, ui = null) {
+  /**
+   * Initializes the game's players.
+   * @param {Array<Player>} players The list of players to initialize into the game.
+   */
+  setPlayers(players) {
     if (players) {
       this.gameState.players = players;
       this.gameState.numPlayers = players.length;
@@ -412,14 +455,6 @@ export class Game {
       this.deal();
       this.gameState.currentPlayer = this.findStartingPlayer(this.gameState.playerHands);
       this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
-    } else {
-      const players = this.gameState.playerTypes.map((type, index) => {
-        if (type === "ai") {
-          return new AIPlayer(this, index, ai);
-        }
-        return new HumanPlayer(this, index, ui);
-      });
-      this.gameState.players = players;
     }
   }
 

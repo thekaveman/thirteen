@@ -22,13 +22,11 @@ export class App {
   }
 
   attachHandlers() {
-    const humanPlayer = this.game.gameState.players.find((p) => p.type === "human");
-    if (humanPlayer) {
-      this.ui.playButton.addEventListener("click", () => this.handleHumanPlay());
-      this.ui.passButton.addEventListener("click", () => this.handleHumanPass());
-    }
+    this.ui.playButton.addEventListener("click", () => this.handleHumanPlay());
+    this.ui.passButton.addEventListener("click", () => this.handleHumanPass());
     this.ui.startGameButton.addEventListener("click", () => this.handleStartGameClick());
     this.ui.newGameButton.addEventListener("click", () => this.handleNewGameClick());
+    this.ui.resetButton.addEventListener("click", () => this.handleResetButtonClick());
   }
 
   handleAITurn() {
@@ -45,6 +43,7 @@ export class App {
     } else {
       this.game.passTurn();
     }
+
     this.ui.render();
 
     this.nextTurn();
@@ -67,13 +66,11 @@ export class App {
   handleHumanPlay() {
     const humanPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
     humanPlayer.handlePlayButtonClick();
-    this.nextTurn();
   }
 
   handleHumanPass() {
     const humanPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
     humanPlayer.handlePassButtonClick();
-    this.nextTurn();
   }
 
   init(currentSetTimeout = null) {
@@ -93,15 +90,8 @@ export class App {
     this.game.reset();
 
     // Initial game setup for display (hands dealt, starting player determined)
-    const playerTypes = ["human", "ai"];
-    const players = playerTypes.map((type, index) => {
-      if (type === "ai") {
-        return new AIPlayer(this.game, index, this.ai);
-      }
-      return new HumanPlayer(this.game, index, this.ui);
-    });
-    // Set up players for a new game
-    this.game.setPlayers(players);
+    this.game.gameState.playerTypes = ["human", "ai"];
+    this.game.setPlayers(this.game.createPlayers(this.ai, this.ui));
     this.game.save();
 
     // Render initial UI with dealt hands and start button
@@ -116,13 +106,16 @@ export class App {
     const currentPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
     if (currentPlayer.type === "ai") {
       this.setTimeout(() => this.handleAITurn(), 1000);
+    } else {
+      // If it's a human player's turn, do nothing and wait for user input
+      return;
     }
   }
 }
 
-export const init = function () {
+export const init = function (stateKey = Game.STATE_KEY) {
   const deck = new Deck();
-  const game = new Game(deck);
+  const game = new Game(deck, stateKey);
   const app = new App(game, new LowestCardAI(game), new UI(game));
   app.init();
 };
