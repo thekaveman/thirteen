@@ -99,6 +99,34 @@ export class MockGame extends Game {
     this.saveCalled = false;
     this.startCalled = false;
 
+    this.onGameResetCalled = false;
+    this.onGameStartedCalled = false;
+    this.onGameWonCalled = false;
+    this.onPlayerMovedCalled = false;
+    this.onPlayerPassedCalled = false;
+    this.onRoundPlayedCalled = false;
+
+    this.hooks = {
+      onGameReset: (game) => {
+        this.onGameResetCalled = true;
+      },
+      onGameStarted: (game) => {
+        this.onGameStartedCalled = true;
+      },
+      onGameWon: (game) => {
+        this.onGameWonCalled = true;
+      },
+      onPlayerMoved: (game) => {
+        this.onPlayerMovedCalled = true;
+      },
+      onPlayerPassed: (game) => {
+        this.onPlayerPassedCalled = true;
+      },
+      onRoundPlayed: (game) => {
+        this.onRoundPlayedCalled = true;
+      },
+    };
+
     // For testing load scenarios
     this.loadWillSucceed = false;
     this.gameOverOnLoad = false;

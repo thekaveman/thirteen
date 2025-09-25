@@ -5,7 +5,9 @@ import { MockAI, MockDeck, MockGame, MockUI } from "./mocks.js";
 
 function testSetup(ai) {
   const game = new MockGame(MockDeck);
+  const mockHooks = { ...game.hooks };
   const app = new App(game, ai || new MockAI(game), new MockUI(game));
+  app.game.hooks = mockHooks;
 
   app.init();
   return app;

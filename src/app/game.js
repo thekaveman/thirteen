@@ -13,6 +13,14 @@ export class Game {
    */
   constructor(deck, stateKey = this.STATE_KEY) {
     this.deck = deck;
+    this.hooks = {
+      onGameReset: (game) => {},
+      onGameStarted: (game) => {},
+      onGameWon: (game) => {},
+      onPlayerMoved: (game) => {},
+      onPlayerPassed: (game) => {},
+      onRoundPlayed: (game) => {},
+    };
     this.gameState = {
       numPlayers: 0,
       players: [],
@@ -276,6 +284,7 @@ export class Game {
     this.gameState.consecutivePasses = 0;
     this.gameState.currentPlayer = this.gameState.lastPlayerToPlay;
     this.gameState.roundNumber++;
+    this.hooks.onRoundPlayed(this);
   }
 
   /**
@@ -290,6 +299,8 @@ export class Game {
 
     this.gameState.consecutivePasses++;
     this.gameState.selectedCards = []; // Clear selected cards on pass
+
+    this.hooks.onPlayerPassed(this);
 
     if (this.gameState.consecutivePasses >= this.gameState.numPlayers - 1) {
       log(`Player ${this.gameState.lastPlayerToPlay + 1} wins round ${this.gameState.roundNumber}.`);
@@ -318,6 +329,8 @@ export class Game {
         currentPlayerHand.splice(cardIndex, 1);
       }
     });
+
+    this.hooks.onPlayerMoved(this);
 
     // Check for win condition
     if (currentPlayerHand.length === 0) {
@@ -373,8 +386,8 @@ export class Game {
     this.gameState.roundNumber = 1;
     this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
     this.gameState.selectedCards = [];
-
     this.deal();
+    this.hooks.onGameReset(this);
   }
 
   /**
@@ -416,6 +429,7 @@ export class Game {
   start() {
     this.gameState.gameStarted = true;
     this.save();
+    this.hooks.onGameStarted(this);
   }
 
   /**
@@ -427,5 +441,6 @@ export class Game {
     this.gameState.playPile = [];
     this.gameState.gameOver = true;
     this.gameState.gameStarted = false;
+    this.hooks.onGameWon(this);
   }
 }
