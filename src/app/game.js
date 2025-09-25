@@ -1,6 +1,6 @@
 import { COMBINATION_TYPES, RANKS } from "./constants.js";
 import { Card, Deck } from "./deck.js";
-import { AIPlayer, HumanPlayer } from "./player.js";
+import { Player, AIPlayer, HumanPlayer } from "./player.js";
 import { log } from "./utils.js";
 
 export class Game {
@@ -64,6 +64,14 @@ export class Game {
       return player;
     });
     return players;
+  }
+
+  /**
+   * Gets the current player from the game's state.
+   * @returns {Player} The current player instance.
+   */
+  currentPlayer() {
+    return this.gameState.players[this.gameState.currentPlayer];
   }
 
   /**

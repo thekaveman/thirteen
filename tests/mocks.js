@@ -1,6 +1,37 @@
 import { AI } from "../src/app/ai.js";
 import { Card } from "../src/app/deck.js";
 import { Game } from "../src/app/game.js";
+import { Player } from "../src/app/player.js";
+
+export class MockAnalytics {
+  constructor() {
+    this.events = [];
+  }
+
+  gameStarted(game) {
+    this.events.push({ eventType: "game_started", game });
+  }
+
+  gameWon(game) {
+    this.events.push({ eventType: "game_won", game });
+  }
+
+  roundPlayed(game) {
+    this.events.push({ eventType: "round_played", game });
+  }
+
+  gameReset(game) {
+    this.events.push({ eventType: "game_reset", game });
+  }
+
+  playerMoved(game) {
+    this.events.push({ eventType: "player_moved", game });
+  }
+
+  playerPassed(game) {
+    this.events.push({ eventType: "player_passed", game });
+  }
+}
 
 export class MockAI extends AI {
   constructor(game, move) {

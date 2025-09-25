@@ -10,6 +10,24 @@
     <meta property="og:url" content="https://thekaveman.github.io/thirteen/src/" />
     <meta property="og:type" content="website" />
     <link rel="stylesheet" href="style.css" type="text/css" />
+    <script src="https://cdn.amplitude.com/script/627908547126720f4807e324ee28ba63.js"></script>
+    <script>
+      window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 1 }));
+      window.amplitude.init("627908547126720f4807e324ee28ba63", {
+        fetchRemoteConfig: true,
+        autocapture: {
+          attribution: true,
+          fileDownloads: false,
+          formInteractions: false,
+          pageViews: true,
+          sessions: true,
+          elementInteractions: false,
+          networkTracking: false,
+          webVitals: false,
+          frustrationInteractions: true,
+        },
+      });
+    </script>
   </head>
   <body>
     <div id="game-container">
