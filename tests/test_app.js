@@ -149,6 +149,23 @@ function test_handleNewGameClick_resetsGame() {
   testTeardown(app);
 }
 
+function test_handleResetButtonClick_clearsLocalStorageAndResetsGame() {
+  const app = testSetup();
+  const localStorageClearSpy = spyOn(localStorage, "clear");
+  const appInitSpy = spyOn(app, "init");
+
+  // Simulate clicking the reset button
+  app.ui.resetButton.handler();
+
+  assert(localStorageClearSpy.called, "localStorage.clear should be called");
+  assert(appInitSpy.called, "app.init should be called");
+  assert(app.game.onGameResetCalled, "onGameReset should be called");
+
+  localStorageClearSpy.restore();
+  appInitSpy.restore();
+  testTeardown(app);
+}
+
 function test_handleStartGameClick_startsGame() {
   const app = testSetup();
   const nextTurnSpy = spyOn(app, "nextTurn");
@@ -298,6 +315,7 @@ export const appTests = [
   test_handleHumanPlay_callsPlayButtonClickAndNextTurn,
   test_handleHumanPass_callsPassButtonClickAndNextTurn,
   test_handleNewGameClick_resetsGame,
+  test_handleResetButtonClick_clearsLocalStorageAndResetsGame,
   test_handleStartGameClick_startsGame,
   test_init_initializesGame,
   test_init_initializesUI,

@@ -19,6 +19,7 @@ export class UI {
       passButton: "pass-button",
       newGameButton: "new-game-button",
       startGameButton: "start-game-button",
+      resetButton: "reset-button",
     };
     this.messageTimeout = null;
 
@@ -31,6 +32,7 @@ export class UI {
     this.passButton = null;
     this.newGameButton = null;
     this.startGameButton = null;
+    this.resetButton = null;
   }
 
   /**
@@ -48,6 +50,7 @@ export class UI {
       this.passButton = document.getElementById(this.id.passButton);
       this.newGameButton = document.getElementById(this.id.newGameButton);
       this.startGameButton = document.getElementById(this.id.startGameButton);
+      this.resetButton = document.getElementById(this.id.resetButton);
     }
   }
 
@@ -247,12 +250,6 @@ export class UI {
           }
           this.playersHands.appendChild(playerHandDiv);
           this.renderPlayerHand(i, playerHandDiv);
-          if (i === this.game.gameState.currentPlayer) {
-            const h2 = playerHandDiv.querySelector("h2");
-            if (h2) {
-              h2.textContent += " (Your Turn)";
-            }
-          }
         }
       });
     }
@@ -269,12 +266,14 @@ export class UI {
       if (this.passButton) this.passButton.style.display = "none";
       if (this.newGameButton) this.newGameButton.style.display = "block";
       if (this.startGameButton) this.startGameButton.style.display = "none";
+      if (this.resetButton) this.resetButton.style.display = "block";
     } else if (!this.game.gameState.gameStarted) {
       // Game has not started yet, show start button
       if (this.playButton) this.playButton.style.display = "none";
       if (this.passButton) this.passButton.style.display = "none";
       if (this.newGameButton) this.newGameButton.style.display = "none";
       if (this.startGameButton) this.startGameButton.style.display = "block";
+      if (this.resetButton) this.resetButton.style.display = "block";
     } else {
       // Game is in progress
       if (this.playButton) {
@@ -287,6 +286,7 @@ export class UI {
       }
       if (this.newGameButton) this.newGameButton.style.display = "none";
       if (this.startGameButton) this.startGameButton.style.display = "none";
+      if (this.resetButton) this.resetButton.style.display = "none";
     }
   }
 

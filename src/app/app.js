@@ -55,6 +55,12 @@ export class App {
     this.ui.render();
   }
 
+  handleResetButtonClick() {
+    log(`Game reset`);
+    localStorage.clear();
+    this.handleNewGameClick();
+  }
+
   handleStartGameClick() {
     log(`Game started`);
     this.game.start();

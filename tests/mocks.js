@@ -231,6 +231,12 @@ export class MockUI {
       },
       style: { display: "" },
     };
+    this.resetButton = {
+      addEventListener: (event, handler) => {
+        this.resetButton.handler = handler;
+      },
+      style: { display: "" },
+    };
     this.gameMessages = { textContent: "", classList: { add: () => {}, remove: () => {} } };
     this.playersHands = { innerHTML: "", appendChild: () => {} };
     this.playArea = { innerHTML: "", appendChild: () => {} };
