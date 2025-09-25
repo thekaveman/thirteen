@@ -1,7 +1,7 @@
 import { LowestCardAI } from "./ai.js";
+import { analytics } from "./analytics.js";
 import { Deck } from "./deck.js";
 import { Game } from "./game.js";
-import { HumanPlayer, AIPlayer } from "./player.js";
 import { UI } from "./ui.js";
 import { log } from "./utils.js";
 
@@ -13,7 +13,16 @@ export class App {
    * @param {UI} ui
    */
   constructor(game, ai, ui) {
+    this.analytics = analytics;
     this.game = game;
+    this.game.hooks = {
+      onGameReset: (game) => this.analytics.gameReset(game),
+      onGameStarted: (game) => this.analytics.gameStarted(game),
+      onGameWon: (game) => this.analytics.gameWon(game),
+      onPlayerMoved: (game) => this.analytics.playerMoved(game),
+      onPlayerPassed: (game) => this.analytics.playerPassed(game),
+      onRoundPlayed: (game) => this.analytics.roundPlayed(game),
+    };
     this.ai = ai;
     this.ui = ui;
     this.setTimeout = typeof window !== "undefined" ? window.setTimeout.bind(window) : setTimeout;

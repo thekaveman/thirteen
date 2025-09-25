@@ -123,15 +123,15 @@ function test_handleHumanPass_callsPassButtonClickAndNextTurn() {
 
   const humanPlayer = app.game.gameState.players[0];
   const passSpy = spyOn(humanPlayer, "handlePassButtonClick");
-  const nextTurnSpy = spyOn(app, "nextTurn");
+  const gamePassTurnSpy = spyOn(app.game, "passTurn");
 
   app.handleHumanPass();
 
   assert(passSpy.called, "handlePassButtonClick should be called");
-  assert(nextTurnSpy.called, "nextTurn should be called");
+  assert(gamePassTurnSpy.called, "game.passTurn should be called");
 
   passSpy.restore();
-  nextTurnSpy.restore();
+  gamePassTurnSpy.restore();
   testTeardown(app);
 }
 
