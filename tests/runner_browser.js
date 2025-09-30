@@ -16,9 +16,7 @@ if (typeof window !== "undefined") {
   const body = document.getElementById("root");
 
   const lastRun = document.getElementById("last-run");
-  const ts = document.createElement("p");
-  ts.textContent = new Date().toLocaleString();
-  lastRun.appendChild(ts);
+  lastRun.textContent = new Date().toLocaleString();
 
   const rerunButton = document.getElementById("rerun-button");
   rerunButton.addEventListener("click", () => {
@@ -88,7 +86,7 @@ if (typeof window !== "undefined") {
         overallResults.textContent = `Some tests failed [${allTestsRun - allTestsPassed} / ${allTestsRun}]`;
         overallResults.style.color = "red";
       }
-      lastRun.appendChild(overallResults);
+      lastRun.parentNode.after(overallResults);
 
       log("Testing complete");
     })
