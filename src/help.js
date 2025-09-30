@@ -167,11 +167,8 @@ class Help {
 
           if (selectedCards.length > 0) {
             const isValid = this.game.isValidPlay(selectedCards, this.game.gameState.playPile, hand, 1, [hand]);
-            if (isValid) {
-              messageContainer.innerHTML = "<p>✅ Valid combination</p>";
-            } else {
-              messageContainer.innerHTML = "<p>❌ Invalid combination</p>";
-            }
+            const icon = isValid ? this.ui.getCombinationTypeIndicator(this.game.getCombinationType(selectedCards)) : "❌";
+            messageContainer.innerHTML = `<p>${isValid ? "Valid" : "Invalid"} combination ${icon}</p>`;
           } else {
             messageContainer.innerHTML = initMessageHtml;
           }
