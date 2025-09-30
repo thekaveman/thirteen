@@ -1,12 +1,12 @@
 import { assert, spyOn } from "./utils.js";
 import { Card } from "../src/app/deck.js";
 import { App } from "../src/app/app.js";
-import { MockAI, MockDeck, MockGame, MockUI } from "./mocks.js";
+import { MockAI, MockDeck, MockGame, MockUI, MockAnalytics } from "./mocks.js";
 
 function testSetup(ai) {
   const game = new MockGame(MockDeck);
   const mockHooks = { ...game.hooks };
-  const app = new App(game, ai || new MockAI(game), new MockUI(game));
+  const app = new App(game, ai || new MockAI(game), new MockUI(game), new MockAnalytics());
   app.game.hooks = mockHooks;
 
   app.init();
@@ -205,7 +205,7 @@ function test_init_loadsGameWhenSaveExistsAndGameNotOver() {
   const game = new MockGame(MockDeck);
   game.loadWillSucceed = true;
   game.gameOverOnLoad = false;
-  const app = new App(game, new MockAI(game), new MockUI(game));
+  const app = new App(game, new MockAI(game), new MockUI(game), new MockAnalytics());
   const setPlayersSpy = spyOn(game, "setPlayers");
 
   app.init();
@@ -222,7 +222,7 @@ function test_init_loadsGameWhenSaveExistsAndGameNotOver() {
 function test_init_startsNewGameWhenNoSavedGame() {
   const game = new MockGame(MockDeck);
   game.loadWillSucceed = false;
-  const app = new App(game, new MockAI(game), new MockUI(game));
+  const app = new App(game, new MockAI(game), new MockUI(game), new MockAnalytics());
   const setPlayersSpy = spyOn(game, "setPlayers");
 
   app.init();
@@ -240,7 +240,7 @@ function test_init_startsNewGameWhenSavedGameIsOver() {
   const game = new MockGame(MockDeck);
   game.loadWillSucceed = true;
   game.gameOverOnLoad = true;
-  const app = new App(game, new MockAI(game), new MockUI(game));
+  const app = new App(game, new MockAI(game), new MockUI(game), new MockAnalytics());
   const setPlayersSpy = spyOn(game, "setPlayers");
 
   app.init();

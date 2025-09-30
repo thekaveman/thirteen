@@ -1,5 +1,5 @@
 import { LowestCardAI } from "./ai.js";
-import { analytics } from "./analytics.js";
+import { Analytics } from "./analytics.js";
 import { Deck } from "./deck.js";
 import { Game } from "./game.js";
 import { UI } from "./ui.js";
@@ -11,8 +11,9 @@ export class App {
    * @param {Game} game
    * @param {AI} ai
    * @param {UI} ui
+   * @param {Analytics} analytics
    */
-  constructor(game, ai, ui) {
+  constructor(game, ai, ui, analytics = new Analytics()) {
     this.analytics = analytics;
     this.game = game;
     this.game.hooks = {
