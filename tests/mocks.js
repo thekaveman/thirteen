@@ -8,6 +8,14 @@ export class MockAnalytics {
     this.events = [];
   }
 
+  gameInit(game) {
+    this.events.push({ eventType: "game_initialized", game });
+  }
+
+  gameReset(game) {
+    this.events.push({ eventType: "game_reset", game });
+  }
+
   gameStarted(game) {
     this.events.push({ eventType: "game_started", game });
   }
@@ -18,10 +26,6 @@ export class MockAnalytics {
 
   roundPlayed(game) {
     this.events.push({ eventType: "round_played", game });
-  }
-
-  gameReset(game) {
-    this.events.push({ eventType: "game_reset", game });
   }
 
   playerMoved(game) {
@@ -126,10 +130,12 @@ export class MockGame extends Game {
     this.loadCalled = false;
     this.playCardsCalled = false;
     this.passTurnCalled = false;
+    this.initCalled = false;
     this.resetCalled = false;
     this.saveCalled = false;
     this.startCalled = false;
 
+    this.onGameInitCalled = false;
     this.onGameResetCalled = false;
     this.onGameStartedCalled = false;
     this.onGameWonCalled = false;
@@ -138,6 +144,9 @@ export class MockGame extends Game {
     this.onRoundPlayedCalled = false;
 
     this.hooks = {
+      onGameInit: (game) => {
+        this.onGameInitCalled = true;
+      },
       onGameReset: (game) => {
         this.onGameResetCalled = true;
       },
@@ -182,6 +191,10 @@ export class MockGame extends Game {
   passTurn() {
     this.passTurnCalled = true;
     return super.passTurn();
+  }
+  init() {
+    this.initCalled = true;
+    super.init();
   }
   reset() {
     this.resetCalled = true;

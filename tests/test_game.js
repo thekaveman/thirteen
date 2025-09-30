@@ -81,6 +81,52 @@ function test_getCombinationType_returnsCorrectType() {
   assert(game.getCombinationType(cards) === "invalid", "Should return invalid");
 }
 
+function test_init_initializesGame() {
+  const game = testSetup();
+  const originalGameId = game.id;
+  game.gameState.numPlayers = 2;
+  game.gameState.playerHands = [[], [new Card("A", "♠")]];
+  game.gameState.playPile = [new Card("7", "♠")];
+  game.gameState.currentPlayer = 1;
+  game.gameState.currentTurn = 5;
+  game.gameState.selectedCards = [new Card("A", "♠")];
+  game.gameState.consecutivePasses = 1;
+  game.gameState.lastPlayerToPlay = 0;
+  game.gameState.roundNumber = 2;
+  game.gameState.roundsWon = [1, 0];
+  const gamesWon = [1, 1];
+  game.gameState.gamesWon = gamesWon;
+  game.gameState.gameStarted = true;
+  game.gameState.gameOver = true;
+
+  game.init();
+
+  assert(Array.isArray(game.gameState.playerHands), "Init playerHands should be an array");
+  assert(game.gameState.playerHands.length === game.gameState.numPlayers, "Init playerHands should be dealt");
+  assert(Array.isArray(game.gameState.playPile), "Init playPile should be an array");
+  assert(game.gameState.playPile.length === 0, "Init playPile should be empty");
+  assert(game.gameState.currentPlayer === 0, "Init currentPlayer should be 0");
+  assert(game.gameState.currentTurn === 0, "Init currentTurn should be 0");
+  assert(Array.isArray(game.gameState.selectedCards), "Init selectedCards should be an array");
+  assert(game.gameState.selectedCards.length === 0, "Init selectedCards should be empty");
+  assert(game.gameState.consecutivePasses === 0, "Init consecutivePasses should be 0");
+  assert(game.gameState.lastPlayerToPlay === -1, "Init lastPlayerToPlay should be -1");
+  assert(game.gameState.roundNumber === 1, "Init roundNumber should be 1");
+  assert(Array.isArray(game.gameState.roundsWon), "Init roundsWon should be an array");
+  assert(game.gameState.roundsWon.length === 2, "Init roundsWon should have the correct length");
+  assert(
+    game.gameState.roundsWon.every((r) => r === 0),
+    "Init roundsWon should all be 0"
+  );
+  assert(
+    game.gameState.gamesWon.every((value, index) => value === gamesWon[index]),
+    "Init should not overwrite gamesWon"
+  );
+  assert(game.id === originalGameId, "Init should not change game ID");
+  assert(game.gameState.gameStarted === false, "Init gameStarted should be false");
+  assert(game.gameState.gameOver === false, "Init gameOver should be false");
+}
+
 function test_isBombForPairOfTwos_returnsFalseForOtherCombinations() {
   const game = testSetup();
   const single = [new Card("A", "♠")];
@@ -785,45 +831,17 @@ function test_playCards_updatesGamesWon() {
 function test_reset_resetsGame() {
   const game = testSetup();
   game.gameState.numPlayers = 2;
-  game.gameState.playerHands = [[], [new Card("A", "♠")]];
-  game.gameState.playPile = [new Card("7", "♠")];
-  game.gameState.currentPlayer = 1;
-  game.gameState.currentTurn = 5;
-  game.gameState.selectedCards = [new Card("A", "♠")];
-  game.gameState.consecutivePasses = 1;
-  game.gameState.lastPlayerToPlay = 0;
-  game.gameState.roundNumber = 2;
-  game.gameState.roundsWon = [1, 0];
-  const gamesWon = [1, 1];
-  game.gameState.gamesWon = gamesWon;
-  game.gameState.gameStarted = true;
-  game.gameState.gameOver = true;
+  game.gameState.gamesWon = [1, 2];
+  const originalGameId = game.id;
 
   game.reset();
 
-  assert(Array.isArray(game.gameState.playerHands), "Reset playerHands should be an array");
-  assert(game.gameState.playerHands.length === game.gameState.numPlayers, "Reset playerHands should be dealt");
-  assert(Array.isArray(game.gameState.playPile), "Reset playPile should be an array");
-  assert(game.gameState.playPile.length === 0, "Reset playPile should be empty");
-  assert(game.gameState.currentPlayer === 0, "Reset currentPlayer should be 0");
-  assert(game.gameState.currentTurn === 0, "Reset currentTurn should be 0");
-  assert(Array.isArray(game.gameState.selectedCards), "Reset selectedCards should be an array");
-  assert(game.gameState.selectedCards.length === 0, "Reset selectedCards should be empty");
-  assert(game.gameState.consecutivePasses === 0, "Reset consecutivePasses should be 0");
-  assert(game.gameState.lastPlayerToPlay === -1, "Reset lastPlayerToPlay should be -1");
-  assert(game.gameState.roundNumber === 1, "Reset roundNumber should be 1");
-  assert(Array.isArray(game.gameState.roundsWon), "Reset roundsWon should be an array");
-  assert(game.gameState.roundsWon.length === 2, "Reset roundsWon should have the correct length");
+  assert(game.id !== originalGameId, "Reset should generate a new game ID");
   assert(
-    game.gameState.roundsWon.every((r) => r === 0),
-    "Reset roundsWon should all be 0"
+    game.gameState.gamesWon.every((count) => count === 0),
+    "Reset should clear gamesWon"
   );
-  assert(
-    game.gameState.gamesWon.every((value, index) => value === gamesWon[index]),
-    "Reset should not overwrite gamesWon"
-  );
-  assert(game.gameState.gameStarted === false, "Reset gameStarted should be false");
-  assert(game.gameState.gameOver === false, "Reset gameOver should be false");
+  assert(game.gameState.roundNumber === 1, "Reset should also initialize round-specific state");
 }
 
 function test_save_savesGameState() {
@@ -898,6 +916,7 @@ export const gameTests = [
   test_findStartingPlayer_findsPlayerWithLowestCard,
   test_gameState,
   test_getCombinationType_returnsCorrectType,
+  test_init_initializesGame,
   test_isBombForPairOfTwos_returnsFalseForOtherCombinations,
   test_isBombForPairOfTwos_returnsTrueForFourConsecutivePairs,
   test_isBombForSingleTwo_returnsFalseForOtherCombinations,

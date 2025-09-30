@@ -14,6 +14,7 @@ export class Game {
   constructor(deck, stateKey = this.STATE_KEY) {
     this.deck = deck;
     this.hooks = {
+      onGameInit: (game) => {},
       onGameReset: (game) => {},
       onGameStarted: (game) => {},
       onGameWon: (game) => {},
@@ -116,6 +117,25 @@ export class Game {
     if (this.isConsecutivePairs(cards)) return COMBINATION_TYPES.CONSECUTIVE_PAIRS;
     if (this.isFourOfAKind(cards)) return COMBINATION_TYPES.FOUR_OF_A_KIND;
     return COMBINATION_TYPES.INVALID;
+  }
+
+  /**
+   * Initializes the game state for a new round or game, preserving cumulative wins and game ID.
+   */
+  init() {
+    this.gameState.currentPlayer = 0;
+    this.gameState.currentTurn = 0;
+    this.gameState.consecutivePasses = 0;
+    this.gameState.gameOver = false;
+    this.gameState.gameStarted = false;
+    this.gameState.lastPlayerToPlay = -1;
+    this.gameState.playPile = [];
+    this.gameState.roundNumber = 1;
+    this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
+    this.gameState.playerTurns = new Array(this.gameState.numPlayers).fill(0);
+    this.gameState.selectedCards = [];
+    this.deal();
+    this.hooks.onGameInit(this);
   }
 
   /**
@@ -418,21 +438,12 @@ export class Game {
   }
 
   /**
-   * Resets the game state to its initial values.
+   * Resets the entire game, including generating a new game ID and clearing cumulative wins.
    */
   reset() {
-    this.gameState.currentPlayer = 0;
-    this.gameState.currentTurn = 0;
-    this.gameState.consecutivePasses = 0;
-    this.gameState.gameOver = false;
-    this.gameState.gameStarted = false;
-    this.gameState.lastPlayerToPlay = -1;
-    this.gameState.playPile = [];
-    this.gameState.roundNumber = 1;
-    this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
-    this.gameState.playerTurns = new Array(this.gameState.numPlayers).fill(0);
-    this.gameState.selectedCards = [];
-    this.deal();
+    this.id = crypto.randomUUID();
+    this.gameState.gamesWon = new Array(this.gameState.numPlayers).fill(0);
+    this.init();
     this.hooks.onGameReset(this);
   }
 

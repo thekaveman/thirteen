@@ -38,6 +38,22 @@ export class Analytics {
   }
 
   /**
+   * Tracks a game initialized event.
+   * @param {Game} game The game instance sending this event.
+   */
+  gameInit(game) {
+    this.#send("game_initialized", game);
+  }
+
+  /**
+   * Tracks a game reset event.
+   * @param {Game} game The game instance sending this event.
+   */
+  gameReset(game) {
+    this.#send("game_reset", game);
+  }
+
+  /**
    * Tracks a game start event.
    * @param {Game} game The game instance sending this event.
    */
@@ -61,14 +77,6 @@ export class Analytics {
         games_won: game.gameState.gamesWon[game.gameState.currentPlayer],
       },
     });
-  }
-
-  /**
-   * Tracks a game reset event.
-   * @param {Game} game The game instance sending this event.
-   */
-  gameReset(game) {
-    this.#send("game_reset", game);
   }
 
   /**

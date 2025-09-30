@@ -16,20 +16,14 @@ export class App {
   constructor(game, ai, ui, analytics = new Analytics()) {
     this.analytics = analytics;
     this.game = game;
-    this.game.hooks = {
-      onGameReset: (game) => this.analytics.gameReset(game),
-      onGameStarted: (game) => this.analytics.gameStarted(game),
-      onGameWon: (game) => this.analytics.gameWon(game),
-      onPlayerMoved: (game) => this.analytics.playerMoved(game),
-      onPlayerPassed: (game) => this.analytics.playerPassed(game),
-      onRoundPlayed: (game) => this.analytics.roundPlayed(game),
-    };
+    this.attachHooks(); // attach analytics hooks
+
     this.ai = ai;
     this.ui = ui;
     this.setTimeout = typeof window !== "undefined" ? window.setTimeout.bind(window) : setTimeout;
 
     this.ui.init(this.game);
-    this.attachHandlers(); // Attach handlers once during construction
+    this.attachHandlers(); // attach handlers once after UI is initialized
   }
 
   attachHandlers() {
@@ -38,6 +32,18 @@ export class App {
     this.ui.startGameButton.addEventListener("click", () => this.handleStartGameClick());
     this.ui.newGameButton.addEventListener("click", () => this.handleNewGameClick());
     this.ui.resetButton.addEventListener("click", () => this.handleResetButtonClick());
+  }
+
+  attachHooks() {
+    this.game.hooks = {
+      onGameInit: (game) => this.analytics.gameInit(game),
+      onGameReset: (game) => this.analytics.gameReset(game),
+      onGameStarted: (game) => this.analytics.gameStarted(game),
+      onGameWon: (game) => this.analytics.gameWon(game),
+      onPlayerMoved: (game) => this.analytics.playerMoved(game),
+      onPlayerPassed: (game) => this.analytics.playerPassed(game),
+      onRoundPlayed: (game) => this.analytics.roundPlayed(game),
+    };
   }
 
   /**
@@ -76,13 +82,13 @@ export class App {
   handleNewGameClick() {
     log(`Game initialized`);
     this.init(this.setTimeout);
-    this.ui.render();
   }
 
   handleResetButtonClick() {
     log(`Game reset`);
     this.clearStorage();
-    this.handleNewGameClick();
+    this.game.reset();
+    this.init();
   }
 
   handleStartGameClick() {
@@ -117,7 +123,7 @@ export class App {
     }
 
     // If no game loaded, or game was over, start a new one.
-    this.game.reset();
+    this.game.init();
 
     // Initial game setup for display (hands dealt, starting player determined)
     this.game.gameState.playerTypes = ["human", "ai"];

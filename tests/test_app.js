@@ -142,7 +142,7 @@ function test_handleNewGameClick_resetsGame() {
   // Simulate clicking the new game button
   app.ui.newGameButton.handler();
 
-  assert(app.game.resetCalled, "game.reset should be called after new game button click");
+  assert(app.game.initCalled, "game.init should be called after new game button click");
   assert(app.game.saveCalled, "game.save should be called after new game button click");
   assert(initSpy.called, "init should be called after new game button click");
 
@@ -158,6 +158,7 @@ function test_handleResetButtonClick_clearsLocalStorageAndResetsGame() {
   app.ui.resetButton.handler();
 
   assert(clearStorageSpy.called, "app.clearStorage should be called");
+  assert(app.game.resetCalled, "game.reset (full reset) should be called");
   assert(appInitSpy.called, "app.init should be called");
   assert(app.game.onGameResetCalled, "onGameReset should be called");
 
@@ -212,7 +213,7 @@ function test_init_loadsGameWhenSaveExistsAndGameNotOver() {
 
   assert(game.loadCalled, "game.load should be called");
   assert(app.ui.renderCalled, "ui.render should be called");
-  assert(!game.resetCalled, "game.reset should not be called");
+  assert(!game.initCalled, "game.init should not be called");
   assert(!setPlayersSpy.called, "game.setPlayers should not be called");
 
   setPlayersSpy.restore();
@@ -228,7 +229,7 @@ function test_init_startsNewGameWhenNoSavedGame() {
   app.init();
 
   assert(game.loadCalled, "game.load should be called");
-  assert(game.resetCalled, "game.reset should be called");
+  assert(game.initCalled, "game.init should be called");
   assert(setPlayersSpy.called, "game.setPlayers should be called");
   assert(app.ui.renderCalled, "ui.render should be called");
 
@@ -246,7 +247,7 @@ function test_init_startsNewGameWhenSavedGameIsOver() {
   app.init();
 
   assert(game.loadCalled, "game.load should be called");
-  assert(game.resetCalled, "game.reset should be called");
+  assert(game.initCalled, "game.init should be called");
   assert(setPlayersSpy.called, "game.setPlayers should be called");
   assert(app.ui.renderCalled, "ui.render should be called");
 
