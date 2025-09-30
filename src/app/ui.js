@@ -103,7 +103,7 @@ export class UI {
       case COMBINATION_TYPES.CONSECUTIVE_PAIRS:
         return "💣"; // Bomb indicator for Consecutive Pairs
       default:
-        return "🟢"; // Default for an empty play pile or invalid combination
+        return "🟢"; // Default for an open play pile
     }
   }
 
@@ -266,14 +266,20 @@ export class UI {
       if (this.passButton) this.passButton.style.display = "none";
       if (this.newGameButton) this.newGameButton.style.display = "block";
       if (this.startGameButton) this.startGameButton.style.display = "none";
-      if (this.resetButton) this.resetButton.style.display = "block";
+      if (this.resetButton) {
+        this.resetButton.style.display = "block";
+        this.resetButton.disabled = false;
+      }
     } else if (!this.game.gameState.gameStarted) {
       // Game has not started yet, show start button
       if (this.playButton) this.playButton.style.display = "none";
       if (this.passButton) this.passButton.style.display = "none";
       if (this.newGameButton) this.newGameButton.style.display = "none";
       if (this.startGameButton) this.startGameButton.style.display = "block";
-      if (this.resetButton) this.resetButton.style.display = "block";
+      if (this.resetButton) {
+        this.resetButton.style.display = "block";
+        this.resetButton.disabled = false;
+      }
     } else {
       // Game is in progress
       if (this.playButton) {
@@ -286,7 +292,10 @@ export class UI {
       }
       if (this.newGameButton) this.newGameButton.style.display = "none";
       if (this.startGameButton) this.startGameButton.style.display = "none";
-      if (this.resetButton) this.resetButton.style.display = "none";
+      if (this.resetButton) {
+        this.resetButton.style.display = "block";
+        this.resetButton.disabled = !isHumanPlayerTurn;
+      }
     }
   }
 

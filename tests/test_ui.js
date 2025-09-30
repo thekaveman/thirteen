@@ -1,3 +1,4 @@
+import { MockDeck, MockGame, MockAI } from "./mocks.js";
 import {
   assert,
   mockSetTimeout,
@@ -6,10 +7,10 @@ import {
   restoreAddEventListener,
   getAddEventListenerCalls,
 } from "./utils.js";
+import { COMBINATION_TYPES } from "../src/app/constants.js";
 import { Card } from "../src/app/deck.js";
 import { HumanPlayer, AIPlayer } from "../src/app/player.js";
 import { UI } from "../src/app/ui.js";
-import { MockDeck, MockGame, MockAI } from "./mocks.js";
 
 const TEST_UI_ID = "test-ui";
 
@@ -38,7 +39,11 @@ function testSetup() {
 
   // Reset game state for a clean test environment
   game.reset();
-  const players = [new HumanPlayer(game, 0, uiInstance), new AIPlayer(game, 1, new MockAI(game)), new HumanPlayer(game, 2, uiInstance)];
+  const players = [
+    new HumanPlayer(game, 0, uiInstance),
+    new AIPlayer(game, 1, new MockAI(game)),
+    new HumanPlayer(game, 2, uiInstance),
+  ];
   game.setPlayers(players);
   game.start();
 
@@ -91,6 +96,27 @@ function test_createCardElement() {
 
   const cardElementRed = ui.createCardElement(cardRed);
   assert(cardElementRed.classList.contains("red"), "Should have the red class for a diamond");
+
+  testTeardown();
+}
+
+function test_getCombinationTypeIndicator_returnsCorrectIndicator() {
+  const ui = testSetup();
+
+  assert(ui.getCombinationTypeIndicator(COMBINATION_TYPES.SINGLE) === "🃏", "Should return single indicator");
+  assert(ui.getCombinationTypeIndicator(COMBINATION_TYPES.PAIR) === "🃏🃏", "Should return pair indicator");
+  assert(ui.getCombinationTypeIndicator(COMBINATION_TYPES.TRIPLE) === "🃏🃏🃏", "Should return triple indicator");
+  assert(ui.getCombinationTypeIndicator(COMBINATION_TYPES.STRAIGHT) === "🪜", "Should return straight indicator");
+  assert(
+    ui.getCombinationTypeIndicator(COMBINATION_TYPES.FOUR_OF_A_KIND) === "💣",
+    "Should return bomb indicator for four of a kind"
+  );
+  assert(
+    ui.getCombinationTypeIndicator(COMBINATION_TYPES.CONSECUTIVE_PAIRS) === "💣",
+    "Should return bomb indicator for consecutive pairs"
+  );
+  assert(ui.getCombinationTypeIndicator("invalid") === "🟢", "Should return default indicator for invalid");
+  assert(ui.getCombinationTypeIndicator(null) === "🟢", "Should return default indicator for null");
 
   testTeardown();
 }
@@ -239,20 +265,44 @@ function test_updateButtonStates_gameOver() {
   assert(ui.passButton.style.display === "none", "Pass button should be hidden");
   assert(ui.newGameButton.style.display === "block", "New game button should be visible");
   assert(ui.startGameButton.style.display === "none", "Start game button should be hidden");
+  assert(ui.resetButton.style.display === "block", "Reset button should be visible when game is over");
+  assert(ui.resetButton.disabled === false, "Reset button should be enabled when game is over");
   testTeardown();
 }
 
 function test_updateButtonStates_gameNotOver() {
   const ui = testSetup();
   ui.game.gameState.gameOver = false;
-  ui.game.gameState.currentTurn = 1; // Simulate game in progress
+  ui.game.gameState.gameStarted = true; // Game is in progress
 
+  // Scenario 1: Human player's turn
+  ui.game.gameState.currentPlayer = 0; // Human player
+  ui.game.gameState.players[0].type = "human";
   ui.updateButtonStates();
 
-  assert(ui.playButton.style.display === "block", "Play button should be visible");
-  assert(ui.passButton.style.display === "block", "Pass button should be visible");
-  assert(ui.newGameButton.style.display === "none", "New game button should be hidden");
-  assert(ui.startGameButton.style.display === "none", "Start game button should be hidden");
+  assert(ui.playButton.style.display === "block", "Play button should be visible for human turn");
+  assert(ui.playButton.disabled === false, "Play button should be enabled for human turn");
+  assert(ui.passButton.style.display === "block", "Pass button should be visible for human turn");
+  assert(ui.passButton.disabled === false, "Pass button should be enabled for human turn");
+  assert(ui.newGameButton.style.display === "none", "New game button should be hidden for human turn");
+  assert(ui.startGameButton.style.display === "none", "Start game button should be hidden for human turn");
+  assert(ui.resetButton.style.display === "block", "Reset button should be visible for human turn");
+  assert(ui.resetButton.disabled === false, "Reset button should be enabled for human turn");
+
+  // Scenario 2: AI player's turn
+  ui.game.gameState.currentPlayer = 1; // AI player
+  ui.game.gameState.players[1].type = "ai";
+  ui.updateButtonStates();
+
+  assert(ui.playButton.style.display === "block", "Play button should be visible for AI turn");
+  assert(ui.playButton.disabled === true, "Play button should be disabled for AI turn");
+  assert(ui.passButton.style.display === "block", "Pass button should be visible for AI turn");
+  assert(ui.passButton.disabled === true, "Pass button should be disabled for AI turn");
+  assert(ui.newGameButton.style.display === "none", "New game button should be hidden for AI turn");
+  assert(ui.startGameButton.style.display === "none", "Start game button should be hidden for AI turn");
+  assert(ui.resetButton.style.display === "block", "Reset button should be visible for AI turn");
+  assert(ui.resetButton.disabled === true, "Reset button should be disabled for AI turn");
+
   testTeardown();
 }
 
@@ -268,11 +318,14 @@ function test_updateButtonStates_gameNotStarted() {
   assert(ui.passButton.style.display === "none", "Pass button should be hidden");
   assert(ui.newGameButton.style.display === "none", "New game button should be hidden");
   assert(ui.startGameButton.style.display === "block", "Start game button should be visible");
+  assert(ui.resetButton.style.display === "block", "Reset button should be visible when game not started");
+  assert(ui.resetButton.disabled === false, "Reset button should be enabled when game not started");
   testTeardown();
 }
 
 export const uiTests = [
   test_createCardElement,
+  test_getCombinationTypeIndicator_returnsCorrectIndicator,
   test_render_displaysGameInfo,
   test_renderPlayArea_clearsGameContentBeforeRendering,
   test_renderPlayerHand_rendersCards,
