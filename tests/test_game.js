@@ -2,6 +2,7 @@ import { assert } from "./utils.js";
 import { Card } from "../src/app/deck.js";
 import { Game } from "../src/app/game.js";
 import { MockDeck, MockAI, MockUI, MockPlayer } from "./mocks.js";
+import { HumanPlayer, AIPlayer } from "../src/app/player.js";
 
 function testSetup() {
   const game = new Game(MockDeck, `${Game.STATE_KEY}-tests`);
@@ -644,6 +645,47 @@ function test_load_noSavedGame() {
   assert(!loaded, "Should not load game if no saved game exists");
 }
 
+function test_load_rehydratesDataCorrectly() {
+  const game = testSetup();
+  const mockAI = new MockAI(game);
+  const mockUI = new MockUI(game);
+
+  // Setup initial game state with AI and human players
+  game.gameState.playerTypes = ["ai", "human"];
+  game.setPlayers(game.createPlayers(mockAI, mockUI));
+  game.gameState.gameStarted = true;
+  game.gameState.playPile = [new Card("K", "♠"), new Card("K", "♦")];
+  game.gameState.selectedCards = [new Card("A", "♠")];
+  game.save();
+
+  // Create a new game instance and attempt to load the saved state
+  const newGame = testSetup();
+  const loaded = newGame.load(mockAI, mockUI);
+
+  assert(loaded, "Should load the game successfully");
+  assert(newGame.id === game.id, "Loaded game should have the loaded id");
+  assert(newGame.stateKey === game.stateKey, "Loaded game should have the loaded stateKey");
+
+  // Assertions for re-hydrated players
+  assert(newGame.gameState.players[0] instanceof AIPlayer, "Loaded player 0 should be an instance of AIPlayer");
+  assert(newGame.gameState.players[1] instanceof HumanPlayer, "Loaded player 1 should be an instance of HumanPlayer");
+  assert(typeof newGame.gameState.players[0].takeTurn === "function", "AIPlayer should have takeTurn method");
+  assert(
+    typeof newGame.gameState.players[1].handlePlayButtonClick === "function",
+    "HumanPlayer should have handlePlayButtonClick method"
+  );
+
+  // Assertions for re-hydrated cards
+  assert(newGame.gameState.playerHands[0][0] instanceof Card, "Card in player 0 hand should be a Card instance");
+  assert(newGame.gameState.playPile[0] instanceof Card, "Card in play pile should be a Card instance");
+  assert(newGame.gameState.selectedCards[0] instanceof Card, "Card in selected cards should be a Card instance");
+
+  assert(newGame.gameState.playPile[0].rank === "K", "Re-hydrated play pile card rank should match");
+  assert(newGame.gameState.playPile[0].suit === "♠", "Re-hydrated play pile card suit should match");
+  assert(newGame.gameState.selectedCards[0].rank === "A", "Re-hydrated selected card rank should match");
+  assert(newGame.gameState.selectedCards[0].suit === "♠", "Re-hydrated selected card suit should match");
+}
+
 function test_nextPlayer_switchesPlayer() {
   const game = testSetup();
   game.gameState.currentPlayer = 0;
@@ -903,6 +945,7 @@ export const gameTests = [
   test_isValidPlay_threeConsecutivePairsCannotBombPairOfTwos,
   test_isValidPlay_tripleBeatsLowerTriple,
   test_load_noSavedGame,
+  test_load_rehydratesDataCorrectly,
   test_nextPlayer_switchesPlayer,
   test_passTurn_endsRoundCorrectly,
   test_passTurn_firstPlayOfRound,

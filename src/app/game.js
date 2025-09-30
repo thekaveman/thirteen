@@ -395,7 +395,9 @@ export class Game {
     const savedState = localStorage.getItem(this.stateKey);
     const parsedState = savedState ? JSON.parse(savedState) : null;
     if (parsedState && ai && ui) {
-      const parsedState = JSON.parse(savedState);
+      // Store playerTypes from the parsed state before overwriting this.gameState
+      const loadedPlayerTypes = parsedState.gameState.players.map((p) => p.type);
+
       this.id = parsedState.id;
       this.stateKey = parsedState.stateKey;
       this.gameState = parsedState.gameState;
@@ -405,6 +407,8 @@ export class Game {
       this.gameState.playerHands = [...this.gameState.playerHands].map((h) => Card.objectsToList(h));
       this.gameState.playPile = Card.objectsToList([...this.gameState.playPile]);
       this.gameState.selectedCards = Card.objectsToList([...this.gameState.selectedCards]);
+      // Assign the stored playerTypes back to gameState
+      this.gameState.playerTypes = loadedPlayerTypes;
       // Re-hydrate players
       this.gameState.players = this.createPlayers(ai, ui);
       log("Game loaded from localStorage.");
