@@ -890,7 +890,7 @@ function test_win_updatesGameState() {
   assert(!game.gameState.gameStarted, "gameStarted should be false after a win");
   assert(game.gameState.gamesWon[0] === 1, "Winner's gamesWon should be incremented");
   assert(game.gameState.roundsWon[0] === 1, "Winner's roundsWon should be incremented");
-  assert(game.gameState.playPile.length === 0, "Play pile should be cleared after a win");
+  assert(game.gameState.playPile.length === 1, "Play pile should not be cleared after a win");
 }
 
 export const gameTests = [

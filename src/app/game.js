@@ -485,7 +485,6 @@ export class Game {
   win() {
     this.gameState.gamesWon[this.gameState.currentPlayer]++;
     this.gameState.roundsWon[this.gameState.currentPlayer]++; // Increment roundsWon here too, for the current round
-    this.gameState.playPile = [];
     this.gameState.gameOver = true;
     this.gameState.gameStarted = false;
     this.hooks.onGameWon(this);
