@@ -29,6 +29,7 @@ export class App {
     this.setTimeout = typeof window !== "undefined" ? window.setTimeout.bind(window) : setTimeout;
 
     this.ui.init(this.game);
+    this.attachHandlers(); // Attach handlers once during construction
   }
 
   attachHandlers() {
@@ -47,17 +48,23 @@ export class App {
   }
 
   handleAITurn() {
+    log("handleAITurn called.");
     const aiPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
     if (aiPlayer.type !== "ai") {
+      log("handleAITurn: Not an AI player, returning.");
       return;
     }
 
+    log("handleAITurn: Calling aiPlayer.takeTurn().");
     const move = aiPlayer.takeTurn();
+    log(`handleAITurn: aiPlayer.takeTurn() returned: ${JSON.stringify(move)}`);
 
     if (move && move.length > 0) {
+      log("handleAITurn: AI is playing cards.");
       this.game.gameState.selectedCards = move;
       this.game.playCards();
     } else {
+      log("handleAITurn: AI is passing turn.");
       this.game.passTurn();
     }
 
@@ -81,7 +88,6 @@ export class App {
   handleStartGameClick() {
     log(`Game started`);
     this.game.start();
-    this.attachHandlers();
     this.ui.render();
     this.nextTurn();
   }
@@ -89,11 +95,13 @@ export class App {
   handleHumanPlay() {
     const humanPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
     humanPlayer.handlePlayButtonClick();
+    this.nextTurn();
   }
 
   handleHumanPass() {
     const humanPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
     humanPlayer.handlePassButtonClick();
+    this.nextTurn();
   }
 
   init(currentSetTimeout = null) {
@@ -105,7 +113,6 @@ export class App {
     if (this.game.load(this.ai, this.ui) && !this.game.gameState.gameOver) {
       // Render loaded UI
       this.ui.render();
-      this.attachHandlers();
       return;
     }
 
@@ -119,10 +126,14 @@ export class App {
 
     // Render initial UI with dealt hands and start button
     this.ui.render();
-    this.attachHandlers();
   }
 
   nextTurn() {
+    log(
+      `nextTurn called. Current player: ${this.game.gameState.currentPlayer}, type: ${
+        this.game.gameState.players[this.game.gameState.currentPlayer]?.type
+      }`
+    );
     if (this.game.gameState.gameOver) {
       return;
     }
@@ -130,6 +141,7 @@ export class App {
     if (currentPlayer.type === "ai") {
       this.setTimeout(() => this.handleAITurn(), 1000);
     } else {
+      log("Human player's turn. Waiting for user input.");
       // If it's a human player's turn, do nothing and wait for user input
       return;
     }
