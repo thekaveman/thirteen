@@ -26,7 +26,6 @@
   --color-play-button: #4caf50;
   --color-pass-button: #f44336;
   --color-new-game-button: #008cba;
-  --color-reset-button: #ff9800;
 
   /* Spacing */
   --spacing-xxs: 3px;
@@ -356,9 +355,7 @@ button:hover {
 }
 
 #reset-button {
-  background-color: var(--color-reset-button);
-  color: var(--color-white);
-  border-color: var(--color-reset-button);
+  color: var(--color-darker-gray);
 }
 
 #start-game-button {
@@ -369,7 +366,8 @@ button:hover {
 
 button:disabled,
 #play-button:disabled,
-#pass-button:disabled {
+#pass-button:disabled,
+#reset-button:disabled {
   background-color: var(--color-disabled-background);
   color: var(--color-disabled-text);
   cursor: not-allowed;
