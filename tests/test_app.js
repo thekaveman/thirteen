@@ -297,6 +297,19 @@ function test_nextTurn_doesNotCallHandleAITurnForHumanPlayer() {
   testTeardown(app);
 }
 
+function test_nextTurn_doesNothingIfGameOver() {
+  const app = testSetup();
+  app.game.gameState.gameOver = true;
+  const handleAITurnSpy = spyOn(app, "handleAITurn");
+
+  app.nextTurn();
+
+  assert(!handleAITurnSpy.called, "handleAITurn should not be called if game is over");
+
+  handleAITurnSpy.restore();
+  testTeardown(app);
+}
+
 function test_spyOn_MockAI_takeTurn() {
   const app = testSetup();
   const ai = new MockAI(app.game);
@@ -324,5 +337,6 @@ export const appTests = [
   test_init_startsNewGameWhenSavedGameIsOver,
   test_nextTurn_callsHandleAITurnForAIPlayer,
   test_nextTurn_doesNotCallHandleAITurnForHumanPlayer,
+  test_nextTurn_doesNothingIfGameOver,
   test_spyOn_MockAI_takeTurn,
 ];

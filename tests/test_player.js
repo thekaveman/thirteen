@@ -16,6 +16,18 @@ function test_Player_constructor() {
   assert(aiPlayer.ai === ai, "AI player should have an AI instance");
 }
 
+function test_AIPlayer_data_returnsCorrectData() {
+  const game = new MockGame();
+  const ai = new MockAI(game);
+  const player = new AIPlayer(game, 1, ai);
+  const playerData = player.data();
+
+  assert(playerData.id === player.id, "data() should include player id");
+  assert(playerData.type === "ai", "data() should include player type");
+  assert(playerData.number === 1, "data() should include player number");
+  assert(playerData.ai.id === ai.id, "data() should include AI id");
+}
+
 function test_HumanPlayer_handleCardClick_preventsSelectionOfOtherPlayersCards() {
   const game = new MockGame();
   const ui = new MockUI();
@@ -192,6 +204,7 @@ function test_HumanPlayer_takeTurn_human() {
 
 export const playerTests = [
   test_Player_constructor,
+  test_AIPlayer_data_returnsCorrectData,
   test_HumanPlayer_handleCardClick_selectsAndDeselectsCard,
   test_HumanPlayer_handleCardClick_preventsSelectionOfOtherPlayersCards,
   test_HumanPlayer_handlePassButtonClick_endsRoundCorrectly,

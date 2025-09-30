@@ -5,6 +5,16 @@ import { log } from "../src/app/utils.js";
 import { MockAI } from "./mocks.js";
 import { assert } from "./utils.js";
 
+function test_AI_data_returnsCorrectData() {
+  const game = new Game();
+  const ai = new AI(game, "test-type");
+  const aiData = ai.data();
+
+  assert(aiData.id === ai.id, "data() should include AI id");
+  assert(aiData.type === "test-type", "data() should include AI type");
+  assert(aiData.game === game.id, "data() should include game id");
+}
+
 function test_AI_findAllValidMoves() {
   const game = new Game();
   const ai = new AI(game);
@@ -221,6 +231,19 @@ function test_AI_generateCombinations_triples() {
   );
 }
 
+function test_AI_takeTurn_throwsError() {
+  const game = new Game();
+  const ai = new AI(game, "base");
+  let errorThrown = false;
+  try {
+    ai.takeTurn();
+  } catch (e) {
+    errorThrown = true;
+    assert(e.message === "Subclasses must implement takeTurn", "Should throw the correct error");
+  }
+  assert(errorThrown, "Base AI class should throw an error on takeTurn");
+}
+
 function test_LowestCardAI_takeTurn_LowestConsecutivePairs() {
   const game = new Game();
   const ai = new LowestCardAI(game);
@@ -380,6 +403,7 @@ function test_MockAI_takeTurn() {
 }
 
 export const aiTests = [
+  test_AI_data_returnsCorrectData,
   test_AI_findAllValidMoves,
   test_AI_generateCombinations_consecutivePairs,
   test_AI_generateCombinations_consecutivePairs_long,
@@ -388,6 +412,7 @@ export const aiTests = [
   test_AI_generateCombinations_singles,
   test_AI_generateCombinations_straights,
   test_AI_generateCombinations_triples,
+  test_AI_takeTurn_throwsError,
   test_LowestCardAI_takeTurn_choosesLowestValueCombination,
   test_LowestCardAI_takeTurn_LowestConsecutivePairs,
   test_LowestCardAI_takeTurn_LowestFourOfAKind,

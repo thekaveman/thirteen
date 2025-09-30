@@ -2,6 +2,10 @@ import { assert } from "./utils.js";
 import { SUITS, RANKS } from "../src/app/constants.js";
 import { Deck, Card } from "../src/app/deck.js";
 
+function test_Card_allSameRank_emptyArray() {
+  assert(Card.allSameRank([]), "Should return true for an empty array");
+}
+
 function test_Card_allSameRank_returnsFalseForDifferentRank() {
   const cards = [new Card("K", "♦"), new Card("A", "♠"), new Card("A", "♣")];
   assert(!Card.allSameRank(cards), "Should return false for cards with different ranks");
@@ -19,6 +23,14 @@ function test_Card_createsCorrectCard() {
   assert(card.value === Card.getValue("A", "♠"), "Card should have correct value");
 }
 
+function test_Card_data_returnsCorrectData() {
+  const card = new Card("Q", "♥");
+  const cardData = card.data();
+  assert(cardData.rank === "Q", "data() should return correct rank");
+  assert(cardData.suit === "♥", "data() should return correct suit");
+  assert(cardData.value === card.value, "data() should return correct value");
+}
+
 function test_Card_findLowest_findsLowestCard() {
   const hands = [
     [new Card("K", "♣"), new Card("A", "♠")],
@@ -32,6 +44,18 @@ function test_Card_getValue_returnsCorrectValue() {
   assert(Card.getValue("3", "♠") === 0, "3♠ should have value 0");
   assert(Card.getValue("A", "♦") === 46, "A♦ should have value 46");
   assert(Card.getValue("2", "♥") === 51, "2♥ should have value 51");
+}
+
+function test_Card_listToObjects_and_objectsToList() {
+  const cards = [new Card("7", "♣"), new Card("J", "♥")];
+  const objects = Card.listToObjects(cards);
+  assert(objects.length === 2, "listToObjects should return correct number of objects");
+  assert(objects[0].rank === "7", "listToObjects should preserve rank");
+
+  const newCards = Card.objectsToList(objects);
+  assert(newCards.length === 2, "objectsToList should return correct number of cards");
+  assert(newCards[0] instanceof Card, "objectsToList should create Card instances");
+  assert(newCards[1].suit === "♥", "objectsToList should preserve suit");
 }
 
 function test_Card_parse_returnsCard() {
@@ -87,6 +111,14 @@ function test_Deck_constructor_cardsHaveCorrectStructure() {
   });
 }
 
+function test_Deck_constructor_withCards() {
+  const cards = [{ rank: "A", suit: "♠" }, { rank: "K", suit: "♦" }];
+  const deck = new Deck(cards);
+  assert(deck.cards.length === 2, "Deck should be created with the provided cards");
+  assert(deck.cards[0] instanceof Card, "Deck should create Card instances");
+  assert(deck.cards[1].rank === "K", "Deck should correctly create cards from objects");
+}
+
 function test_Deck_deal_deals13CardsToEachPlayer() {
   const deck = new Deck();
   const numPlayers = 2;
@@ -132,17 +164,21 @@ function test_Deck_deal_doesNotModifyDeck() {
 }
 
 export const deckTests = [
+  test_Card_allSameRank_emptyArray,
   test_Card_allSameRank_returnsFalseForDifferentRank,
   test_Card_allSameRank_returnsTrueForSameRank,
   test_Card_createsCorrectCard,
+  test_Card_data_returnsCorrectData,
   test_Card_findLowest_findsLowestCard,
   test_Card_getValue_returnsCorrectValue,
+  test_Card_listToObjects_and_objectsToList,
   test_Card_parse_returnsCard,
   test_Card_sort_sortsByValue,
-  test_Deck_constructor_has52Cards,
+  test_Deck_constructor_cardsHaveCorrectStructure,
   test_Deck_constructor_has13CardsOfEachSuit,
   test_Deck_constructor_has4CardsOfEachRank,
-  test_Deck_constructor_cardsHaveCorrectStructure,
+  test_Deck_constructor_has52Cards,
+  test_Deck_constructor_withCards,
   test_Deck_deal_deals13CardsToEachPlayer,
   test_Deck_deal_dealsCorrectNumberOfHands,
   test_Deck_deal_dealsCorrectTotalCards,
