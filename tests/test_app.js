@@ -151,17 +151,17 @@ function test_handleNewGameClick_resetsGame() {
 
 function test_handleResetButtonClick_clearsLocalStorageAndResetsGame() {
   const app = testSetup();
-  const localStorageClearSpy = spyOn(localStorage, "clear");
+  const clearStorageSpy = spyOn(app, "clearStorage");
   const appInitSpy = spyOn(app, "init");
 
   // Simulate clicking the reset button
   app.ui.resetButton.handler();
 
-  assert(localStorageClearSpy.called, "localStorage.clear should be called");
+  assert(clearStorageSpy.called, "app.clearStorage should be called");
   assert(appInitSpy.called, "app.init should be called");
   assert(app.game.onGameResetCalled, "onGameReset should be called");
 
-  localStorageClearSpy.restore();
+  clearStorageSpy.restore();
   appInitSpy.restore();
   testTeardown(app);
 }

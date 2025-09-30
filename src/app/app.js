@@ -39,6 +39,13 @@ export class App {
     this.ui.resetButton.addEventListener("click", () => this.handleResetButtonClick());
   }
 
+  /**
+   * Clears localStorage.
+   */
+  clearStorage() {
+    localStorage.clear();
+  }
+
   handleAITurn() {
     const aiPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
     if (aiPlayer.type !== "ai") {
@@ -67,7 +74,7 @@ export class App {
 
   handleResetButtonClick() {
     log(`Game reset`);
-    localStorage.clear();
+    this.clearStorage();
     this.handleNewGameClick();
   }
 
