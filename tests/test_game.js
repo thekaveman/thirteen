@@ -3,6 +3,7 @@ import { Card } from "../src/app/deck.js";
 import { Game } from "../src/app/game.js";
 import { MockDeck, MockAI, MockUI, MockPlayer } from "./mocks.js";
 import { HumanPlayer, AIPlayer } from "../src/app/player.js";
+import { COMBINATION_TYPES } from "../src/app/constants.js";
 
 function testSetup() {
   const game = new Game(MockDeck, `${Game.STATE_KEY}-tests`);
@@ -53,19 +54,19 @@ function test_gameState() {
 function test_getCombinationType_returnsCorrectType() {
   const game = testSetup();
   let cards = [new Card("A", "♠")];
-  assert(game.getCombinationType(cards) === "single", "Should return single");
+  assert(game.getCombinationType(cards) === COMBINATION_TYPES.SINGLE, "Should return single");
 
   cards = [new Card("A", "♠"), new Card("A", "♦")];
-  assert(game.getCombinationType(cards) === "pair", "Should return pair");
+  assert(game.getCombinationType(cards) === COMBINATION_TYPES.PAIR, "Should return pair");
 
   cards = [new Card("A", "♠"), new Card("A", "♣"), new Card("A", "♦")];
-  assert(game.getCombinationType(cards) === "triple", "Should return triple");
+  assert(game.getCombinationType(cards) === COMBINATION_TYPES.TRIPLE, "Should return triple");
 
   cards = [new Card("A", "♠"), new Card("A", "♣"), new Card("A", "♦"), new Card("A", "♥")];
-  assert(game.getCombinationType(cards) === "four_of_a_kind", "Should return four_of_a_kind");
+  assert(game.getCombinationType(cards) === COMBINATION_TYPES.FOUR_OF_A_KIND, "Should return four_of_a_kind");
 
   cards = [new Card("3", "♠"), new Card("4", "♦"), new Card("5", "♣")];
-  assert(game.getCombinationType(cards) === "straight", "Should return straight");
+  assert(game.getCombinationType(cards) === COMBINATION_TYPES.STRAIGHT, "Should return straight");
 
   cards = [
     new Card("3", "♠"),
@@ -75,10 +76,10 @@ function test_getCombinationType_returnsCorrectType() {
     new Card("5", "♠"),
     new Card("5", "♦"),
   ];
-  assert(game.getCombinationType(cards) === "consecutive_pairs", "Should return consecutive_pairs");
+  assert(game.getCombinationType(cards) === COMBINATION_TYPES.CONSECUTIVE_PAIRS, "Should return consecutive_pairs");
 
   cards = [new Card("K", "♠"), new Card("A", "♠")];
-  assert(game.getCombinationType(cards) === "invalid", "Should return invalid");
+  assert(game.getCombinationType(cards) === COMBINATION_TYPES.INVALID, "Should return invalid");
 }
 
 function test_init_initializesGame() {

@@ -1,4 +1,4 @@
-import { RANKS } from "./constants.js";
+import { COMBINATION_TYPES, RANKS } from "./constants.js";
 import { Card } from "./deck.js";
 
 export class AI {
@@ -34,12 +34,24 @@ export class AI {
    */
   findAllValidMoves(hand, playPile, currentTurn, allPlayerHands) {
     let allValidMoves = [];
-    allValidMoves = allValidMoves.concat(this.findValidMoves(hand, playPile, "single", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this.findValidMoves(hand, playPile, "pair", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this.findValidMoves(hand, playPile, "triple", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this.findValidMoves(hand, playPile, "straight", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this.findValidMoves(hand, playPile, "four_of_a_kind", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this.findValidMoves(hand, playPile, "consecutive_pairs", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(
+      this.findValidMoves(hand, playPile, COMBINATION_TYPES.SINGLE, currentTurn, allPlayerHands)
+    );
+    allValidMoves = allValidMoves.concat(
+      this.findValidMoves(hand, playPile, COMBINATION_TYPES.PAIR, currentTurn, allPlayerHands)
+    );
+    allValidMoves = allValidMoves.concat(
+      this.findValidMoves(hand, playPile, COMBINATION_TYPES.TRIPLE, currentTurn, allPlayerHands)
+    );
+    allValidMoves = allValidMoves.concat(
+      this.findValidMoves(hand, playPile, COMBINATION_TYPES.STRAIGHT, currentTurn, allPlayerHands)
+    );
+    allValidMoves = allValidMoves.concat(
+      this.findValidMoves(hand, playPile, COMBINATION_TYPES.FOUR_OF_A_KIND, currentTurn, allPlayerHands)
+    );
+    allValidMoves = allValidMoves.concat(
+      this.findValidMoves(hand, playPile, COMBINATION_TYPES.CONSECUTIVE_PAIRS, currentTurn, allPlayerHands)
+    );
     return allValidMoves;
   }
 
@@ -73,22 +85,22 @@ export class AI {
   generateCombinations(hand, type) {
     let combinations = [];
     switch (type) {
-      case "single":
+      case COMBINATION_TYPES.SINGLE:
         combinations = this._generateSingles(hand);
         break;
-      case "pair":
+      case COMBINATION_TYPES.PAIR:
         combinations = this._generatePairs(hand);
         break;
-      case "triple":
+      case COMBINATION_TYPES.TRIPLE:
         combinations = this._generateTriples(hand);
         break;
-      case "straight":
+      case COMBINATION_TYPES.STRAIGHT:
         combinations = this._generateStraights(hand);
         break;
-      case "four_of_a_kind":
+      case COMBINATION_TYPES.FOUR_OF_A_KIND:
         combinations = this._generateFourOfAKind(hand);
         break;
-      case "consecutive_pairs":
+      case COMBINATION_TYPES.CONSECUTIVE_PAIRS:
         combinations = this._generateConsecutivePairs(hand);
         break;
     }

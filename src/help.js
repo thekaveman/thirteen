@@ -1,5 +1,5 @@
 import { AI } from "./app/ai.js";
-import { RANKS, SUITS } from "./app/constants.js";
+import { COMBINATION_TYPES, RANKS, SUITS } from "./app/constants.js";
 import { Card, Deck } from "./app/deck.js";
 import { Game } from "./app/game.js";
 import { UI } from "./app/ui.js";
@@ -30,7 +30,12 @@ class Help {
 
   getTryItHand() {
     // 1. Generate a random playPile
-    const combinationTypes = ["single", "pair", "triple", "straight"];
+    const combinationTypes = [
+      COMBINATION_TYPES.SINGLE,
+      COMBINATION_TYPES.PAIR,
+      COMBINATION_TYPES.TRIPLE,
+      COMBINATION_TYPES.STRAIGHT,
+    ];
     const randomType = combinationTypes[Math.floor(Math.random() * combinationTypes.length)];
 
     let hands = [];
@@ -108,7 +113,7 @@ class Help {
         const container = document.createElement("div");
         container.classList.add("combination-examples");
         let hand;
-        if (combinationType === "straight") {
+        if (combinationType === COMBINATION_TYPES.STRAIGHT) {
           const newDeck = new Deck();
           const middle = Math.floor(newDeck.cards.length / 2);
           const start = middle - 6;
@@ -118,14 +123,14 @@ class Help {
         }
 
         let combinations;
-        if (combinationType === "straight") {
+        if (combinationType === COMBINATION_TYPES.STRAIGHT) {
           combinations = this.ai
             .generateCombinations(hand, combinationType)
             // between 3 and 6 cards in length
             .filter((s) => s.length >= 3 && s.length <= 6)
             // a mix of suits so suited isn't assumed necessary
             .filter((s) => s.some((c) => c.suit != s[0].suit));
-        } else if (combinationType == "consecutive_pairs") {
+        } else if (combinationType == COMBINATION_TYPES.CONSECUTIVE_PAIRS) {
           // 3 consecutive pairs
           combinations = this.ai.generateCombinations(hand, combinationType).filter((s) => s.length == 6);
         } else {
