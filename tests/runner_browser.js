@@ -1,24 +1,22 @@
-import { log } from "../src/utils.js";
+import { init } from "../src/app/app.js";
+import { Game } from "../src/app/game.js";
+import { log } from "../src/app/utils.js";
 import { TEST_CONFIG } from "./config.js";
 import { runTests, mockSetTimeout, restoreSetTimeout } from "./utils.js";
-import { LowestCardAI } from "../src/ai.js";
-import { App } from "../src/app.js";
-import { Deck } from "../src/deck.js";
-import { Game } from "../src/game.js";
-import { UI } from "../src/ui.js";
 
 if (typeof window !== "undefined") {
   let allTestsRun = 0;
   let allTestsPassed = 0;
+
+  const stateKey = `${Game.STATE_KEY}-tests`;
+  window.localStorage.removeItem(stateKey);
 
   log("Running tests");
 
   const body = document.getElementById("root");
 
   const lastRun = document.getElementById("last-run");
-  const ts = document.createElement("p");
-  ts.textContent = new Date().toLocaleString();
-  lastRun.appendChild(ts);
+  lastRun.textContent = new Date().toLocaleString();
 
   const rerunButton = document.getElementById("rerun-button");
   rerunButton.addEventListener("click", () => {
@@ -37,19 +35,9 @@ if (typeof window !== "undefined") {
         document.body.appendChild(gameContainer);
       }
 
-      // Create a new Game instance for each test suite
-      const deck = new Deck();
-      const game = new Game(deck);
-      const ai = new LowestCardAI(game);
-      const ui = new UI(game);
-      const app = new App(game, ai, ui);
-
       // Mock setTimeout for app initialization
       mockSetTimeout();
-      app.init((handler, delay) => {
-        // This handler is called by app.init, but we don't want it to actually set a timeout
-        // We just want to ensure the app's internal setTimeout is mocked.
-      });
+      init(stateKey);
       restoreSetTimeout();
 
       for (const [name, tests] of Object.entries(TEST_CONFIG)) {
@@ -58,6 +46,7 @@ if (typeof window !== "undefined") {
         let testsPassed = 0;
         tests.forEach((test) => {
           test.beforeEach = () => {
+            window.localStorage.removeItem(stateKey);
             allTestsRun++;
             testsRun++;
           };
@@ -66,6 +55,7 @@ if (typeof window !== "undefined") {
               allTestsPassed++;
               testsPassed++;
             }
+            window.localStorage.removeItem(stateKey);
           };
         });
         const heading = document.createElement("h2");
@@ -73,7 +63,7 @@ if (typeof window !== "undefined") {
         const resultsList = document.createElement("ul");
         const resultText = document.createElement("p");
 
-        runTests(tests, resultsList, { gameInstance: game });
+        runTests(tests, resultsList);
 
         heading.textContent = `${name} [${testsRun}]`;
         body.appendChild(heading);
@@ -96,7 +86,7 @@ if (typeof window !== "undefined") {
         overallResults.textContent = `Some tests failed [${allTestsRun - allTestsPassed} / ${allTestsRun}]`;
         overallResults.style.color = "red";
       }
-      lastRun.appendChild(overallResults);
+      lastRun.parentNode.after(overallResults);
 
       log("Testing complete");
     })

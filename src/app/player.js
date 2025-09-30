@@ -6,10 +6,15 @@ export class Player {
    * @param {string} type The type of player (human or ai).
    * @param {object} game The game instance.
    */
-  constructor(type, game, id) {
+  constructor(type, game, number) {
     this.type = type;
     this.game = game;
-    this.id = id;
+    this.number = number;
+    this.id = crypto.randomUUID();
+  }
+
+  data() {
+    return { game: this.game.id, id: this.id, number: this.number, type: this.type };
   }
 
   takeTurn() {
@@ -18,8 +23,8 @@ export class Player {
 }
 
 export class HumanPlayer extends Player {
-  constructor(game, id, ui) {
-    super("human", game, id);
+  constructor(game, number, ui) {
+    super("human", game, number);
     this.ui = ui;
   }
 
@@ -29,7 +34,7 @@ export class HumanPlayer extends Player {
   }
 
   handleCardClick(event) {
-    const card = JSON.parse(event.target.dataset.card);
+    const card = Card.parse(event.target.dataset.card);
 
     // Check if the clicked card belongs to the current player's hand
     const currentPlayerHand = this.game.gameState.playerHands[this.game.gameState.currentPlayer];
@@ -79,9 +84,15 @@ export class HumanPlayer extends Player {
 }
 
 export class AIPlayer extends Player {
-  constructor(game, id, ai) {
-    super("ai", game, id);
+  constructor(game, number, ai) {
+    super("ai", game, number);
     this.ai = ai;
+  }
+
+  data() {
+    const d = super.data();
+    d.ai = this.ai.data();
+    return d;
   }
 
   takeTurn() {

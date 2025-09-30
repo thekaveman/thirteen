@@ -1,11 +1,10 @@
-import { Card } from "../src/deck.js";
-import { Game } from "../src/game.js";
-import { HumanPlayer, AIPlayer } from "../src/player.js";
+import { Card } from "../src/app/deck.js";
+import { HumanPlayer, AIPlayer } from "../src/app/player.js";
 import { assert } from "./utils.js";
-import { MockAI, MockUI } from "./mocks.js";
+import { MockAI, MockUI, MockGame } from "./mocks.js";
 
 function test_Player_constructor() {
-  const game = new Game();
+  const game = new MockGame();
 
   const humanPlayer = new HumanPlayer(game, 0, new MockUI());
   assert(humanPlayer.type === "human", "Player constructor should set the type to human");
@@ -17,8 +16,20 @@ function test_Player_constructor() {
   assert(aiPlayer.ai === ai, "AI player should have an AI instance");
 }
 
+function test_AIPlayer_data_returnsCorrectData() {
+  const game = new MockGame();
+  const ai = new MockAI(game);
+  const player = new AIPlayer(game, 1, ai);
+  const playerData = player.data();
+
+  assert(playerData.id === player.id, "data() should include player id");
+  assert(playerData.type === "ai", "data() should include player type");
+  assert(playerData.number === 1, "data() should include player number");
+  assert(playerData.ai.id === ai.id, "data() should include AI id");
+}
+
 function test_HumanPlayer_handleCardClick_preventsSelectionOfOtherPlayersCards() {
-  const game = new Game();
+  const game = new MockGame();
   const ui = new MockUI();
   ui.renderPlayerHand = (playerIndex, handDiv) => {
     const card = game.gameState.playerHands[playerIndex][0];
@@ -58,7 +69,7 @@ function test_HumanPlayer_handleCardClick_preventsSelectionOfOtherPlayersCards()
 }
 
 function test_HumanPlayer_handleCardClick_selectsAndDeselectsCard() {
-  const game = new Game();
+  const game = new MockGame();
   const ui = new MockUI();
   const humanPlayer = new HumanPlayer(game, 0, ui);
   const card = new Card("A", "♠");
@@ -83,7 +94,7 @@ function test_HumanPlayer_handleCardClick_selectsAndDeselectsCard() {
 }
 
 function test_HumanPlayer_handlePassButtonClick_endsRoundCorrectly() {
-  const game = new Game();
+  const game = new MockGame();
   const ui = new MockUI();
   const humanPlayer = new HumanPlayer(game, 0, ui);
   game.gameState.numPlayers = 3;
@@ -102,7 +113,7 @@ function test_HumanPlayer_handlePassButtonClick_endsRoundCorrectly() {
 }
 
 function test_HumanPlayer_handlePassButtonClick_firstPlayOfRound() {
-  const game = new Game();
+  const game = new MockGame();
   const ui = new MockUI();
   const humanPlayer = new HumanPlayer(game, 0, ui);
   game.gameState.playPile = []; // Empty play pile indicates the start of a round
@@ -115,7 +126,7 @@ function test_HumanPlayer_handlePassButtonClick_firstPlayOfRound() {
 }
 
 function test_HumanPlayer_handlePassButtonClick_incrementsPassesAndSwitchesPlayer() {
-  const game = new Game();
+  const game = new MockGame();
   const ui = new MockUI();
   const humanPlayer = new HumanPlayer(game, 0, ui);
   game.gameState.numPlayers = 3;
@@ -132,7 +143,7 @@ function test_HumanPlayer_handlePassButtonClick_incrementsPassesAndSwitchesPlaye
 }
 
 function test_HumanPlayer_handlePlayButtonClick_showsMessageOnInvalidPlay() {
-  const game = new Game();
+  const game = new MockGame();
   const ui = new MockUI();
   const humanPlayer = new HumanPlayer(game, 0, ui);
   // Set up an invalid game state to make isValidPlay return false.
@@ -147,34 +158,33 @@ function test_HumanPlayer_handlePlayButtonClick_showsMessageOnInvalidPlay() {
 }
 
 function test_HumanPlayer_handlePlayButtonClick_updatesGameStateOnValidPlay() {
-  const game = new Game();
+  const game = new MockGame();
   const ui = new MockUI();
   const humanPlayer = new HumanPlayer(game, 0, ui);
   // Set up a valid game state to make isValidPlay return true.
   game.gameState.currentPlayer = 0;
   game.gameState.numPlayers = 2;
   const cardToPlay = new Card("4", "♠");
-  game.gameState.playerHands = [[cardToPlay], []];
+  game.gameState.playerHands = [[cardToPlay, new Card("5", "♠")], []];
   game.gameState.selectedCards = [cardToPlay];
   game.gameState.playPile = [];
   game.gameState.currentTurn = 1;
   game.gameState.consecutivePasses = 1; // Should be reset
-  game.gameState.gameOver = false; // Ensure game is not over initially
 
   humanPlayer.handlePlayButtonClick();
 
-  assert(game.gameState.playerHands[0].length === 0, "Should remove card from player's hand");
+  assert(game.gameState.playerHands[0].length === 1, "Should remove card from player's hand");
   assert(game.gameState.playPile.length === 1, "Should add card to play pile");
   assert(game.gameState.playPile[0].value === 4, "Should add correct card to play pile");
   assert(game.gameState.selectedCards.length === 0, "Should clear selected cards");
-  assert(game.gameState.currentPlayer === 0, "Current player should remain the winner");
+  assert(game.gameState.currentPlayer === 1, "Should switch to next player");
   assert(game.gameState.consecutivePasses === 0, "Should reset consecutive passes");
   assert(game.gameState.lastPlayerToPlay === 0, "Should set the last player to play");
-  assert(game.gameState.gameOver === true, "Should set gameOver to true when player wins");
+  assert(game.gameState.gameOver === false, "Should not set gameOver to true when player does not win");
 }
 
 function test_AIPlayer_takeTurn_ai() {
-  const game = new Game();
+  const game = new MockGame();
   game.gameState.currentPlayer = 0;
   game.gameState.playerHands = [[]];
   const move = [new Card("5", "♦")];
@@ -185,7 +195,7 @@ function test_AIPlayer_takeTurn_ai() {
 }
 
 function test_HumanPlayer_takeTurn_human() {
-  const game = new Game();
+  const game = new MockGame();
   const ui = new MockUI();
   const humanPlayer = new HumanPlayer(game, 0, ui);
   const move = humanPlayer.takeTurn();
@@ -194,6 +204,7 @@ function test_HumanPlayer_takeTurn_human() {
 
 export const playerTests = [
   test_Player_constructor,
+  test_AIPlayer_data_returnsCorrectData,
   test_HumanPlayer_handleCardClick_selectsAndDeselectsCard,
   test_HumanPlayer_handleCardClick_preventsSelectionOfOtherPlayersCards,
   test_HumanPlayer_handlePassButtonClick_endsRoundCorrectly,

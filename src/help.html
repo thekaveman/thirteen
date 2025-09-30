@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Help | Thirteen</title>
+    <meta property="og:title" content="Help | Thirteen - The Card Game" />
+    <meta property="og:description" content="A web-based version of the popular card game Thirteen (Tiến Lên)." />
+    <meta property="og:image" content="https://thekaveman.github.io/thirteen/src/logo.png" />
+    <meta property="og:url" content="https://thekaveman.github.io/thirteen/src/" />
+    <meta property="og:type" content="website" />
+    <link rel="stylesheet" href="style.css" type="text/css" />
+    <script src="https://cdn.amplitude.com/script/627908547126720f4807e324ee28ba63.js"></script>
+    <script>
+      window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 1 }));
+      window.amplitude.init("627908547126720f4807e324ee28ba63", {
+        fetchRemoteConfig: true,
+        autocapture: {
+          attribution: true,
+          fileDownloads: false,
+          formInteractions: false,
+          pageViews: true,
+          sessions: true,
+          elementInteractions: false,
+          networkTracking: false,
+          webVitals: false,
+          frustrationInteractions: true,
+        },
+      });
+    </script>
+  </head>
+  <body>
+    <div id="game-container" class="help">
+      <header>
+        <img src="logo.png" alt="Thirteen card game logo" class="logo" />
+        <h1>Thirteen - Help</h1>
+        <a href="index.html">🃏 Game</a>
+      </header>
+      <div id="help-container">
+        <h2>The Goal</h2>
+        <p>The goal of Thirteen is to be the first player to get rid of all of your cards.</p>
+
+        <h2>Card Ranking</h2>
+        <p>Cards are ranked by value, then by suit.</p>
+        <p>The lowest card is the <span class="card black">3♠</span> and the highest is the <span class="card red">2♥</span></p>
+
+        <p>The values are ranked from lowest to highest:</p>
+        <div class="combination">
+          <div id="ranks-container" class="cards-container"></div>
+        </div>
+
+        <p>The suits are ranked from lowest to highest:</p>
+        <div class="combination">
+          <div id="suits-container" class="cards-container"></div>
+        </div>
+
+        <p>For example, the following hand is in order from lowest to highest:</p>
+        <div class="combination">
+          <div id="hand-container" class="cards-container"></div>
+        </div>
+
+        <h2>Starting the Game</h2>
+        <p>
+          The player with the <span class="card black">3♠</span> starts the first round. If no one has the
+          <span class="card black">3♠</span>
+          the player with the next lowest card starts the first round. The starting player must play the starting card as part of
+          any valid combination.
+        </p>
+
+        <h2>Playing a Round</h2>
+        <p>
+          Players take turns playing cards in combinations. The first player of a round can play any valid combination. Subsequent
+          players in the same round must play a higher-ranking combination of the same type.
+        </p>
+        <p>
+          If a player cannot or chooses not to play, they must pass. Once a player passes, they cannot play again in that round. A
+          round ends when all players have passed after a play. The player who played the last combination wins the round and
+          starts the next one.
+        </p>
+
+        <h3>Valid Combinations</h3>
+        <div class="combination-examples">
+          <div class="combination" data-combination="single">
+            <span class="combination-type"></span>
+            <strong>Single</strong>
+            <p>A single card. 2 is the highest single.</p>
+          </div>
+          <div class="combination" data-combination="pair">
+            <span class="combination-type"></span>
+            <strong>Pair</strong>
+            <p>Two cards of the same rank. Pairs can include 2s.</p>
+          </div>
+          <div class="combination" data-combination="triple">
+            <span class="combination-type"></span>
+            <strong>Triple</strong>
+            <p>Three cards of the same rank. Triples can include 2s.</p>
+          </div>
+          <div class="combination" data-combination="straight">
+            <span class="combination-type"></span>
+            <strong>Straight</strong>
+            <p>Three or more cards of sequential rank. No 2 can be part of a straight.</p>
+          </div>
+        </div>
+
+        <h3>Bombs</h3>
+        <p>Bombs are special combinations that can be played on any 2.</p>
+        <div class="combination-examples">
+          <div class="combination" data-combination="four_of_a_kind">
+            <span class="combination-type"></span>
+            <strong>Four of a Kind</strong>
+            <p>Four cards of the same rank beats any single 2.</p>
+          </div>
+          <div class="combination" data-combination="consecutive_pairs">
+            <span class="combination-type"></span>
+            <strong>Consecutive Pairs</strong>
+            <p>Three consecutive pairs beat any single 2. Four consecutive pairs beat any pair of 2s.</p>
+          </div>
+        </div>
+
+        <h2>Try it!</h2>
+        <div id="try-it">
+          <div id="messages"></div>
+          <div id="play-area" class="play-area">
+            <div id="game-content"></div>
+          </div>
+          <p>Your hand:</p>
+          <div id="player-hand" class="player-hand"></div>
+        </div>
+
+        <h2>Winning the Game</h2>
+        <p>The first player to play all of their cards wins the game.</p>
+
+        <a href="index.html">Back to Game</a>
+      </div>
+    </div>
+    <script type="module" src="help.js"></script>
+  </body>
+</html>

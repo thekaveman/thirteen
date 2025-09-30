@@ -1,9 +1,15 @@
-import { RANKS } from "./constants.js";
+import { COMBINATION_TYPES, RANKS } from "./constants.js";
 import { Card } from "./deck.js";
 
 export class AI {
-  constructor(game) {
+  constructor(game, type) {
     this.game = game;
+    this.type = type;
+    this.id = crypto.randomUUID();
+  }
+
+  data() {
+    return { game: this.game.id, id: this.id, type: this.type };
   }
 
   /**
@@ -26,14 +32,26 @@ export class AI {
    * @param {Array<Array<Card>>} allPlayerHands All players' hands.
    * @returns {Array<Array<Card>>} The cards to play, or an empty array if no valid move is found.
    */
-  _findAllValidMoves(hand, playPile, currentTurn, allPlayerHands) {
+  findAllValidMoves(hand, playPile, currentTurn, allPlayerHands) {
     let allValidMoves = [];
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "single", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "pair", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "triple", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "straight", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "four_of_a_kind", currentTurn, allPlayerHands));
-    allValidMoves = allValidMoves.concat(this._findValidMoves(hand, playPile, "consecutive_pairs", currentTurn, allPlayerHands));
+    allValidMoves = allValidMoves.concat(
+      this.findValidMoves(hand, playPile, COMBINATION_TYPES.SINGLE, currentTurn, allPlayerHands)
+    );
+    allValidMoves = allValidMoves.concat(
+      this.findValidMoves(hand, playPile, COMBINATION_TYPES.PAIR, currentTurn, allPlayerHands)
+    );
+    allValidMoves = allValidMoves.concat(
+      this.findValidMoves(hand, playPile, COMBINATION_TYPES.TRIPLE, currentTurn, allPlayerHands)
+    );
+    allValidMoves = allValidMoves.concat(
+      this.findValidMoves(hand, playPile, COMBINATION_TYPES.STRAIGHT, currentTurn, allPlayerHands)
+    );
+    allValidMoves = allValidMoves.concat(
+      this.findValidMoves(hand, playPile, COMBINATION_TYPES.FOUR_OF_A_KIND, currentTurn, allPlayerHands)
+    );
+    allValidMoves = allValidMoves.concat(
+      this.findValidMoves(hand, playPile, COMBINATION_TYPES.CONSECUTIVE_PAIRS, currentTurn, allPlayerHands)
+    );
     return allValidMoves;
   }
 
@@ -46,8 +64,8 @@ export class AI {
    * @param {Array<Array<Card>>} allPlayerHands All players' hands.
    * @returns {Array<Array<Card>>} An array of valid moves.
    */
-  _findValidMoves(hand, playPile, combinationType, currentTurn, allPlayerHands) {
-    const potentialMoves = this._generateCombinations(hand, combinationType);
+  findValidMoves(hand, playPile, combinationType, currentTurn, allPlayerHands) {
+    const potentialMoves = this.generateCombinations(hand, combinationType);
     const validMoves = [];
 
     for (const potentialPlay of potentialMoves) {
@@ -64,25 +82,25 @@ export class AI {
    * @param {string} type The type of combination to generate.
    * @returns {Array<Array<Card>>} An array of combinations.
    */
-  _generateCombinations(hand, type) {
+  generateCombinations(hand, type) {
     let combinations = [];
     switch (type) {
-      case "single":
+      case COMBINATION_TYPES.SINGLE:
         combinations = this._generateSingles(hand);
         break;
-      case "pair":
+      case COMBINATION_TYPES.PAIR:
         combinations = this._generatePairs(hand);
         break;
-      case "triple":
+      case COMBINATION_TYPES.TRIPLE:
         combinations = this._generateTriples(hand);
         break;
-      case "straight":
+      case COMBINATION_TYPES.STRAIGHT:
         combinations = this._generateStraights(hand);
         break;
-      case "four_of_a_kind":
+      case COMBINATION_TYPES.FOUR_OF_A_KIND:
         combinations = this._generateFourOfAKind(hand);
         break;
-      case "consecutive_pairs":
+      case COMBINATION_TYPES.CONSECUTIVE_PAIRS:
         combinations = this._generateConsecutivePairs(hand);
         break;
     }
@@ -275,7 +293,7 @@ export class AI {
   }
 
   /**
-   * Extracts all sub-consecutive pairs of length 3 or more from a given sequence of consecutive pairs.
+   * Extracts all sub-consecutive pairs of length 3 or 4 from a given sequence of consecutive pairs.
    * @param {Array<Array<Card>>} maximalConsecutivePairs The sequence of consecutive pairs to extract sub-sequences from.
    * @returns {Array<Array<Card>>} An array of sub-consecutive pair combinations.
    */
@@ -283,7 +301,7 @@ export class AI {
     const subConsecutivePairs = [];
     if (maximalConsecutivePairs.length >= 3) {
       for (let i = 0; i <= maximalConsecutivePairs.length - 3; i++) {
-        for (let j = i + 3; j <= maximalConsecutivePairs.length; j++) {
+        for (let j = i + 3; j <= i + 4 && j <= maximalConsecutivePairs.length; j++) {
           subConsecutivePairs.push(maximalConsecutivePairs.slice(i, j).flat());
         }
       }
@@ -294,7 +312,7 @@ export class AI {
 
 export class LowestCardAI extends AI {
   constructor(game) {
-    super(game);
+    super(game, "lowest-card");
   }
 
   /**
@@ -319,7 +337,7 @@ export class LowestCardAI extends AI {
    * @returns {Array<Card>} The cards to play, or an empty array if no valid move is found.
    */
   _findLowestValidMove(hand, playPile, currentTurn, allPlayerHands) {
-    const allValidMoves = this._findAllValidMoves(hand, playPile, currentTurn, allPlayerHands);
+    const allValidMoves = this.findAllValidMoves(hand, playPile, currentTurn, allPlayerHands);
 
     allValidMoves.sort((a, b) => a[0].value - b[0].value);
 

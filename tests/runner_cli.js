@@ -23,50 +23,42 @@ global.alert = () => {}; // Provide a no-op mock for alert
 dom.window.document.body.innerHTML = html;
 
 // Load game module
-import { Game } from "../src/game.js";
+import { Game } from "../src/app/game.js";
 
 // Load deck module
-import { Deck } from "../src/deck.js";
+import { Deck } from "../src/app/deck.js";
 
 // Load player module
-import { HumanPlayer, AIPlayer } from "../src/player.js";
+import { HumanPlayer, AIPlayer } from "../src/app/player.js";
 
 // Load UI module
-import { UI } from "../src/ui.js";
+import { UI } from "../src/app/ui.js";
 
 // Load AI module
-import { LowestCardAI } from "../src/ai.js";
+import { LowestCardAI } from "../src/app/ai.js";
 
 // Load app module
-import { App } from "../src/app.js";
+import { App } from "../src/app/app.js";
 
 // Load test utilities
-import { assert, runTests, mockSetTimeout, restoreSetTimeout } from "./utils.js";
+import { assert, runTests } from "./utils.js";
 global.assert = assert; // Make assert globally available for test files
 
 import { TEST_CONFIG } from "./config.js";
+import { MockLocalStorage } from "./mocks.js";
+global.localStorage = new MockLocalStorage();
 
 let allTestsRun = 0;
 let allTestsPassed = 0;
 let allTestsFailed = [];
+const stateKey = `${Game.STATE_KEY}-tests`;
 
 for (const [name, tests] of Object.entries(TEST_CONFIG)) {
   let testsRun = 0;
   let testsPassed = 0;
   // Create a new Game instance for each test suite
   const deck = new Deck();
-  const game = new Game(deck);
-  const ai = new LowestCardAI(game);
-  const ui = new UI(game);
-  const app = new App(game, ai, ui);
-
-  // Mock setTimeout for app initialization
-  mockSetTimeout();
-  app.init((handler, delay) => {
-    // This handler is called by app.init, but we don't want it to actually set a timeout
-    // We just want to ensure the app's internal setTimeout is mocked.
-  });
-  restoreSetTimeout();
+  const game = new Game(deck, stateKey);
 
   process.stdout.write(`\n== Running tests: ${name} [${tests.length}]\n`);
   const mockResults = {

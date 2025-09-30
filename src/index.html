@@ -4,18 +4,37 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Thirteen</title>
-    <meta property="og:title" content="Thirteen - The Card Game" />
+    <meta property="og:title" content="Thirteen" />
     <meta property="og:description" content="A web-based version of the popular card game Thirteen (Tiến Lên)." />
     <meta property="og:image" content="https://thekaveman.github.io/thirteen/src/logo.png" />
     <meta property="og:url" content="https://thekaveman.github.io/thirteen/src/" />
     <meta property="og:type" content="website" />
     <link rel="stylesheet" href="style.css" type="text/css" />
+    <script src="https://cdn.amplitude.com/script/5f9c6d8af1fb6d26924ad4f9a016840b.js"></script>
+    <script>
+      window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 1 }));
+      window.amplitude.init("5f9c6d8af1fb6d26924ad4f9a016840b", {
+        fetchRemoteConfig: true,
+        autocapture: {
+          attribution: true,
+          fileDownloads: false,
+          formInteractions: false,
+          pageViews: true,
+          sessions: true,
+          elementInteractions: false,
+          networkTracking: false,
+          webVitals: false,
+          frustrationInteractions: true,
+        },
+      });
+    </script>
   </head>
   <body>
     <div id="game-container">
       <header>
         <img src="logo.png" alt="Thirteen card game logo" class="logo" />
         <h1>Thirteen</h1>
+        <a href="help.html">📖 Help</a>
       </header>
       <div id="game-board">
         <div id="play-area">
@@ -29,19 +48,12 @@
         <button id="play-button" style="display: none">Play</button>
         <button id="pass-button" style="display: none">Pass</button>
         <button id="new-game-button" style="display: none">New Game</button>
+        <button id="reset-button" style="display: none">Reset</button>
       </div>
     </div>
     <script type="module">
-      import { App } from "./app.js";
-      import { Deck } from "./deck.js";
-      import { Game } from "./game.js";
-      import { LowestCardAI } from "./ai.js";
-      import { UI } from "./ui.js";
-
-      const deck = new Deck();
-      const game = new Game(deck);
-      const app = new App(game, new LowestCardAI(game), new UI(game));
-      app.init();
+      import { init } from "./app/app.js";
+      init();
     </script>
   </body>
 </html>

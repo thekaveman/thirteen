@@ -1,17 +1,32 @@
 import { COMBINATION_TYPES, RANKS } from "./constants.js";
 import { Card, Deck } from "./deck.js";
+import { Player, AIPlayer, HumanPlayer } from "./player.js";
 import { log } from "./utils.js";
 
 export class Game {
+  STATE_KEY = "13gs";
+
   /**
    * Initializes a new game.
+   * @param {Deck} deck The Deck instance for this game.
+   * @param {string} [stateKey=this.STATE_KEY] The key used to save and load state in localStorage.
    */
-  constructor(deck) {
+  constructor(deck, stateKey = this.STATE_KEY) {
     this.deck = deck;
+    this.hooks = {
+      onGameInit: (game) => {},
+      onGameReset: (game) => {},
+      onGameStarted: (game) => {},
+      onGameWon: (game) => {},
+      onPlayerMoved: (game) => {},
+      onPlayerPassed: (game) => {},
+      onRoundPlayed: (game) => {},
+    };
     this.gameState = {
       numPlayers: 0,
       players: [],
       playerHands: [],
+      playerTurns: [],
       playPile: [],
       currentPlayer: 0,
       currentTurn: 0,
@@ -25,6 +40,47 @@ export class Game {
       gameStarted: false,
       playerTypes: [],
     };
+    this.id = crypto.randomUUID();
+    this.stateKey = stateKey;
+  }
+
+  /**
+   * Create players from the game state's playerTypes.
+   * @param {AI} ai An AI instance for AIPlayers.
+   * @param {UI} ui A UI instance for HumanPlayers.
+   * @returns {Array<Player>} The list of players.
+   */
+  createPlayers(ai, ui) {
+    const playerIds = this.gameState.players.map((p) => p.id);
+    const players = this.gameState.playerTypes.map((type, index) => {
+      let player;
+      if (type === "ai") {
+        player = new AIPlayer(this, index, ai);
+      } else {
+        player = new HumanPlayer(this, index, ui);
+      }
+      if (playerIds.length > 0) {
+        player.id = playerIds[index];
+      }
+      return player;
+    });
+    return players;
+  }
+
+  /**
+   * Gets the current player from the game's state.
+   * @returns {Player} The current player instance.
+   */
+  currentPlayer() {
+    return this.gameState.players[this.gameState.currentPlayer];
+  }
+
+  /**
+   * Deals player hands for each player.
+   */
+  deal() {
+    this.gameState.playerHands = this.deck.deal(this.gameState.numPlayers);
+    this.gameState.playerHands.forEach(Card.sort);
   }
 
   /**
@@ -61,6 +117,25 @@ export class Game {
     if (this.isConsecutivePairs(cards)) return COMBINATION_TYPES.CONSECUTIVE_PAIRS;
     if (this.isFourOfAKind(cards)) return COMBINATION_TYPES.FOUR_OF_A_KIND;
     return COMBINATION_TYPES.INVALID;
+  }
+
+  /**
+   * Initializes the game state for a new round or game, preserving cumulative wins and game ID.
+   */
+  init() {
+    this.gameState.currentPlayer = 0;
+    this.gameState.currentTurn = 0;
+    this.gameState.consecutivePasses = 0;
+    this.gameState.gameOver = false;
+    this.gameState.gameStarted = false;
+    this.gameState.lastPlayerToPlay = -1;
+    this.gameState.playPile = [];
+    this.gameState.roundNumber = 1;
+    this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
+    this.gameState.playerTurns = new Array(this.gameState.numPlayers).fill(0);
+    this.gameState.selectedCards = [];
+    this.deal();
+    this.hooks.onGameInit(this);
   }
 
   /**
@@ -253,6 +328,18 @@ export class Game {
   }
 
   /**
+   * Ends the current round and starts the next.
+   */
+  nextRound() {
+    this.gameState.roundsWon[this.gameState.lastPlayerToPlay]++;
+    this.gameState.playPile = [];
+    this.gameState.consecutivePasses = 0;
+    this.gameState.currentPlayer = this.gameState.lastPlayerToPlay;
+    this.gameState.roundNumber++;
+    this.hooks.onRoundPlayed(this);
+  }
+
+  /**
    * Handles a player passing their turn.
    * @returns {boolean} True if the pass was successful, false otherwise (e.g., cannot pass on first play).
    */
@@ -262,21 +349,21 @@ export class Game {
       return false;
     }
 
+    this.gameState.playerTurns[this.gameState.currentPlayer]++;
     this.gameState.consecutivePasses++;
     this.gameState.selectedCards = []; // Clear selected cards on pass
 
+    this.hooks.onPlayerPassed(this);
+
     if (this.gameState.consecutivePasses >= this.gameState.numPlayers - 1) {
       log(`Player ${this.gameState.lastPlayerToPlay + 1} wins round ${this.gameState.roundNumber}.`);
-      this.gameState.roundsWon[this.gameState.lastPlayerToPlay]++;
-      this.gameState.playPile = [];
-      this.gameState.consecutivePasses = 0;
-      this.gameState.currentPlayer = this.gameState.lastPlayerToPlay;
-      this.gameState.roundNumber++;
+      this.nextRound();
     } else {
       this.nextPlayer();
     }
 
     this.gameState.currentTurn++;
+    this.save();
     return true;
   }
 
@@ -296,12 +383,12 @@ export class Game {
       }
     });
 
+    this.hooks.onPlayerMoved(this);
+
     // Check for win condition
     if (currentPlayerHand.length === 0) {
       log(`Player ${this.gameState.currentPlayer + 1} wins the game!`);
-      this.gameState.gamesWon[this.gameState.currentPlayer]++;
-      this.gameState.roundsWon[this.gameState.currentPlayer]++; // Increment roundsWon here
-      this.gameState.gameOver = true;
+      this.win();
     }
 
     this.gameState.consecutivePasses = 0;
@@ -315,45 +402,102 @@ export class Game {
       this.nextPlayer();
     }
     this.gameState.currentTurn++;
+    this.save();
   }
 
   /**
-   * Resets the game state to its initial values.
+   * Loads the game state from localStorage.
+   * @param {AI} ai An instance of an implementation of the AI class.
+   * @param {UI} ui An instance of the UI class.
+   * @returns {boolean} True if a saved game was loaded, false otherwise.
+   */
+  load(ai, ui) {
+    const savedState = localStorage.getItem(this.stateKey);
+    const parsedState = savedState ? JSON.parse(savedState) : null;
+    if (parsedState && ai && ui) {
+      // Store playerTypes from the parsed state before overwriting this.gameState
+      const loadedPlayerTypes = parsedState.gameState.players.map((p) => p.type);
+
+      this.id = parsedState.id;
+      this.stateKey = parsedState.stateKey;
+      this.gameState = parsedState.gameState;
+      // Re-hydrate deck
+      this.deck = new Deck(parsedState.deck.cards);
+      // Re-hydrate cards
+      this.gameState.playerHands = [...this.gameState.playerHands].map((h) => Card.objectsToList(h));
+      this.gameState.playPile = Card.objectsToList([...this.gameState.playPile]);
+      this.gameState.selectedCards = Card.objectsToList([...this.gameState.selectedCards]);
+      // Assign the stored playerTypes back to gameState
+      this.gameState.playerTypes = loadedPlayerTypes;
+      // Re-hydrate players
+      this.gameState.players = this.createPlayers(ai, ui);
+      log("Game loaded from localStorage.");
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Resets the entire game, including generating a new game ID and clearing cumulative wins.
    */
   reset() {
-    this.gameState.playerHands = [];
-    this.gameState.playPile = [];
-    this.gameState.currentPlayer = 0;
-    this.gameState.currentTurn = 0;
-    this.gameState.selectedCards = [];
-    this.gameState.consecutivePasses = 0;
-    this.gameState.lastPlayerToPlay = -1;
-    this.gameState.roundNumber = 1;
-    this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
-    this.gameState.gameOver = false;
-    this.gameState.gameStarted = false;
-  }
-
-  setPlayers(players) {
-    this.gameState.players = players;
-    this.gameState.numPlayers = players.length;
-    this.gameState.playerTypes = players.map((p) => p.type);
-    this.gameState.roundsWon = new Array(players.length).fill(0);
-    if (this.gameState.gamesWon.length !== players.length) {
-      // Only initialize if not already initialized
-      this.gameState.gamesWon = new Array(players.length).fill(0);
-    }
-    this.deck.shuffle();
-    this.gameState.playerHands = this.deck.deal(this.gameState.numPlayers);
-    this.gameState.playerHands.forEach(Card.sort);
-    this.gameState.currentPlayer = this.findStartingPlayer(this.gameState.playerHands);
-    this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
+    this.id = crypto.randomUUID();
+    this.gameState.gamesWon = new Array(this.gameState.numPlayers).fill(0);
+    this.init();
+    this.hooks.onGameReset(this);
   }
 
   /**
-   * Initializes the game by dealing hands and setting the starting player.
+   * Saves the current game state to localStorage.
+   */
+  save() {
+    const serializableGameState = {
+      id: this.id,
+      deck: { ...this.deck },
+      gameState: { ...this.gameState },
+      stateKey: this.stateKey,
+    };
+    serializableGameState.gameState.players = this.gameState.players.map((p) => p.data());
+    localStorage.setItem(this.stateKey, JSON.stringify(serializableGameState));
+    log("Game saved to localStorage.");
+  }
+
+  /**
+   * Initializes the game's players.
+   * @param {Array<Player>} players The list of players to initialize into the game.
+   */
+  setPlayers(players) {
+    if (players) {
+      this.gameState.players = players;
+      this.gameState.numPlayers = players.length;
+      this.gameState.playerTypes = players.map((p) => p.type);
+      this.gameState.roundsWon = new Array(players.length).fill(0);
+      if (this.gameState.gamesWon.length !== players.length) {
+        this.gameState.gamesWon = new Array(players.length).fill(0);
+      }
+      this.deal();
+      this.gameState.currentPlayer = this.findStartingPlayer(this.gameState.playerHands);
+      this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
+    }
+  }
+
+  /**
+   * Marks the game as started.
    */
   start() {
     this.gameState.gameStarted = true;
+    this.save();
+    this.hooks.onGameStarted(this);
+  }
+
+  /**
+   * Marks the game as over and sets the winner
+   */
+  win() {
+    this.gameState.gamesWon[this.gameState.currentPlayer]++;
+    this.gameState.roundsWon[this.gameState.currentPlayer]++; // Increment roundsWon here too, for the current round
+    this.gameState.gameOver = true;
+    this.gameState.gameStarted = false;
+    this.hooks.onGameWon(this);
   }
 }

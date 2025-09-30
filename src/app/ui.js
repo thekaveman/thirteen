@@ -4,6 +4,10 @@ import { Game } from "./game.js";
 import { COMBINATION_TYPES } from "./constants.js";
 
 export class UI {
+  /**
+   * Initialize a new UI instance.
+   * @param {Game} game The Game instance for this UI.
+   */
   constructor(game) {
     this.game = game;
     this.id = {
@@ -15,6 +19,7 @@ export class UI {
       passButton: "pass-button",
       newGameButton: "new-game-button",
       startGameButton: "start-game-button",
+      resetButton: "reset-button",
     };
     this.messageTimeout = null;
 
@@ -27,6 +32,7 @@ export class UI {
     this.passButton = null;
     this.newGameButton = null;
     this.startGameButton = null;
+    this.resetButton = null;
   }
 
   /**
@@ -44,6 +50,7 @@ export class UI {
       this.passButton = document.getElementById(this.id.passButton);
       this.newGameButton = document.getElementById(this.id.newGameButton);
       this.startGameButton = document.getElementById(this.id.startGameButton);
+      this.resetButton = document.getElementById(this.id.resetButton);
     }
   }
 
@@ -84,19 +91,19 @@ export class UI {
   getCombinationTypeIndicator(combinationType) {
     switch (combinationType) {
       case COMBINATION_TYPES.SINGLE:
-        return "3♠"; // Three of Spades (single card)
+        return "🃏";
       case COMBINATION_TYPES.PAIR:
-        return "3♦3♣"; // Two different 3s (pair)
+        return "🃏🃏";
       case COMBINATION_TYPES.TRIPLE:
-        return "3♦3♣3♥"; // Three different 3s (triple)
+        return "🃏🃏🃏";
       case COMBINATION_TYPES.STRAIGHT:
-        return "Q♦K♣A♥"; // Queen, King, Ace (straight)
+        return "🪜";
       case COMBINATION_TYPES.FOUR_OF_A_KIND:
         return "💣"; // Bomb indicator for Four of a Kind
       case COMBINATION_TYPES.CONSECUTIVE_PAIRS:
         return "💣"; // Bomb indicator for Consecutive Pairs
       default:
-        return "Open"; // Default for an empty play pile or invalid combination
+        return "🟢"; // Default for an open play pile
     }
   }
 
@@ -162,7 +169,7 @@ export class UI {
     if (this.gameContent) {
       const combinationType = this.game.getCombinationType(this.game.gameState.playPile);
       const indicator = this.getCombinationTypeIndicator(combinationType);
-      this.gameContent.innerHTML = `<h2>Play Area (Round ${this.game.gameState.roundNumber}) <span class="combination-type-indicator">${indicator}</span></h2>`;
+      this.gameContent.innerHTML = `<h2>Play Area (Round ${this.game.gameState.roundNumber}) <span class="combination-type">${indicator}</span></h2>`;
       this.renderCardsContainer(this.game.gameState.playPile, this.gameContent);
     }
   }
@@ -187,7 +194,9 @@ export class UI {
       text += " (Your Turn)";
     }
     if (handDiv) {
-      handDiv.innerHTML = `<h2>${text}</h2>`;
+      const h2 = document.createElement("h2");
+      h2.textContent = text;
+      handDiv.appendChild(h2);
     }
 
     if (typeof document !== "undefined") {
@@ -257,12 +266,20 @@ export class UI {
       if (this.passButton) this.passButton.style.display = "none";
       if (this.newGameButton) this.newGameButton.style.display = "block";
       if (this.startGameButton) this.startGameButton.style.display = "none";
+      if (this.resetButton) {
+        this.resetButton.style.display = "block";
+        this.resetButton.disabled = false;
+      }
     } else if (!this.game.gameState.gameStarted) {
       // Game has not started yet, show start button
       if (this.playButton) this.playButton.style.display = "none";
       if (this.passButton) this.passButton.style.display = "none";
       if (this.newGameButton) this.newGameButton.style.display = "none";
       if (this.startGameButton) this.startGameButton.style.display = "block";
+      if (this.resetButton) {
+        this.resetButton.style.display = "block";
+        this.resetButton.disabled = false;
+      }
     } else {
       // Game is in progress
       if (this.playButton) {
@@ -275,6 +292,10 @@ export class UI {
       }
       if (this.newGameButton) this.newGameButton.style.display = "none";
       if (this.startGameButton) this.startGameButton.style.display = "none";
+      if (this.resetButton) {
+        this.resetButton.style.display = "block";
+        this.resetButton.disabled = !isHumanPlayerTurn;
+      }
     }
   }
 
@@ -293,7 +314,7 @@ export class UI {
 
     const cardElements = currentPlayerHandDiv.querySelectorAll(".card");
     cardElements.forEach((cardEl) => {
-      const card = JSON.parse(cardEl.dataset.card);
+      const card = Card.parse(cardEl.dataset.card);
       const isSelected = this.game.gameState.selectedCards.some(
         (selectedCard) => selectedCard.rank === card.rank && selectedCard.suit === card.suit
       );

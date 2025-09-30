@@ -21,6 +21,15 @@ export class Card {
   }
 
   /**
+   * Get a data representation of the cards.
+   * @param {Array<Card>} cards The cards to transform.
+   * @returns {Array<object>} The pure data representation of the cards.
+   */
+  static listToObjects(cards) {
+    return cards.map((card) => card.data());
+  }
+
+  /**
    * Finds the lowest card in the list of hands.
    * @param {Array<Array<Card>>} hands An array of player hands.
    * @returns {Card} The lowest card object.
@@ -54,31 +63,47 @@ export class Card {
   }
 
   /**
+   * Parse a JSON string into a Card instance.
+   * @param {string} json JSON string containing card data.
+   * @returns {Card} The parsed Card instance.
+   */
+  static parse(json) {
+    const data = JSON.parse(json);
+    return new Card(data.rank, data.suit);
+  }
+
+  /**
+   * Parse an array of objects into an array of Card instances.
+   * @param {Array<object>} list Array containing card data.
+   * @returns {Array<Card>} The parsed array of Card instances.
+   */
+  static objectsToList(list) {
+    return list.map((c) => new Card(c.rank, c.suit));
+  }
+
+  /**
    * Sorts a hand of cards by value.
    * @param {Array<Card>} hand The hand to sort.
    */
   static sort(hand) {
     hand.sort((a, b) => a.value - b.value);
   }
+
+  /**
+   * Get a data representation of this card.
+   * @returns {object} The pure data representation of the card.
+   */
+  data() {
+    return { rank: this.rank, suit: this.suit, value: this.value };
+  }
 }
 
 export class Deck {
-  constructor() {
-    this.cards = [];
-    SUITS.forEach((suit) => {
-      RANKS.forEach((rank) => {
-        this.cards.push(new Card(rank, suit));
-      });
-    });
-  }
-
-  /**
-   * Shuffles the deck of cards in place.
-   */
-  shuffle() {
-    for (let i = this.cards.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [this.cards[i], this.cards[j]] = [this.cards[j], this.cards[i]];
+  constructor(cards = null) {
+    if (cards) {
+      this.cards = cards.map((card) => new Card(card.rank, card.suit));
+    } else {
+      this.cards = SUITS.flatMap((suit) => RANKS.map((rank) => new Card(rank, suit)));
     }
   }
 
@@ -88,10 +113,21 @@ export class Deck {
    * @returns {Array<Array<Card>>} An array of hands, where each hand is an array of cards.
    */
   deal(numPlayers) {
-    const hands = Array.from({ length: numPlayers }, () => []);
-    const cardsToDeal = Math.min(this.cards.length, numPlayers * 13);
-    for (let i = 0; i < cardsToDeal; i++) {
-      hands[i % numPlayers].push(this.cards[i]);
+    const hands = new Array(numPlayers).fill(0).map(() => []);
+    const shuffledCards = [...this.cards];
+
+    // Fisher-Yates shuffle on the copy
+    for (let i = shuffledCards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledCards[i], shuffledCards[j]] = [shuffledCards[j], shuffledCards[i]];
+    }
+
+    for (let i = 0; i < 13; i++) {
+      for (let j = 0; j < numPlayers; j++) {
+        if (shuffledCards.length > 0) {
+          hands[j].push(shuffledCards.pop());
+        }
+      }
     }
     return hands;
   }
