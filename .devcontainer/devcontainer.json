@@ -1,0 +1,21 @@
+{
+  "name": "thekaveman/thirteen",
+  "dockerComposeFile": "../compose.yml",
+  "service": "dev",
+  "workspaceFolder": "/home/node/app",
+  "postAttachCommand": ["/bin/bash", ".devcontainer/postAttach.sh"],
+  "runServices": ["dev"],
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "terminal.integrated.profiles.linux": {
+          "bash": {
+            "path": "/bin/bash"
+          }
+        }
+      },
+      "extensions": ["eamodio.gitlens", "esbenp.prettier-vscode", "google.gemini-cli-vscode-ide-companion", "mhutchie.git-graph"]
+    }
+  }
+}

@@ -1,0 +1,25 @@
+services:
+  app:
+    image: node:24-trixie
+    entrypoint: ["/bin/bash", "-c"]
+    command: ["./bin/startup.sh"]
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "8888"
+    working_dir: /home/node/app
+    volumes:
+      - .:/home/node/app
+
+  dev:
+    build:
+      context: .
+      dockerfile: .devcontainer/Dockerfile
+    command: sleep infinity
+    environment:
+      - NODE_ENV=development
+    ports:
+      - "8888"
+    working_dir: /home/node/app
+    volumes:
+      - .:/home/node/app
