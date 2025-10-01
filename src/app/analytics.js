@@ -1,4 +1,3 @@
-import { Card } from "./deck.js";
 import { Game } from "./game.js";
 
 export class Analytics {
@@ -58,7 +57,12 @@ export class Analytics {
    * @param {Game} game The game instance sending this event.
    */
   gameStarted(game) {
-    this.#send("game_started", game);
+    this.#send("game_started", game, {
+      event: {
+        player: game.currentPlayer().id,
+        type: game.currentPlayer().type,
+      },
+    });
   }
 
   /**
