@@ -1,6 +1,6 @@
 {
   "name": "thirteen",
-  "version": "2025.9.1",
+  "version": "2025.10.1",
   "description": "A web-based implementation of the card game Thirteen (Tiến Lên), built with vanilla JavaScript, HTML, and CSS.",
   "main": "src/app.js",
   "directories": {
@@ -24,6 +24,6 @@
   "homepage": "https://thekaveman.github.io/thirteen/src/",
   "devDependencies": {
     "jsdom": "^27.0.0",
-    "live-server": "^1.2.2"
+    "live-server": "^1.2.0"
   }
 }
