@@ -4,7 +4,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Launch via NPM",
+      "name": "Start app",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["start"]
     },
@@ -17,6 +17,13 @@
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen",
       "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Debug in browser",
+      "url": "http://localhost:8888",
+      "webRoot": "${workspaceFolder}/src"
     }
   ]
 }
