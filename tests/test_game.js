@@ -32,6 +32,16 @@ function test_findStartingPlayer_findsPlayerWithLowestCard() {
   assert(startingPlayer === 1, "Player with the lowest card should start");
 }
 
+function test_findStartingPlayer_selectsLastPlayerWithLowestCard() {
+  const game = testSetup();
+  const hands = [
+    [new Card("3", "♦"), new Card("K", "♣")],
+    [new Card("3", "♠"), new Card("4", "♠")],
+  ];
+  const startingPlayer = game.findStartingPlayer(hands);
+  assert(startingPlayer === 1, "Should select the last player with the lowest card");
+}
+
 function test_gameState() {
   const game = testSetup();
   assert(game.gameState.numPlayers === 0, "Initial numPlayers should be 0");
@@ -699,10 +709,16 @@ function test_isValidPlay_tripleBeatsLowerTriple() {
   );
 }
 
-function test_load_noSavedGame() {
+function test_load_invalidSavedGame() {
   const game = testSetup();
-  const loaded = game.load(new MockAI(game), new MockUI(game));
-  assert(!loaded, "Should not load game if no saved game exists");
+  localStorage.setItem(game.stateKey, "invalid json");
+  let loaded = false;
+  try {
+    loaded = game.load(new MockAI(game), new MockUI(game));
+  } catch (e) {
+    assert(e instanceof SyntaxError, "Should throw a SyntaxError");
+  }
+  assert(!loaded, "Should not load game if saved game is invalid json");
 }
 
 function test_load_rehydratesDataCorrectly() {
@@ -805,6 +821,21 @@ function test_passTurn_incrementsPassesAndSwitchesPlayer() {
   assert(game.gameState.consecutivePasses === 1, "Should increment consecutive passes");
 }
 
+function test_playCards_endsGameOnLastCard() {
+  const game = testSetup();
+  game.gameState.currentPlayer = 0;
+  game.gameState.numPlayers = 2;
+  const cardToPlay = new Card("4", "♠");
+  game.gameState.playerHands = [[cardToPlay], []];
+  game.gameState.selectedCards = [cardToPlay];
+  game.gameState.gamesWon = [0, 0];
+
+  game.playCards();
+
+  assert(game.gameState.gameOver, "Should end the game when a player plays their last card");
+  assert(game.gameState.gamesWon[0] === 1, "Should increment games won for the winner");
+}
+
 function test_playCards_updatesGameState() {
   const game = testSetup();
   game.gameState.currentPlayer = 0;
@@ -826,20 +857,6 @@ function test_playCards_updatesGameState() {
   assert(game.gameState.consecutivePasses === 0, "Should reset consecutive passes");
   assert(game.gameState.lastPlayerToPlay === 0, "Should set the last player to play");
   assert(game.gameState.gameOver === false, "Should not set gameOver to true when player does not win");
-}
-
-function test_playCards_updatesGamesWon() {
-  const game = testSetup();
-  game.gameState.currentPlayer = 0;
-  game.gameState.numPlayers = 2;
-  const cardToPlay = new Card("4", "♠");
-  game.gameState.playerHands = [[cardToPlay], []];
-  game.gameState.selectedCards = [cardToPlay];
-  game.gameState.gamesWon = [0, 0];
-
-  game.playCards();
-
-  assert(game.gameState.gamesWon[0] === 1, "Should increment games won for the winner");
 }
 
 function test_reset_resetsGame() {
@@ -928,6 +945,7 @@ function test_win_updatesGameState() {
 export const gameTests = [
   test_createPlayers_createsPlayers,
   test_findStartingPlayer_findsPlayerWithLowestCard,
+  test_findStartingPlayer_selectsLastPlayerWithLowestCard,
   test_gameState,
   test_getCombinationType_returnsCorrectType,
   test_init_initializesGame,
@@ -978,14 +996,14 @@ export const gameTests = [
   test_isValidPlay_threeConsecutivePairsBeatsSingle2,
   test_isValidPlay_threeConsecutivePairsCannotBombPairOfTwos,
   test_isValidPlay_tripleBeatsLowerTriple,
-  test_load_noSavedGame,
+  test_load_invalidSavedGame,
   test_load_rehydratesDataCorrectly,
   test_nextPlayer_switchesPlayer,
   test_passTurn_endsRoundCorrectly,
   test_passTurn_firstPlayOfRound,
   test_passTurn_incrementsPassesAndSwitchesPlayer,
+  test_playCards_endsGameOnLastCard,
   test_playCards_updatesGameState,
-  test_playCards_updatesGamesWon,
   test_reset_resetsGame,
   test_save_savesGameState,
   test_setPlayers_initializesPlayersAndHands,
