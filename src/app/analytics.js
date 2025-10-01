@@ -13,6 +13,26 @@ export class Analytics {
   }
 
   /**
+   * Private method to initialize player data in the central service.
+   * @param {Game} game The game instance sending this event.
+   */
+  async #idPlayer(game) {
+    try {
+      const id = new this.api.Identify();
+      const player = game.firstHumanPlayer();
+
+      id.setOnce("player", player.id);
+      id.setOnce("type", player.type);
+      id.set("game", player.game.id);
+      id.add("games_played", 1);
+
+      this.api.identify(id);
+    } catch (error) {
+      console.error(`Error initializing player:`, error);
+    }
+  }
+
+  /**
    * Private method to send analytics data to a central service.
    * @param {string} eventType The type of event (e.g., "game_started", "game_won").
    * @param {Game} game The game instance sending this event.
@@ -63,6 +83,7 @@ export class Analytics {
         type: game.currentPlayer().type,
       },
     });
+    this.#idPlayer(game);
   }
 
   /**

@@ -1,11 +1,12 @@
 import { PLAYER_TYPES } from "./constants.js";
 import { Card } from "./deck.js";
+import { Game } from "./game.js";
 import { log } from "./utils.js";
 
 export class Player {
   /**
    * @param {string} type The type of player (human or ai).
-   * @param {object} game The game instance.
+   * @param {Game} game The game instance.
    */
   constructor(type, game, number) {
     this.type = type;
