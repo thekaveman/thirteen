@@ -88,7 +88,7 @@ export class App {
     log(`Game reset`);
     this.clearStorage();
     this.game.reset();
-    this.init();
+    this.init(this.setTimeout);
   }
 
   handleStartGameClick() {
