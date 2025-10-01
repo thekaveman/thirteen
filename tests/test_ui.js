@@ -7,7 +7,7 @@ import {
   restoreAddEventListener,
   getAddEventListenerCalls,
 } from "./utils.js";
-import { COMBINATION_TYPES } from "../src/app/constants.js";
+import { COMBINATION_TYPES, PLAYER_TYPES } from "../src/app/constants.js";
 import { Card } from "../src/app/deck.js";
 import { HumanPlayer, AIPlayer } from "../src/app/player.js";
 import { UI } from "../src/app/ui.js";
@@ -131,9 +131,9 @@ function test_render_displaysGameInfo() {
   ui.game.gameState.gamesWon = [1, 0, 0];
   ui.game.gameState.playerHands = [[new Card("3", "♠")], [new Card("4", "♦")], [new Card("5", "♣")]];
   ui.game.gameState.currentPlayer = 0; // Player 1 is current
-  ui.game.gameState.players[0].type = "human";
-  ui.game.gameState.players[1].type = "ai";
-  ui.game.gameState.players[2].type = "human";
+  ui.game.gameState.players[0].type = PLAYER_TYPES.HUMAN;
+  ui.game.gameState.players[1].type = PLAYER_TYPES.AI;
+  ui.game.gameState.players[2].type = PLAYER_TYPES.HUMAN;
 
   ui.render();
 
@@ -175,7 +175,7 @@ function test_renderPlayerHand_rendersCards() {
   const playerHandDiv = document.createElement("div");
   ui.game.gameState.playerHands[0] = [new Card("A", "♠"), new Card("K", "♦")];
   ui.game.gameState.currentPlayer = 0;
-  ui.game.gameState.players[0].type = "human";
+  ui.game.gameState.players[0].type = PLAYER_TYPES.HUMAN;
 
   ui.renderPlayerHand(0, playerHandDiv);
 
@@ -198,9 +198,9 @@ function test_renderPlayerHands_rendersCorrectNumberOfHands() {
   const ui = testSetup();
   ui.playersHands.innerHTML = "";
   ui.game.gameState.playerHands = [[], [], []];
-  ui.game.gameState.players[0].type = "human";
-  ui.game.gameState.players[1].type = "ai";
-  ui.game.gameState.players[2].type = "human";
+  ui.game.gameState.players[0].type = PLAYER_TYPES.HUMAN;
+  ui.game.gameState.players[1].type = PLAYER_TYPES.AI;
+  ui.game.gameState.players[2].type = PLAYER_TYPES.HUMAN;
   ui.game.gameState.currentPlayer = 1; // AI is current player
 
   ui.renderPlayerHands();
@@ -208,16 +208,22 @@ function test_renderPlayerHands_rendersCorrectNumberOfHands() {
   const playerHandElements = ui.playersHands.querySelectorAll(".player-hand");
   assert(playerHandElements.length === 3, "Should render the correct number of player hands");
 
-  assert(document.getElementById("player-hand-0").classList.contains("human"), "Player 0 hand should have 'human' class");
+  assert(
+    document.getElementById("player-hand-0").classList.contains(PLAYER_TYPES.HUMAN),
+    "Player 0 hand should have 'human' class"
+  );
   assert(
     !document.getElementById("player-hand-0").classList.contains("current"),
     "Player 0 hand should not have 'current' class"
   );
 
-  assert(document.getElementById("player-hand-1").classList.contains("ai"), "Player 1 hand should have 'ai' class");
+  assert(document.getElementById("player-hand-1").classList.contains(PLAYER_TYPES.AI), "Player 1 hand should have 'ai' class");
   assert(document.getElementById("player-hand-1").classList.contains("current"), "Player 1 hand should have 'current' class");
 
-  assert(document.getElementById("player-hand-2").classList.contains("human"), "Player 2 hand should have 'human' class");
+  assert(
+    document.getElementById("player-hand-2").classList.contains(PLAYER_TYPES.HUMAN),
+    "Player 2 hand should have 'human' class"
+  );
   assert(
     !document.getElementById("player-hand-2").classList.contains("current"),
     "Player 2 hand should not have 'current' class"
@@ -277,7 +283,7 @@ function test_updateButtonStates_gameNotOver() {
 
   // Scenario 1: Human player's turn
   ui.game.gameState.currentPlayer = 0; // Human player
-  ui.game.gameState.players[0].type = "human";
+  ui.game.gameState.players[0].type = PLAYER_TYPES.HUMAN;
   ui.updateButtonStates();
 
   assert(ui.playButton.style.display === "block", "Play button should be visible for human turn");
@@ -291,7 +297,7 @@ function test_updateButtonStates_gameNotOver() {
 
   // Scenario 2: AI player's turn
   ui.game.gameState.currentPlayer = 1; // AI player
-  ui.game.gameState.players[1].type = "ai";
+  ui.game.gameState.players[1].type = PLAYER_TYPES.AI;
   ui.updateButtonStates();
 
   assert(ui.playButton.style.display === "block", "Play button should be visible for AI turn");

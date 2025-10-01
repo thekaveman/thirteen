@@ -1,10 +1,12 @@
+import { PLAYER_TYPES } from "./constants.js";
 import { Card } from "./deck.js";
+import { Game } from "./game.js";
 import { log } from "./utils.js";
 
 export class Player {
   /**
    * @param {string} type The type of player (human or ai).
-   * @param {object} game The game instance.
+   * @param {Game} game The game instance.
    */
   constructor(type, game, number) {
     this.type = type;
@@ -24,7 +26,7 @@ export class Player {
 
 export class HumanPlayer extends Player {
   constructor(game, number, ui) {
-    super("human", game, number);
+    super(PLAYER_TYPES.HUMAN, game, number);
     this.ui = ui;
   }
 
@@ -85,7 +87,7 @@ export class HumanPlayer extends Player {
 
 export class AIPlayer extends Player {
   constructor(game, number, ai) {
-    super("ai", game, number);
+    super(PLAYER_TYPES.AI, game, number);
     this.ai = ai;
   }
 

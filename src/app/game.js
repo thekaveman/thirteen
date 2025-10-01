@@ -1,4 +1,4 @@
-import { COMBINATION_TYPES, RANKS } from "./constants.js";
+import { COMBINATION_TYPES, PLAYER_TYPES, RANKS } from "./constants.js";
 import { Card, Deck } from "./deck.js";
 import { Player, AIPlayer, HumanPlayer } from "./player.js";
 import { log } from "./utils.js";
@@ -54,7 +54,7 @@ export class Game {
     const playerIds = this.gameState.players.map((p) => p.id);
     const players = this.gameState.playerTypes.map((type, index) => {
       let player;
-      if (type === "ai") {
+      if (type === PLAYER_TYPES.AI) {
         player = new AIPlayer(this, index, ai);
       } else {
         player = new HumanPlayer(this, index, ui);
@@ -73,6 +73,22 @@ export class Game {
    */
   currentPlayer() {
     return this.gameState.players[this.gameState.currentPlayer];
+  }
+
+  /**
+   * Gets the AI player from the game's state.
+   * @returns {AIPlayer} The current AI player instance.
+   */
+  firstAIPlayer() {
+    return this.gameState.players.find((p) => p.type === PLAYER_TYPES.AI);
+  }
+
+  /**
+   * Gets the human player from the game's state.
+   * @returns {HumanPlayer} The current human player instance.
+   */
+  firstHumanPlayer() {
+    return this.gameState.players.find((p) => p.type === PLAYER_TYPES.HUMAN);
   }
 
   /**
@@ -175,7 +191,7 @@ export class Game {
    * @returns {boolean} True if the combination is consecutive pairs.
    */
   isConsecutivePairs(cards) {
-    if (cards.length < 6 || cards.length % 2 !== 0) {
+    if (cards.length < 6 || cards.length % 2 !== 0 || cards.some((card) => card.rank === "2")) {
       return false;
     }
     const pairs = [];

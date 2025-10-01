@@ -1,4 +1,3 @@
-import { Card } from "./deck.js";
 import { Game } from "./game.js";
 
 export class Analytics {
@@ -11,6 +10,26 @@ export class Analytics {
               console.warn(`Coudn't send analytics for ${eventType}:`, payload);
             },
           };
+  }
+
+  /**
+   * Private method to initialize player data in the central service.
+   * @param {Game} game The game instance sending this event.
+   */
+  async #idPlayer(game) {
+    try {
+      const id = new this.api.Identify();
+      const player = game.firstHumanPlayer();
+
+      id.setOnce("player", player.id);
+      id.setOnce("type", player.type);
+      id.set("game", player.game.id);
+      id.add("games_played", 1);
+
+      this.api.identify(id);
+    } catch (error) {
+      console.error(`Error initializing player:`, error);
+    }
   }
 
   /**
@@ -58,7 +77,13 @@ export class Analytics {
    * @param {Game} game The game instance sending this event.
    */
   gameStarted(game) {
-    this.#send("game_started", game);
+    this.#send("game_started", game, {
+      event: {
+        player: game.currentPlayer().id,
+        type: game.currentPlayer().type,
+      },
+    });
+    this.#idPlayer(game);
   }
 
   /**

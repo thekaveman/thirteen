@@ -1,7 +1,7 @@
-import { log } from "./utils.js";
+import { COMBINATION_TYPES, PLAYER_TYPES } from "./constants.js";
 import { Card } from "./deck.js";
 import { Game } from "./game.js";
-import { COMBINATION_TYPES } from "./constants.js";
+import { log } from "./utils.js";
 
 export class UI {
   /**
@@ -183,7 +183,7 @@ export class UI {
     const player = this.game.gameState.players[playerIndex];
     let text = `Player ${playerIndex + 1}`;
 
-    if (player.type === "ai") {
+    if (player.type === PLAYER_TYPES.AI) {
       text += " (AI)";
     }
 
@@ -213,7 +213,7 @@ export class UI {
 
     const preRender = (cardSpan, card) => {
       const currentPlayer = this.game.gameState.players[playerIndex];
-      if (playerIndex === this.game.gameState.currentPlayer && currentPlayer.type === "human") {
+      if (playerIndex === this.game.gameState.currentPlayer && currentPlayer.type === PLAYER_TYPES.HUMAN) {
         if (cardSpan && cardSpan.addEventListener) {
           cardSpan.addEventListener("click", currentPlayer.handleCardClick.bind(currentPlayer));
         }
@@ -259,7 +259,7 @@ export class UI {
    * Updates the state of the play, pass, and new game buttons.
    */
   updateButtonStates() {
-    const isHumanPlayerTurn = this.game.gameState.players[this.game.gameState.currentPlayer]?.type === "human";
+    const isHumanPlayerTurn = this.game.gameState.players[this.game.gameState.currentPlayer]?.type === PLAYER_TYPES.HUMAN;
 
     if (this.game.gameState.gameOver) {
       if (this.playButton) this.playButton.style.display = "none";

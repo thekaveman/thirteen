@@ -5,6 +5,7 @@ import { playerTests } from "./test_player.js";
 import { aiTests } from "./test_ai.js";
 import { uiTests } from "./test_ui.js";
 import { appTests } from "./test_app.js";
+import { analyticsTests } from "./test_analytics.js";
 
 export const TEST_CONFIG = {
   Deck: deckTests,
@@ -13,4 +14,5 @@ export const TEST_CONFIG = {
   AI: aiTests,
   UI: uiTests,
   App: appTests,
+  Analytics: analyticsTests,
 };

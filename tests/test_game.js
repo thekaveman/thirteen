@@ -3,7 +3,7 @@ import { Card } from "../src/app/deck.js";
 import { Game } from "../src/app/game.js";
 import { MockDeck, MockAI, MockUI, MockPlayer } from "./mocks.js";
 import { HumanPlayer, AIPlayer } from "../src/app/player.js";
-import { COMBINATION_TYPES } from "../src/app/constants.js";
+import { COMBINATION_TYPES, PLAYER_TYPES } from "../src/app/constants.js";
 
 function testSetup() {
   const game = new Game(MockDeck, `${Game.STATE_KEY}-tests`);
@@ -12,13 +12,13 @@ function testSetup() {
 
 function test_createPlayers_createsPlayers() {
   const game = testSetup();
-  game.gameState.playerTypes = ["human", "ai"];
+  game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
   game.gameState.players = [{ id: "one" }, { id: "two" }];
   const players = game.createPlayers(new MockAI(game), new MockUI(game));
   assert(players.length === 2, "Should create 2 players");
-  assert(players[0].type === "human", "First player should be human");
+  assert(players[0].type === PLAYER_TYPES.HUMAN, "First player should be human");
   assert(players[0].id === "one", "First player should get the correct (existing) ID");
-  assert(players[1].type === "ai", "Second player should be AI");
+  assert(players[1].type === PLAYER_TYPES.AI, "Second player should be AI");
   assert(players[1].id === "two", "Second player should get the correct (existing) ID");
 }
 
@@ -30,6 +30,16 @@ function test_findStartingPlayer_findsPlayerWithLowestCard() {
   ];
   const startingPlayer = game.findStartingPlayer(hands);
   assert(startingPlayer === 1, "Player with the lowest card should start");
+}
+
+function test_findStartingPlayer_selectsLastPlayerWithLowestCard() {
+  const game = testSetup();
+  const hands = [
+    [new Card("3", "♦"), new Card("K", "♣")],
+    [new Card("3", "♠"), new Card("4", "♠")],
+  ];
+  const startingPlayer = game.findStartingPlayer(hands);
+  assert(startingPlayer === 1, "Should select the last player with the lowest card");
 }
 
 function test_gameState() {
@@ -211,6 +221,19 @@ function test_isConsecutivePairs_returnsFalseForNotConsecutivePairs() {
     new Card("6", "♦"),
   ];
   assert(!game.isConsecutivePairs(cards), "Should return false for non-consecutive pairs");
+}
+
+function test_isConsecutivePairs_returnsFalseForPairsOfTwos() {
+  const game = testSetup();
+  const cards = [
+    new Card("K", "♠"),
+    new Card("K", "♦"),
+    new Card("A", "♠"),
+    new Card("A", "♦"),
+    new Card("2", "♣"),
+    new Card("2", "♥"),
+  ];
+  assert(!game.isConsecutivePairs(cards), "Should return false for pairs of 2s");
 }
 
 function test_isConsecutivePairs_returnsTrueForConsecutivePairs() {
@@ -686,10 +709,16 @@ function test_isValidPlay_tripleBeatsLowerTriple() {
   );
 }
 
-function test_load_noSavedGame() {
+function test_load_invalidSavedGame() {
   const game = testSetup();
-  const loaded = game.load(new MockAI(game), new MockUI(game));
-  assert(!loaded, "Should not load game if no saved game exists");
+  localStorage.setItem(game.stateKey, "invalid json");
+  let loaded = false;
+  try {
+    loaded = game.load(new MockAI(game), new MockUI(game));
+  } catch (e) {
+    assert(e instanceof SyntaxError, "Should throw a SyntaxError");
+  }
+  assert(!loaded, "Should not load game if saved game is invalid json");
 }
 
 function test_load_rehydratesDataCorrectly() {
@@ -698,7 +727,7 @@ function test_load_rehydratesDataCorrectly() {
   const mockUI = new MockUI(game);
 
   // Setup initial game state with AI and human players
-  game.gameState.playerTypes = ["ai", "human"];
+  game.gameState.playerTypes = [PLAYER_TYPES.AI, PLAYER_TYPES.HUMAN];
   game.setPlayers(game.createPlayers(mockAI, mockUI));
   game.gameState.gameStarted = true;
   game.gameState.playPile = [new Card("K", "♠"), new Card("K", "♦")];
@@ -792,6 +821,21 @@ function test_passTurn_incrementsPassesAndSwitchesPlayer() {
   assert(game.gameState.consecutivePasses === 1, "Should increment consecutive passes");
 }
 
+function test_playCards_endsGameOnLastCard() {
+  const game = testSetup();
+  game.gameState.currentPlayer = 0;
+  game.gameState.numPlayers = 2;
+  const cardToPlay = new Card("4", "♠");
+  game.gameState.playerHands = [[cardToPlay], []];
+  game.gameState.selectedCards = [cardToPlay];
+  game.gameState.gamesWon = [0, 0];
+
+  game.playCards();
+
+  assert(game.gameState.gameOver, "Should end the game when a player plays their last card");
+  assert(game.gameState.gamesWon[0] === 1, "Should increment games won for the winner");
+}
+
 function test_playCards_updatesGameState() {
   const game = testSetup();
   game.gameState.currentPlayer = 0;
@@ -813,20 +857,6 @@ function test_playCards_updatesGameState() {
   assert(game.gameState.consecutivePasses === 0, "Should reset consecutive passes");
   assert(game.gameState.lastPlayerToPlay === 0, "Should set the last player to play");
   assert(game.gameState.gameOver === false, "Should not set gameOver to true when player does not win");
-}
-
-function test_playCards_updatesGamesWon() {
-  const game = testSetup();
-  game.gameState.currentPlayer = 0;
-  game.gameState.numPlayers = 2;
-  const cardToPlay = new Card("4", "♠");
-  game.gameState.playerHands = [[cardToPlay], []];
-  game.gameState.selectedCards = [cardToPlay];
-  game.gameState.gamesWon = [0, 0];
-
-  game.playCards();
-
-  assert(game.gameState.gamesWon[0] === 1, "Should increment games won for the winner");
 }
 
 function test_reset_resetsGame() {
@@ -857,7 +887,7 @@ function test_save_savesGameState() {
 
 function test_setPlayers_initializesPlayersAndHands() {
   const game = testSetup();
-  const players = [{ type: "human" }, { type: "ai" }];
+  const players = [{ type: PLAYER_TYPES.HUMAN }, { type: PLAYER_TYPES.AI }];
   game.setPlayers(players);
 
   assert(game.gameState.numPlayers === players.length, "numPlayers should be initialized with the correct length");
@@ -915,6 +945,7 @@ function test_win_updatesGameState() {
 export const gameTests = [
   test_createPlayers_createsPlayers,
   test_findStartingPlayer_findsPlayerWithLowestCard,
+  test_findStartingPlayer_selectsLastPlayerWithLowestCard,
   test_gameState,
   test_getCombinationType_returnsCorrectType,
   test_init_initializesGame,
@@ -925,6 +956,7 @@ export const gameTests = [
   test_isBombForSingleTwo_returnsTrueForThreeConsecutivePairs,
   test_isConsecutivePairs_returnsFalseForInvalidPairs,
   test_isConsecutivePairs_returnsFalseForNotConsecutivePairs,
+  test_isConsecutivePairs_returnsFalseForPairsOfTwos,
   test_isConsecutivePairs_returnsTrueForConsecutivePairs,
   test_isFourOfAKind_returnsFalseForNotFourOfAKind,
   test_isFourOfAKind_returnsTrueForFourOfAKind,
@@ -964,14 +996,14 @@ export const gameTests = [
   test_isValidPlay_threeConsecutivePairsBeatsSingle2,
   test_isValidPlay_threeConsecutivePairsCannotBombPairOfTwos,
   test_isValidPlay_tripleBeatsLowerTriple,
-  test_load_noSavedGame,
+  test_load_invalidSavedGame,
   test_load_rehydratesDataCorrectly,
   test_nextPlayer_switchesPlayer,
   test_passTurn_endsRoundCorrectly,
   test_passTurn_firstPlayOfRound,
   test_passTurn_incrementsPassesAndSwitchesPlayer,
+  test_playCards_endsGameOnLastCard,
   test_playCards_updatesGameState,
-  test_playCards_updatesGamesWon,
   test_reset_resetsGame,
   test_save_savesGameState,
   test_setPlayers_initializesPlayersAndHands,
