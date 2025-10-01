@@ -1,5 +1,6 @@
 import { LowestCardAI } from "./ai.js";
 import { Analytics } from "./analytics.js";
+import { PLAYER_TYPES } from "./constants.js";
 import { Deck } from "./deck.js";
 import { Game } from "./game.js";
 import { UI } from "./ui.js";
@@ -56,7 +57,7 @@ export class App {
   handleAITurn() {
     log("handleAITurn called.");
     const aiPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
-    if (aiPlayer.type !== "ai") {
+    if (aiPlayer.type !== PLAYER_TYPES.AI) {
       log("handleAITurn: Not an AI player, returning.");
       return;
     }
@@ -126,7 +127,7 @@ export class App {
     this.game.init();
 
     // Initial game setup for display (hands dealt, starting player determined)
-    this.game.gameState.playerTypes = ["human", "ai"];
+    this.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
     this.game.setPlayers(this.game.createPlayers(this.ai, this.ui));
     this.game.save();
 
@@ -144,7 +145,7 @@ export class App {
       return;
     }
     const currentPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
-    if (currentPlayer.type === "ai") {
+    if (currentPlayer.type === PLAYER_TYPES.AI) {
       this.setTimeout(() => this.handleAITurn(), 1000);
     } else {
       log("Human player's turn. Waiting for user input.");

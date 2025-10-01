@@ -1,6 +1,7 @@
 import { assert, spyOn } from "./utils.js";
-import { Card } from "../src/app/deck.js";
 import { App } from "../src/app/app.js";
+import { PLAYER_TYPES } from "../src/app/constants.js";
+import { Card } from "../src/app/deck.js";
 import { MockAI, MockDeck, MockGame, MockUI, MockAnalytics } from "./mocks.js";
 
 function testSetup(ai) {
@@ -21,7 +22,7 @@ function testTeardown(app) {
 
 function test_handleAITurn_playsCardsWhenMoveIsAvailable() {
   const app = testSetup(new MockAI(new MockGame(MockDeck), [new Card("3", "♠")]));
-  app.game.gameState.playerTypes = ["human", "ai"];
+  app.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
 
   // Mock app.nextTurn before app.init is called
   const originalAppNextTurn = app.nextTurn;
@@ -58,7 +59,7 @@ function test_handleAITurn_playsCardsWhenMoveIsAvailable() {
 
 function test_handleAITurn_passesTurnWhenNoMoveIsAvailable() {
   const app = testSetup(new MockAI(new MockGame(MockDeck), []));
-  app.game.gameState.playerTypes = ["human", "ai"];
+  app.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
 
   // Mock app.nextTurn before app.init is called
   const originalNextTurn = app.nextTurn;
@@ -94,7 +95,7 @@ function test_handleAITurn_passesTurnWhenNoMoveIsAvailable() {
 
 function test_handleHumanPlay_callsPlayButtonClickAndNextTurn() {
   const app = testSetup();
-  app.game.gameState.playerTypes = ["human", "ai"];
+  app.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
 
   app.init();
   app.ui.startGameButton.handler(); // Simulate clicking the start button
@@ -114,7 +115,7 @@ function test_handleHumanPlay_callsPlayButtonClickAndNextTurn() {
 
 function test_handleHumanPass_callsPassButtonClickAndNextTurn() {
   const app = testSetup();
-  app.game.gameState.playerTypes = ["human", "ai"];
+  app.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
 
   app.init();
   app.ui.startGameButton.handler(); // Simulate clicking the start button
@@ -187,8 +188,8 @@ function test_init_initializesGame() {
 
   assert(app.game.findStartingPlayerCalled, "findStartingPlayer should be called during init");
   assert(app.game.gameState.players.length === 2, "init should initialize 2 players");
-  assert(app.game.gameState.playerTypes[0] === "human", "First player should be human");
-  assert(app.game.gameState.playerTypes[1] === "ai", "Second player should be AI");
+  assert(app.game.gameState.playerTypes[0] === PLAYER_TYPES.HUMAN, "First player should be human");
+  assert(app.game.gameState.playerTypes[1] === PLAYER_TYPES.AI, "Second player should be AI");
 
   testTeardown(app);
 }
@@ -257,7 +258,7 @@ function test_init_startsNewGameWhenSavedGameIsOver() {
 
 function test_nextTurn_callsHandleAITurnForAIPlayer() {
   const app = testSetup(new MockAI(new MockGame(MockDeck), [new Card("3", "♦")]));
-  app.game.gameState.playerTypes = ["human", "ai"];
+  app.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
 
   const handleAITurnSpy = spyOn(app, "handleAITurn");
 
@@ -281,7 +282,7 @@ function test_nextTurn_callsHandleAITurnForAIPlayer() {
 
 function test_nextTurn_doesNotCallHandleAITurnForHumanPlayer() {
   const app = testSetup();
-  app.game.gameState.playerTypes = ["human", "ai"];
+  app.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
 
   const handleAITurnSpy = spyOn(app, "handleAITurn");
 

@@ -1,4 +1,4 @@
-import { COMBINATION_TYPES, RANKS } from "./constants.js";
+import { COMBINATION_TYPES, PLAYER_TYPES, RANKS } from "./constants.js";
 import { Card, Deck } from "./deck.js";
 import { Player, AIPlayer, HumanPlayer } from "./player.js";
 import { log } from "./utils.js";
@@ -54,7 +54,7 @@ export class Game {
     const playerIds = this.gameState.players.map((p) => p.id);
     const players = this.gameState.playerTypes.map((type, index) => {
       let player;
-      if (type === "ai") {
+      if (type === PLAYER_TYPES.AI) {
         player = new AIPlayer(this, index, ai);
       } else {
         player = new HumanPlayer(this, index, ui);

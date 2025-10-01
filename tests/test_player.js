@@ -1,18 +1,19 @@
+import { PLAYER_TYPES } from "../src/app/constants.js";
 import { Card } from "../src/app/deck.js";
 import { HumanPlayer, AIPlayer } from "../src/app/player.js";
-import { assert } from "./utils.js";
 import { MockAI, MockUI, MockGame } from "./mocks.js";
+import { assert } from "./utils.js";
 
 function test_Player_constructor() {
   const game = new MockGame();
 
   const humanPlayer = new HumanPlayer(game, 0, new MockUI());
-  assert(humanPlayer.type === "human", "Player constructor should set the type to human");
+  assert(humanPlayer.type === PLAYER_TYPES.HUMAN, "Player constructor should set the type to human");
   assert(humanPlayer.ui !== null, "Human player should have a UI instance");
 
   const ai = new MockAI();
   const aiPlayer = new AIPlayer(game, 1, ai);
-  assert(aiPlayer.type === "ai", "Player constructor should set the type to ai");
+  assert(aiPlayer.type === PLAYER_TYPES.AI, "Player constructor should set the type to ai");
   assert(aiPlayer.ai === ai, "AI player should have an AI instance");
 }
 
@@ -23,7 +24,7 @@ function test_AIPlayer_data_returnsCorrectData() {
   const playerData = player.data();
 
   assert(playerData.id === player.id, "data() should include player id");
-  assert(playerData.type === "ai", "data() should include player type");
+  assert(playerData.type === PLAYER_TYPES.AI, "data() should include player type");
   assert(playerData.number === 1, "data() should include player number");
   assert(playerData.ai.id === ai.id, "data() should include AI id");
 }

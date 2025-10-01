@@ -9,3 +9,7 @@ export const COMBINATION_TYPES = {
   FOUR_OF_A_KIND: "four_of_a_kind",
   INVALID: "invalid",
 };
+export const PLAYER_TYPES = {
+  AI: "ai",
+  HUMAN: "human",
+};

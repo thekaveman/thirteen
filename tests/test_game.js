@@ -3,7 +3,7 @@ import { Card } from "../src/app/deck.js";
 import { Game } from "../src/app/game.js";
 import { MockDeck, MockAI, MockUI, MockPlayer } from "./mocks.js";
 import { HumanPlayer, AIPlayer } from "../src/app/player.js";
-import { COMBINATION_TYPES } from "../src/app/constants.js";
+import { COMBINATION_TYPES, PLAYER_TYPES } from "../src/app/constants.js";
 
 function testSetup() {
   const game = new Game(MockDeck, `${Game.STATE_KEY}-tests`);
@@ -12,13 +12,13 @@ function testSetup() {
 
 function test_createPlayers_createsPlayers() {
   const game = testSetup();
-  game.gameState.playerTypes = ["human", "ai"];
+  game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
   game.gameState.players = [{ id: "one" }, { id: "two" }];
   const players = game.createPlayers(new MockAI(game), new MockUI(game));
   assert(players.length === 2, "Should create 2 players");
-  assert(players[0].type === "human", "First player should be human");
+  assert(players[0].type === PLAYER_TYPES.HUMAN, "First player should be human");
   assert(players[0].id === "one", "First player should get the correct (existing) ID");
-  assert(players[1].type === "ai", "Second player should be AI");
+  assert(players[1].type === PLAYER_TYPES.AI, "Second player should be AI");
   assert(players[1].id === "two", "Second player should get the correct (existing) ID");
 }
 
@@ -698,7 +698,7 @@ function test_load_rehydratesDataCorrectly() {
   const mockUI = new MockUI(game);
 
   // Setup initial game state with AI and human players
-  game.gameState.playerTypes = ["ai", "human"];
+  game.gameState.playerTypes = [PLAYER_TYPES.AI, PLAYER_TYPES.HUMAN];
   game.setPlayers(game.createPlayers(mockAI, mockUI));
   game.gameState.gameStarted = true;
   game.gameState.playPile = [new Card("K", "♠"), new Card("K", "♦")];
@@ -857,7 +857,7 @@ function test_save_savesGameState() {
 
 function test_setPlayers_initializesPlayersAndHands() {
   const game = testSetup();
-  const players = [{ type: "human" }, { type: "ai" }];
+  const players = [{ type: PLAYER_TYPES.HUMAN }, { type: PLAYER_TYPES.AI }];
   game.setPlayers(players);
 
   assert(game.gameState.numPlayers === players.length, "numPlayers should be initialized with the correct length");
