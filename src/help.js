@@ -154,7 +154,7 @@ class Help {
       const hand = this.getTryItHand();
       let selectedCards = [];
       const messageContainer = document.getElementById("messages");
-      const initMessageHtml = "<p>Select a valid combination to beat this one:</p>";
+      const initMessageHtml = "<p>Select a valid combination to beat the one shown above.</p>";
       messageContainer.innerHTML = initMessageHtml;
 
       const playerHandContainer = document.getElementById("player-hand");
