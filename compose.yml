@@ -6,7 +6,7 @@ services:
     environment:
       - NODE_ENV=production
     ports:
-      - "8888"
+      - "8888:8888"
     working_dir: /home/node/app
     volumes:
       - .:/home/node/app
@@ -19,7 +19,7 @@ services:
     environment:
       - NODE_ENV=development
     ports:
-      - "8888"
+      - "8888:8888"
     working_dir: /home/node/app
     volumes:
       - .:/home/node/app

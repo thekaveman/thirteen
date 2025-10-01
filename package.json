@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "node tests/runner_cli.js",
-    "start": "live-server"
+    "start": "live-server --port=8888"
   },
   "repository": {
     "type": "git",
