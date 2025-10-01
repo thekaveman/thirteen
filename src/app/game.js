@@ -76,6 +76,22 @@ export class Game {
   }
 
   /**
+   * Gets the AI player from the game's state.
+   * @returns {AIPlayer} The current AI player instance.
+   */
+  firstAIPlayer() {
+    return this.gameState.players.find((p) => p.type === PLAYER_TYPES.AI);
+  }
+
+  /**
+   * Gets the human player from the game's state.
+   * @returns {HumanPlayer} The current human player instance.
+   */
+  firstHumanPlayer() {
+    return this.gameState.players.find((p) => p.type === PLAYER_TYPES.HUMAN);
+  }
+
+  /**
    * Deals player hands for each player.
    */
   deal() {
