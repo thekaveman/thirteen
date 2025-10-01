@@ -213,6 +213,19 @@ function test_isConsecutivePairs_returnsFalseForNotConsecutivePairs() {
   assert(!game.isConsecutivePairs(cards), "Should return false for non-consecutive pairs");
 }
 
+function test_isConsecutivePairs_returnsFalseForPairsOfTwos() {
+  const game = testSetup();
+  const cards = [
+    new Card("K", "♠"),
+    new Card("K", "♦"),
+    new Card("A", "♠"),
+    new Card("A", "♦"),
+    new Card("2", "♣"),
+    new Card("2", "♥"),
+  ];
+  assert(!game.isConsecutivePairs(cards), "Should return false for pairs of 2s");
+}
+
 function test_isConsecutivePairs_returnsTrueForConsecutivePairs() {
   const game = testSetup();
   const cards = [
@@ -925,6 +938,7 @@ export const gameTests = [
   test_isBombForSingleTwo_returnsTrueForThreeConsecutivePairs,
   test_isConsecutivePairs_returnsFalseForInvalidPairs,
   test_isConsecutivePairs_returnsFalseForNotConsecutivePairs,
+  test_isConsecutivePairs_returnsFalseForPairsOfTwos,
   test_isConsecutivePairs_returnsTrueForConsecutivePairs,
   test_isFourOfAKind_returnsFalseForNotFourOfAKind,
   test_isFourOfAKind_returnsTrueForFourOfAKind,

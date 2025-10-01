@@ -191,7 +191,7 @@ export class Game {
    * @returns {boolean} True if the combination is consecutive pairs.
    */
   isConsecutivePairs(cards) {
-    if (cards.length < 6 || cards.length % 2 !== 0) {
+    if (cards.length < 6 || cards.length % 2 !== 0 || cards.some((card) => card.rank === "2")) {
       return false;
     }
     const pairs = [];
