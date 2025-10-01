@@ -412,6 +412,14 @@ button:disabled,
   background-color: var(--color-primary-blue-hover);
 }
 
+#help-container .cards-container {
+  padding: var(--spacing-m) 0;
+}
+
+#help-container #play-area .cards-container {
+  padding: 0;
+}
+
 .combination-examples {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -421,9 +429,13 @@ button:disabled,
 
 .combination {
   background-color: var(--color-light-gray);
-  padding: var(--spacing-m);
+  padding: var(--spacing-s) var(--spacing-xs);
   border-radius: var(--border-radius-m);
   text-align: center;
+}
+
+.combination-examples > .combination {
+  padding: var(--spacing-m);
 }
 
 .combination .combination-type {
@@ -438,17 +450,27 @@ button:disabled,
   margin-bottom: var(--spacing-xs);
 }
 
-#help-container > .cards-container {
-  background-color: var(--color-light-gray);
+#try-it #play-area {
+  width: 100%;
+  max-width: none;
   padding: var(--spacing-m);
-  border-radius: var(--border-radius-m);
+  margin: 0;
+}
+
+#try-it #game-content {
+  padding: var(--spacing-m) 0;
 }
 
 #try-it #player-hand {
   width: 100%;
   max-width: none;
   height: unset;
-  padding-bottom: var(--spacing-m);
+  padding-bottom: var(--spacing-s);
+}
+
+#try-it .cards-container {
+  background-color: transparent;
+  overflow-x: visible;
 }
 
 @media (min-width: 576px) {
