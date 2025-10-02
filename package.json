@@ -23,7 +23,10 @@
   },
   "homepage": "https://thekaveman.github.io/thirteen/src/",
   "devDependencies": {
+    "chai": "^6.2.0",
     "jsdom": "^27.0.0",
-    "live-server": "^1.2.0"
+    "live-server": "^1.2.0",
+    "mocha": "^11.7.4",
+    "sinon": "^21.0.0"
   }
 }
