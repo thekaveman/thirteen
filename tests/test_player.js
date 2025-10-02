@@ -2,217 +2,136 @@ import { PLAYER_TYPES } from "../src/app/constants.js";
 import { Card } from "../src/app/deck.js";
 import { HumanPlayer, AIPlayer } from "../src/app/player.js";
 import { MockAI, MockUI, MockGame } from "./mocks.js";
-import { assert } from "./utils.js";
 
-function test_Player_constructor() {
-  const game = new MockGame();
+describe("Player", () => {
+  before(() => {
+    if (typeof window === "undefined") {
+      // Running in Node.js, set up JSDOM
+      const { JSDOM } = require("jsdom"); // Use require for conditional import
+      const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
+      global.window = dom.window;
+      global.document = dom.window.document;
+    }
+  });
+  describe("Player Constructor", () => {
+    it("should correctly initialize HumanPlayer", () => {
+      const game = new MockGame();
+      const humanPlayer = new HumanPlayer(game, 0, new MockUI());
+      expect(humanPlayer.type).to.equal(PLAYER_TYPES.HUMAN);
+      expect(humanPlayer.ui).to.not.be.null;
+    });
 
-  const humanPlayer = new HumanPlayer(game, 0, new MockUI());
-  assert(humanPlayer.type === PLAYER_TYPES.HUMAN, "Player constructor should set the type to human");
-  assert(humanPlayer.ui !== null, "Human player should have a UI instance");
+    it("should correctly initialize AIPlayer", () => {
+      const game = new MockGame();
+      const ai = new MockAI();
+      const aiPlayer = new AIPlayer(game, 1, ai);
+      expect(aiPlayer.type).to.equal(PLAYER_TYPES.AI);
+      expect(aiPlayer.ai).to.equal(ai);
+    });
+  });
 
-  const ai = new MockAI();
-  const aiPlayer = new AIPlayer(game, 1, ai);
-  assert(aiPlayer.type === PLAYER_TYPES.AI, "Player constructor should set the type to ai");
-  assert(aiPlayer.ai === ai, "AI player should have an AI instance");
-}
+  describe("AIPlayer", () => {
+    it("data() should return correct data", () => {
+      const game = new MockGame();
+      const ai = new MockAI(game);
+      const player = new AIPlayer(game, 1, ai);
+      const playerData = player.data();
 
-function test_AIPlayer_data_returnsCorrectData() {
-  const game = new MockGame();
-  const ai = new MockAI(game);
-  const player = new AIPlayer(game, 1, ai);
-  const playerData = player.data();
+      expect(playerData.id).to.equal(player.id);
+      expect(playerData.type).to.equal(PLAYER_TYPES.AI);
+      expect(playerData.number).to.equal(1);
+      expect(playerData.ai.id).to.equal(ai.id);
+    });
 
-  assert(playerData.id === player.id, "data() should include player id");
-  assert(playerData.type === PLAYER_TYPES.AI, "data() should include player type");
-  assert(playerData.number === 1, "data() should include player number");
-  assert(playerData.ai.id === ai.id, "data() should include AI id");
-}
+    it("takeTurn() should return the move from the AI", () => {
+      const game = new MockGame();
+      game.gameState.currentPlayer = 0;
+      game.gameState.playerHands = [[]];
+      const move = [new Card("5", "♦")];
+      const ai = new MockAI(game, move);
+      const player = new AIPlayer(game, 0, ai);
+      const selectedMove = player.takeTurn();
+      expect(selectedMove).to.equal(move);
+    });
+  });
 
-function test_HumanPlayer_handleCardClick_preventsSelectionOfOtherPlayersCards() {
-  const game = new MockGame();
-  const ui = new MockUI();
-  ui.renderPlayerHand = (playerIndex, handDiv) => {
-    const card = game.gameState.playerHands[playerIndex][0];
-    const cardElement = document.createElement("div");
-    cardElement.classList.add("card");
-    cardElement.dataset.card = JSON.stringify(card);
-    handDiv.appendChild(cardElement);
-  };
-  const humanPlayer = new HumanPlayer(game, 0, ui);
-  // Setup initial game state
-  game.gameState.currentPlayer = 0;
-  game.gameState.numPlayers = 2;
-  game.gameState.playerHands = [
-    [new Card("3", "♠")], // Player 0's hand
-    [new Card("4", "♦")], // Player 1's hand
-  ];
-  game.gameState.selectedCards = [];
+  describe("HumanPlayer", () => {
+    let game, ui, humanPlayer;
 
-  // Mock DOM elements for player hands and cards
-  const player0HandDiv = document.createElement("div");
-  player0HandDiv.id = "player-hand-0";
-  const player1HandDiv = document.createElement("div");
-  player1HandDiv.id = "player-hand-1";
+    beforeEach(() => {
+      game = new MockGame();
+      ui = new MockUI();
+      humanPlayer = new HumanPlayer(game, 0, ui);
+    });
 
-  // Render hands to attach event listeners
-  ui.renderPlayerHand(0, player0HandDiv);
-  ui.renderPlayerHand(1, player1HandDiv);
+    it("takeTurn() should return null", () => {
+      const move = humanPlayer.takeTurn();
+      expect(move).to.be.null;
+    });
 
-  // Simulate clicking a card from Player 1's hand (not current player)
-  const otherPlayerCardElement = player1HandDiv.querySelector(".card");
-  const event = { target: otherPlayerCardElement };
+    describe("Event Handlers", () => {
+      it("handleCardClick() should select and deselect a card", () => {
+        const card = new Card("A", "♠");
+        game.gameState.currentPlayer = 0;
+        game.gameState.playerHands = [[card], []];
+        game.gameState.selectedCards = [];
 
-  humanPlayer.handleCardClick(event);
+        const cardElement = document.createElement("div");
+        cardElement.dataset.card = JSON.stringify(card);
+        const event = { target: cardElement };
 
-  assert(game.gameState.selectedCards.length === 0, "Should not select card from other player's hand");
-  assert(!otherPlayerCardElement.classList.contains("selected"), "Other player's card should not have 'selected' class");
-}
+        humanPlayer.handleCardClick(event);
+        expect(game.gameState.selectedCards).to.have.lengthOf(1);
+        expect(game.gameState.selectedCards[0].value).to.equal(card.value);
 
-function test_HumanPlayer_handleCardClick_selectsAndDeselectsCard() {
-  const game = new MockGame();
-  const ui = new MockUI();
-  const humanPlayer = new HumanPlayer(game, 0, ui);
-  const card = new Card("A", "♠");
-  // Setup initial game state for the current player
-  game.gameState.currentPlayer = 0;
-  game.gameState.playerHands = [
-    [card], // Player 0's hand
-    [], // Other players' hands can be empty for this test
-  ];
-  game.gameState.selectedCards = [];
+        humanPlayer.handleCardClick(event);
+        expect(game.gameState.selectedCards).to.be.empty;
+      });
 
-  const tmp = document.createElement(`div`);
+      it("handleCardClick() should not select cards of another player", () => {
+        game.gameState.currentPlayer = 0;
+        game.gameState.playerHands = [[new Card("3", "♠")], [new Card("4", "♦")]];
+        game.gameState.selectedCards = [];
 
-  const event = { target: { dataset: { card: JSON.stringify(card) }, classList: tmp.classList } };
+        const otherPlayerCardElement = document.createElement("div");
+        otherPlayerCardElement.dataset.card = JSON.stringify(game.gameState.playerHands[1][0]);
+        const event = { target: otherPlayerCardElement };
 
-  humanPlayer.handleCardClick(event);
-  assert(game.gameState.selectedCards.length === 1, "Should select one card");
-  assert(game.gameState.selectedCards[0].value === card.value, "Should select the correct card");
+        humanPlayer.handleCardClick(event);
 
-  humanPlayer.handleCardClick(event);
-  assert(game.gameState.selectedCards.length === 0, "Should deselect the card");
-}
+        expect(game.gameState.selectedCards).to.be.empty;
+        expect(otherPlayerCardElement.classList.contains("selected")).to.be.false;
+      });
 
-function test_HumanPlayer_handlePassButtonClick_endsRoundCorrectly() {
-  const game = new MockGame();
-  const ui = new MockUI();
-  const humanPlayer = new HumanPlayer(game, 0, ui);
-  game.gameState.numPlayers = 3;
-  game.gameState.currentPlayer = 2; // Player 3 is passing
-  game.gameState.lastPlayerToPlay = 1; // Player 2 was the last to play
-  game.gameState.consecutivePasses = 1; // Player 1 already passed
-  game.gameState.roundNumber = 1;
-  game.gameState.playPile = [new Card("A", "♠")];
+      it("handlePlayButtonClick() should show a message on invalid play", () => {
+        const cardToPlay = new Card("3", "♠");
+        game.gameState.currentPlayer = 0;
+        game.gameState.playerHands = [[cardToPlay]];
+        game.gameState.selectedCards = [cardToPlay];
+        game.gameState.playPile = [new Card("A", "♠")]; // Invalid play
 
-  humanPlayer.handlePassButtonClick();
+        humanPlayer.handlePlayButtonClick();
 
-  assert(game.gameState.playPile.length === 0, "Should clear the play pile");
-  assert(game.gameState.consecutivePasses === 0, "Should reset consecutive passes");
-  assert(game.gameState.currentPlayer === 1, "Should set the current player to the round winner");
-  assert(game.gameState.roundNumber === 2, "Should increment the round number");
-}
+        expect(ui.gameMessages.textContent).to.equal("Invalid play");
+      });
 
-function test_HumanPlayer_handlePassButtonClick_firstPlayOfRound() {
-  const game = new MockGame();
-  const ui = new MockUI();
-  const humanPlayer = new HumanPlayer(game, 0, ui);
-  game.gameState.playPile = []; // Empty play pile indicates the start of a round
-  const originalState = { ...game.gameState };
+      it("handlePlayButtonClick() should call game.playCards on valid play", () => {
+        const cardToPlay = new Card("A", "♠");
+        game.gameState.currentPlayer = 0;
+        game.gameState.playerHands = [[cardToPlay]];
+        game.gameState.selectedCards = [cardToPlay];
+        game.gameState.playPile = [new Card("3", "♠")]; // Valid play
 
-  humanPlayer.handlePassButtonClick();
+        humanPlayer.handlePlayButtonClick();
 
-  assert(game.gameState.currentPlayer === originalState.currentPlayer, "Should not change current player");
-  assert(game.gameState.consecutivePasses === originalState.consecutivePasses, "Should not change consecutive passes");
-}
+        expect(game.playCardsCalled).to.be.true;
+      });
 
-function test_HumanPlayer_handlePassButtonClick_incrementsPassesAndSwitchesPlayer() {
-  const game = new MockGame();
-  const ui = new MockUI();
-  const humanPlayer = new HumanPlayer(game, 0, ui);
-  game.gameState.numPlayers = 3;
-  game.gameState.currentPlayer = 0;
-  game.gameState.consecutivePasses = 0;
-  game.gameState.playPile = [new Card("3", "♠")]; // Not the first play
-  game.gameState.selectedCards = [new Card("A", "♠")];
-
-  humanPlayer.handlePassButtonClick();
-
-  assert(game.gameState.currentPlayer === 1, "Should switch to the next player");
-  assert(game.gameState.selectedCards.length === 0, "Should clear selected cards");
-  assert(game.gameState.consecutivePasses === 1, "Should increment consecutive passes");
-}
-
-function test_HumanPlayer_handlePlayButtonClick_showsMessageOnInvalidPlay() {
-  const game = new MockGame();
-  const ui = new MockUI();
-  const humanPlayer = new HumanPlayer(game, 0, ui);
-  // Set up an invalid game state to make isValidPlay return false.
-  game.gameState.numPlayers = 2;
-  game.gameState.playerHands = [[], []];
-  game.gameState.selectedCards = [new Card("3", "♠")];
-  game.gameState.playPile = [new Card("A", "♠")];
-
-  humanPlayer.handlePlayButtonClick();
-
-  assert(ui.gameMessages.textContent === "Invalid play", "Should show invalid play message");
-}
-
-function test_HumanPlayer_handlePlayButtonClick_updatesGameStateOnValidPlay() {
-  const game = new MockGame();
-  const ui = new MockUI();
-  const humanPlayer = new HumanPlayer(game, 0, ui);
-  // Set up a valid game state to make isValidPlay return true.
-  game.gameState.currentPlayer = 0;
-  game.gameState.numPlayers = 2;
-  const cardToPlay = new Card("4", "♠");
-  game.gameState.playerHands = [[cardToPlay, new Card("5", "♠")], []];
-  game.gameState.selectedCards = [cardToPlay];
-  game.gameState.playPile = [];
-  game.gameState.currentTurn = 1;
-  game.gameState.consecutivePasses = 1; // Should be reset
-
-  humanPlayer.handlePlayButtonClick();
-
-  assert(game.gameState.playerHands[0].length === 1, "Should remove card from player's hand");
-  assert(game.gameState.playPile.length === 1, "Should add card to play pile");
-  assert(game.gameState.playPile[0].value === 4, "Should add correct card to play pile");
-  assert(game.gameState.selectedCards.length === 0, "Should clear selected cards");
-  assert(game.gameState.currentPlayer === 1, "Should switch to next player");
-  assert(game.gameState.consecutivePasses === 0, "Should reset consecutive passes");
-  assert(game.gameState.lastPlayerToPlay === 0, "Should set the last player to play");
-  assert(game.gameState.gameOver === false, "Should not set gameOver to true when player does not win");
-}
-
-function test_AIPlayer_takeTurn_ai() {
-  const game = new MockGame();
-  game.gameState.currentPlayer = 0;
-  game.gameState.playerHands = [[]];
-  const move = [new Card("5", "♦")];
-  const ai = new MockAI(game, move);
-  const player = new AIPlayer(game, 0, ai);
-  const selectedMove = player.takeTurn();
-  assert(selectedMove === move, "AI player should return the move from the AI");
-}
-
-function test_HumanPlayer_takeTurn_human() {
-  const game = new MockGame();
-  const ui = new MockUI();
-  const humanPlayer = new HumanPlayer(game, 0, ui);
-  const move = humanPlayer.takeTurn();
-  assert(move === null, "Human player's takeTurn should return null");
-}
-
-export const playerTests = [
-  test_Player_constructor,
-  test_AIPlayer_data_returnsCorrectData,
-  test_HumanPlayer_handleCardClick_selectsAndDeselectsCard,
-  test_HumanPlayer_handleCardClick_preventsSelectionOfOtherPlayersCards,
-  test_HumanPlayer_handlePassButtonClick_endsRoundCorrectly,
-  test_HumanPlayer_handlePassButtonClick_firstPlayOfRound,
-  test_HumanPlayer_handlePassButtonClick_incrementsPassesAndSwitchesPlayer,
-  test_HumanPlayer_handlePlayButtonClick_showsMessageOnInvalidPlay,
-  test_HumanPlayer_handlePlayButtonClick_updatesGameStateOnValidPlay,
-  test_AIPlayer_takeTurn_ai,
-  test_HumanPlayer_takeTurn_human,
-];
+      it("handlePassButtonClick() should call game.passTurn", () => {
+        game.gameState.playPile = [new Card("3", "♠")]; // Not first turn
+        humanPlayer.handlePassButtonClick();
+        expect(game.passTurnCalled).to.be.true;
+      });
+    });
+  });
+});

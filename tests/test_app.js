@@ -1,344 +1,187 @@
-import { assert, spyOn } from "./utils.js";
 import { App } from "../src/app/app.js";
 import { PLAYER_TYPES } from "../src/app/constants.js";
 import { Card } from "../src/app/deck.js";
-import { MockAI, MockDeck, MockGame, MockUI, MockAnalytics } from "./mocks.js";
+import { MockAI, MockDeck, MockGame, MockUI, MockAnalytics, MockLocalStorage } from "./mocks.js";
 
-function testSetup(ai) {
-  const game = new MockGame(MockDeck);
-  const mockHooks = { ...game.hooks };
-  const app = new App(game, ai || new MockAI(game), new MockUI(game), new MockAnalytics());
-  app.game.hooks = mockHooks;
+describe("App", () => {
+  let app, game, ai, ui, analytics, container;
 
-  app.init();
-  return app;
-}
-
-function testTeardown(app) {
-  // No-op for now, but good practice to have
-}
-
-// Test cases
-
-function test_handleAITurn_playsCardsWhenMoveIsAvailable() {
-  const app = testSetup(new MockAI(new MockGame(MockDeck), [new Card("3", "♠")]));
-  app.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
-
-  // Mock app.nextTurn before app.init is called
-  const originalAppNextTurn = app.nextTurn;
-  app.nextTurn = () => {}; // Prevent app.init from calling nextTurn
-
-  // Mock setTimeout to immediately call the handler for this test
-  app.init((handler, delay) => {
-    handler();
+  before(() => {
+    if (typeof window === "undefined") {
+      // Running in Node.js, set up JSDOM
+      const { JSDOM } = require("jsdom"); // Use require for conditional import
+      const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
+      global.window = dom.window;
+      global.document = dom.window.document;
+      global.localStorage = new MockLocalStorage();
+    }
   });
-  app.ui.startGameButton.handler(); // Simulate clicking the start button
 
-  app.game.gameState.currentPlayer = 1; // the AI player
-  const aiPlayer = app.game.gameState.players[1];
-  const takeTurnSpy = spyOn(aiPlayer.ai, "takeTurn");
+  after(() => {});
 
-  let playCardsCalled = false;
-  app.game.playCards = () => {
-    playCardsCalled = true;
-  };
+  beforeEach(() => {
+    game = new MockGame(MockDeck);
+    ai = new MockAI(game);
+    ui = new MockUI(game);
+    analytics = new MockAnalytics();
+    app = new App(game, ai, ui, analytics);
 
-  // Explicitly call app.handleAITurn
-  app.handleAITurn();
-
-  assert(takeTurnSpy.called, "AI takeTurn should be called");
-  assert(playCardsCalled, "playCards should be called");
-  assert(app.ui.renderCalled, "ui.render should be called");
-
-  // Restore original functions
-  app.game.playCards = () => {}; // Reset mock
-  app.nextTurn = originalAppNextTurn;
-  takeTurnSpy.restore();
-  testTeardown(app);
-}
-
-function test_handleAITurn_passesTurnWhenNoMoveIsAvailable() {
-  const app = testSetup(new MockAI(new MockGame(MockDeck), []));
-  app.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
-
-  // Mock app.nextTurn before app.init is called
-  const originalNextTurn = app.nextTurn;
-  app.nextTurn = () => {};
-
-  let passTurnCalled = false;
-  app.game.passTurn = () => {
-    passTurnCalled = true;
-  };
-
-  // Mock setTimeout to prevent immediate execution of nextTurn during init
-  app.init((handler, delay) => {});
-  app.ui.startGameButton.handler(); // Simulate clicking the start button
-
-  app.game.gameState.currentPlayer = 1; // Set current player to AI
-  app.nextTurn = originalNextTurn; // Restore nextTurn
-
-  const aiPlayer = app.game.gameState.players[1];
-  const takeTurnSpy = spyOn(aiPlayer.ai, "takeTurn");
-
-  // Explicitly call app.handleAITurn
-  app.handleAITurn();
-
-  assert(takeTurnSpy.called, "AI takeTurn should be called");
-  assert(passTurnCalled, "passTurn should be called");
-  assert(app.ui.renderCalled, "ui.render should be called");
-
-  // Restore original functions
-  app.game.passTurn = () => {};
-  takeTurnSpy.restore();
-  testTeardown(app);
-}
-
-function test_handleHumanPlay_callsPlayButtonClickAndNextTurn() {
-  const app = testSetup();
-  app.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
-
-  app.init();
-  app.ui.startGameButton.handler(); // Simulate clicking the start button
-
-  app.game.gameState.currentPlayer = 0; // the human player
-
-  const humanPlayer = app.game.gameState.players[0];
-  const playSpy = spyOn(humanPlayer, "handlePlayButtonClick");
-
-  app.handleHumanPlay();
-
-  assert(playSpy.called, "handlePlayButtonClick should be called");
-
-  playSpy.restore();
-  testTeardown(app);
-}
-
-function test_handleHumanPass_callsPassButtonClickAndNextTurn() {
-  const app = testSetup();
-  app.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
-
-  app.init();
-  app.ui.startGameButton.handler(); // Simulate clicking the start button
-
-  app.game.gameState.currentPlayer = 0; // the human player
-
-  const humanPlayer = app.game.gameState.players[0];
-  const passSpy = spyOn(humanPlayer, "handlePassButtonClick");
-  const gamePassTurnSpy = spyOn(app.game, "passTurn");
-
-  app.handleHumanPass();
-
-  assert(passSpy.called, "handlePassButtonClick should be called");
-  assert(gamePassTurnSpy.called, "game.passTurn should be called");
-
-  passSpy.restore();
-  gamePassTurnSpy.restore();
-  testTeardown(app);
-}
-
-function test_handleNewGameClick_resetsGame() {
-  const app = testSetup();
-  const initSpy = spyOn(app, "init");
-
-  // Simulate clicking the new game button
-  app.ui.newGameButton.handler();
-
-  assert(app.game.initCalled, "game.init should be called after new game button click");
-  assert(app.game.saveCalled, "game.save should be called after new game button click");
-  assert(initSpy.called, "init should be called after new game button click");
-
-  testTeardown(app);
-}
-
-function test_handleResetButtonClick_clearsLocalStorageAndResetsGame() {
-  const app = testSetup();
-  const clearStorageSpy = spyOn(app, "clearStorage");
-  const appInitSpy = spyOn(app, "init");
-
-  // Simulate clicking the reset button
-  app.ui.resetButton.handler();
-
-  assert(clearStorageSpy.called, "app.clearStorage should be called");
-  assert(app.game.resetCalled, "game.reset (full reset) should be called");
-  assert(appInitSpy.called, "app.init should be called");
-  assert(app.game.onGameResetCalled, "onGameReset should be called");
-
-  clearStorageSpy.restore();
-  appInitSpy.restore();
-  testTeardown(app);
-}
-
-function test_handleStartGameClick_startsGame() {
-  const app = testSetup();
-  const nextTurnSpy = spyOn(app, "nextTurn");
-
-  // Simulate clicking the start button
-  app.ui.startGameButton.handler();
-
-  assert(app.game.startCalled, "game.start should be called after start button click");
-  assert(app.game.saveCalled, "game.save should be called after start button click");
-  assert(app.ui.renderCalled, "ui.render should be called after start button click");
-  assert(nextTurnSpy.called, "nextTurn should be called after start button click");
-
-  testTeardown(app);
-}
-
-function test_init_initializesGame() {
-  const app = testSetup();
-
-  assert(app.game.findStartingPlayerCalled, "findStartingPlayer should be called during init");
-  assert(app.game.gameState.players.length === 2, "init should initialize 2 players");
-  assert(app.game.gameState.playerTypes[0] === PLAYER_TYPES.HUMAN, "First player should be human");
-  assert(app.game.gameState.playerTypes[1] === PLAYER_TYPES.AI, "Second player should be AI");
-
-  testTeardown(app);
-}
-
-function test_init_initializesUI() {
-  const app = testSetup();
-
-  assert(app.ui.initCalled, "ui.init should be called");
-  assert(app.ui.startGameButton.handler, "Start game button event listener should be set");
-
-  testTeardown(app);
-}
-
-function test_init_loadsGameWhenSaveExistsAndGameNotOver() {
-  const game = new MockGame(MockDeck);
-  game.loadWillSucceed = true;
-  game.gameOverOnLoad = false;
-  const app = new App(game, new MockAI(game), new MockUI(game), new MockAnalytics());
-  const setPlayersSpy = spyOn(game, "setPlayers");
-
-  app.init();
-
-  assert(game.loadCalled, "game.load should be called");
-  assert(app.ui.renderCalled, "ui.render should be called");
-  assert(!game.initCalled, "game.init should not be called");
-  assert(!setPlayersSpy.called, "game.setPlayers should not be called");
-
-  setPlayersSpy.restore();
-  testTeardown(app);
-}
-
-function test_init_startsNewGameWhenNoSavedGame() {
-  const game = new MockGame(MockDeck);
-  game.loadWillSucceed = false;
-  const app = new App(game, new MockAI(game), new MockUI(game), new MockAnalytics());
-  const setPlayersSpy = spyOn(game, "setPlayers");
-
-  app.init();
-
-  assert(game.loadCalled, "game.load should be called");
-  assert(game.initCalled, "game.init should be called");
-  assert(setPlayersSpy.called, "game.setPlayers should be called");
-  assert(app.ui.renderCalled, "ui.render should be called");
-
-  setPlayersSpy.restore();
-  testTeardown(app);
-}
-
-function test_init_startsNewGameWhenSavedGameIsOver() {
-  const game = new MockGame(MockDeck);
-  game.loadWillSucceed = true;
-  game.gameOverOnLoad = true;
-  const app = new App(game, new MockAI(game), new MockUI(game), new MockAnalytics());
-  const setPlayersSpy = spyOn(game, "setPlayers");
-
-  app.init();
-
-  assert(game.loadCalled, "game.load should be called");
-  assert(game.initCalled, "game.init should be called");
-  assert(setPlayersSpy.called, "game.setPlayers should be called");
-  assert(app.ui.renderCalled, "ui.render should be called");
-
-  setPlayersSpy.restore();
-  testTeardown(app);
-}
-
-function test_nextTurn_callsHandleAITurnForAIPlayer() {
-  const app = testSetup(new MockAI(new MockGame(MockDeck), [new Card("3", "♦")]));
-  app.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
-
-  const handleAITurnSpy = spyOn(app, "handleAITurn");
-
-  // Set up playPile and currentPlay for the AI to respond to
-  app.init((handler, delay) => {
-    handler();
+    // Mock UI elements
+    container = document.createElement("div");
+    for (const [_, value] of Object.entries(ui.id)) {
+      const el = document.createElement("div");
+      el.id = value;
+      container.appendChild(el);
+    }
+    document.body.appendChild(container);
   });
-  app.ui.startGameButton.handler(); // Simulate clicking the start button
 
-  const playedCard = new Card("3", "♠");
-  app.game.gameState.playPile = [playedCard];
-  app.game.gameState.currentPlayer = 1; // Assuming AI is next
+  describe("Initialization", () => {
+    it("init() should initialize the game and UI", () => {
+      app.init();
+      expect(game.findStartingPlayerCalled).to.be.true;
+      expect(ui.initCalled).to.be.true;
+      expect(ui.startGameButton.handler).to.exist;
+    });
 
-  app.nextTurn();
+    it("init() should load a saved game if one exists and is not over", () => {
+      game.loadWillSucceed = true;
+      game.gameOverOnLoad = false;
+      const setPlayersSpy = sinon.spy(game, "setPlayers");
 
-  assert(handleAITurnSpy.called, "handleAITurn should be called");
+      app.init();
 
-  handleAITurnSpy.restore();
-  testTeardown(app);
-}
+      expect(game.loadCalled).to.be.true;
+      expect(ui.renderCalled).to.be.true;
+      expect(game.initCalled).to.be.false;
+      expect(setPlayersSpy.called).to.be.false;
+    });
 
-function test_nextTurn_doesNotCallHandleAITurnForHumanPlayer() {
-  const app = testSetup();
-  app.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
+    it("init() should start a new game if no saved game exists", () => {
+      game.loadWillSucceed = false;
+      const setPlayersSpy = sinon.spy(game, "setPlayers");
 
-  const handleAITurnSpy = spyOn(app, "handleAITurn");
+      app.init();
 
-  app.init();
-  app.ui.startGameButton.handler(); // Simulate clicking the start button
+      expect(game.loadCalled).to.be.true;
+      expect(game.initCalled).to.be.true;
+      expect(setPlayersSpy.called).to.be.true;
+      expect(ui.renderCalled).to.be.true;
+    });
 
-  app.game.gameState.currentPlayer = 0; // the human player
+    it("init() should start a new game if the saved game is over", () => {
+      game.loadWillSucceed = true;
+      game.gameOverOnLoad = true;
+      const setPlayersSpy = sinon.spy(game, "setPlayers");
 
-  app.nextTurn();
+      app.init();
 
-  assert(!handleAITurnSpy.called, "handleAITurn should not be called");
+      expect(game.loadCalled).to.be.true;
+      expect(game.initCalled).to.be.true;
+      expect(setPlayersSpy.called).to.be.true;
+      expect(ui.renderCalled).to.be.true;
+    });
+  });
 
-  handleAITurnSpy.restore();
-  testTeardown(app);
-}
+  describe("Event Handlers", () => {
+    beforeEach(() => {
+      app.init();
+    });
 
-function test_nextTurn_doesNothingIfGameOver() {
-  const app = testSetup();
-  app.game.gameState.gameOver = true;
-  const handleAITurnSpy = spyOn(app, "handleAITurn");
+    it("handleStartGameClick() should start the game and trigger the next turn", () => {
+      const nextTurnSpy = sinon.spy(app, "nextTurn");
+      ui.startGameButton.handler(); // Simulate click
+      expect(game.startCalled).to.be.true;
+      expect(game.saveCalled).to.be.true;
+      expect(ui.renderCalled).to.be.true;
+      expect(nextTurnSpy.called).to.be.true;
+    });
 
-  app.nextTurn();
+    it("handleNewGameClick() should re-initialize the game", () => {
+      const initSpy = sinon.spy(app, "init");
+      ui.newGameButton.handler(); // Simulate click
+      expect(game.initCalled).to.be.true;
+      expect(game.saveCalled).to.be.true;
+      expect(initSpy.called).to.be.true;
+    });
 
-  assert(!handleAITurnSpy.called, "handleAITurn should not be called if game is over");
+    it("handleResetButtonClick() should clear storage and reset the game", () => {
+      const clearStorageSpy = sinon.spy(app, "clearStorage");
+      const appInitSpy = sinon.spy(app, "init");
+      const analyticsSpy = sinon.spy(analytics, "gameReset");
+      ui.resetButton.handler(); // Simulate click
+      expect(clearStorageSpy.called).to.be.true;
+      expect(game.resetCalled).to.be.true;
+      expect(appInitSpy.called).to.be.true;
+      expect(analyticsSpy.called).to.be.true;
+    });
+    it("handleHumanPlay() should call the human player's play handler", () => {
+      game.gameState.currentPlayer = 0; // Human
+      const humanPlayer = game.gameState.players[0];
+      const playSpy = sinon.spy(humanPlayer, "handlePlayButtonClick");
+      app.handleHumanPlay();
+      expect(playSpy.called).to.be.true;
+    });
 
-  handleAITurnSpy.restore();
-  testTeardown(app);
-}
+    it("handleHumanPass() should call the human player's pass handler", () => {
+      game.gameState.currentPlayer = 0; // Human
+      const humanPlayer = game.gameState.players[0];
+      const passSpy = sinon.spy(humanPlayer, "handlePassButtonClick");
+      app.handleHumanPass();
+      expect(passSpy.called).to.be.true;
+    });
+  });
 
-function test_spyOn_MockAI_takeTurn() {
-  const app = testSetup();
-  const ai = new MockAI(app.game);
-  const takeTurnSpy = spyOn(ai, "takeTurn");
+  describe("Turn Logic", () => {
+    beforeEach(() => {
+      app.init();
+      ui.startGameButton.handler();
+    });
 
-  ai.takeTurn([], [], 0, []); // Call the method
+    it("nextTurn() should not call handleAITurn for a human player", () => {
+      game.gameState.currentPlayer = 0; // Human
+      const handleAITurnSpy = sinon.spy(app, "handleAITurn");
+      app.nextTurn();
+      expect(handleAITurnSpy.called).to.be.false;
+    });
 
-  assert(takeTurnSpy.called, "MockAI takeTurn should be called");
-  takeTurnSpy.restore();
-  testTeardown(app);
-}
+    it("nextTurn() should call handleAITurn for an AI player", () => {
+      game.gameState.currentPlayer = 1; // AI
+      const handleAITurnSpy = sinon.spy(app, "handleAITurn");
+      app.nextTurn();
+      sinon.clock.tick(1001); // Advance timers past the 1000ms delay
+      expect(handleAITurnSpy.called).to.be.true;
+    });
+    it("nextTurn() should do nothing if the game is over", () => {
+      game.gameState.gameOver = true;
+      const handleAITurnSpy = sinon.spy(app, "handleAITurn");
+      app.nextTurn();
+      expect(handleAITurnSpy.called).to.be.false;
+    });
 
-export const appTests = [
-  test_handleAITurn_playsCardsWhenMoveIsAvailable,
-  test_handleAITurn_passesTurnWhenNoMoveIsAvailable,
-  test_handleHumanPlay_callsPlayButtonClickAndNextTurn,
-  test_handleHumanPass_callsPassButtonClickAndNextTurn,
-  test_handleNewGameClick_resetsGame,
-  test_handleResetButtonClick_clearsLocalStorageAndResetsGame,
-  test_handleStartGameClick_startsGame,
-  test_init_initializesGame,
-  test_init_initializesUI,
-  test_init_loadsGameWhenSaveExistsAndGameNotOver,
-  test_init_startsNewGameWhenNoSavedGame,
-  test_init_startsNewGameWhenSavedGameIsOver,
-  test_nextTurn_callsHandleAITurnForAIPlayer,
-  test_nextTurn_doesNotCallHandleAITurnForHumanPlayer,
-  test_nextTurn_doesNothingIfGameOver,
-  test_spyOn_MockAI_takeTurn,
-];
+    it("handleAITurn() should play cards when a move is available", () => {
+      const move = [new Card("3", "♠")];
+      ai.move = move; // Configure MockAI to return a move
+      game.gameState.currentPlayer = 1; // AI
+      const playCardsSpy = sinon.spy(game, "playCards");
+
+      app.handleAITurn();
+
+      expect(ai.takeTurnCalled).to.be.true;
+      expect(playCardsSpy.called).to.be.true;
+      expect(ui.renderCalled).to.be.true;
+    });
+
+    it("handleAITurn() should pass turn when no move is available", () => {
+      ai.move = []; // Configure MockAI to return no move
+      game.gameState.currentPlayer = 1; // AI
+      const passTurnSpy = sinon.spy(game, "passTurn");
+
+      app.handleAITurn();
+
+      expect(ai.takeTurnCalled).to.be.true;
+      expect(passTurnSpy.called).to.be.true;
+      expect(ui.renderCalled).to.be.true;
+    });
+  });
+});

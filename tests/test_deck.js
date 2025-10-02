@@ -1,187 +1,164 @@
-import { assert } from "./utils.js";
 import { SUITS, RANKS } from "../src/app/constants.js";
 import { Deck, Card } from "../src/app/deck.js";
 
-function test_Card_allSameRank_emptyArray() {
-  assert(Card.allSameRank([]), "Should return true for an empty array");
-}
-
-function test_Card_allSameRank_returnsFalseForDifferentRank() {
-  const cards = [new Card("K", "♦"), new Card("A", "♠"), new Card("A", "♣")];
-  assert(!Card.allSameRank(cards), "Should return false for cards with different ranks");
-}
-
-function test_Card_allSameRank_returnsTrueForSameRank() {
-  const cards = [new Card("A", "♠"), new Card("A", "♣"), new Card("A", "♦")];
-  assert(Card.allSameRank(cards), "Should return true for cards with the same rank");
-}
-
-function test_Card_createsCorrectCard() {
-  const card = new Card("A", "♠");
-  assert(card.rank === "A", "Card should have correct rank");
-  assert(card.suit === "♠", "Card should have correct suit");
-  assert(card.value === Card.getValue("A", "♠"), "Card should have correct value");
-}
-
-function test_Card_data_returnsCorrectData() {
-  const card = new Card("Q", "♥");
-  const cardData = card.data();
-  assert(cardData.rank === "Q", "data() should return correct rank");
-  assert(cardData.suit === "♥", "data() should return correct suit");
-  assert(cardData.value === card.value, "data() should return correct value");
-}
-
-function test_Card_findLowest_findsLowestCard() {
-  const hands = [
-    [new Card("K", "♣"), new Card("A", "♠")],
-    [new Card("4", "♠"), new Card("3", "♦")],
-  ];
-  const lowestCard = Card.findLowest(hands);
-  assert(lowestCard.value === Card.getValue("3", "♦"), "Should find the lowest card in the the hands");
-}
-
-function test_Card_getValue_returnsCorrectValue() {
-  assert(Card.getValue("3", "♠") === 0, "3♠ should have value 0");
-  assert(Card.getValue("A", "♦") === 46, "A♦ should have value 46");
-  assert(Card.getValue("2", "♥") === 51, "2♥ should have value 51");
-}
-
-function test_Card_listToObjects_and_objectsToList() {
-  const cards = [new Card("7", "♣"), new Card("J", "♥")];
-  const objects = Card.listToObjects(cards);
-  assert(objects.length === 2, "listToObjects should return correct number of objects");
-  assert(objects[0].rank === "7", "listToObjects should preserve rank");
-
-  const newCards = Card.objectsToList(objects);
-  assert(newCards.length === 2, "objectsToList should return correct number of cards");
-  assert(newCards[0] instanceof Card, "objectsToList should create Card instances");
-  assert(newCards[1].suit === "♥", "objectsToList should preserve suit");
-}
-
-function test_Card_parse_returnsCard() {
-  const card = new Card("3", "♠");
-  const cardJson = JSON.stringify(card);
-
-  const parsed = Card.parse(cardJson);
-
-  assert(parsed.value === card.value);
-}
-
-function test_Card_sort_sortsByValue() {
-  const hand = [new Card("A", "♠"), new Card("3", "♦"), new Card("K", "♣")];
-  Card.sort(hand);
-  assert(hand[0].value === Card.getValue("3", "♦"), "Hand should be sorted by value");
-  assert(hand[1].value === Card.getValue("K", "♣"), "Hand should be sorted by value");
-  assert(hand[2].value === Card.getValue("A", "♠"), "Hand should be sorted by value");
-}
-
-function test_Deck_constructor_has52Cards() {
-  const deck = new Deck();
-  assert(deck.cards.length === 52, "Deck should have 52 cards");
-}
-
-function test_Deck_constructor_has13CardsOfEachSuit() {
-  const deck = new Deck();
-  const suits = deck.cards.reduce((acc, card) => {
-    acc[card.suit] = (acc[card.suit] || 0) + 1;
-    return acc;
-  }, {});
-  SUITS.forEach((suit) => {
-    assert(suits[suit] === 13, `Suit ${suit} should have 13 cards`);
+describe("Card", () => {
+  it("should create a card with correct rank, suit, and value", () => {
+    const card = new Card("A", "♠");
+    expect(card.rank).to.equal("A");
+    expect(card.suit).to.equal("♠");
+    expect(card.value).to.equal(Card.getValue("A", "♠"));
   });
-}
 
-function test_Deck_constructor_has4CardsOfEachRank() {
-  const deck = new Deck();
-  const ranks = deck.cards.reduce((acc, card) => {
-    acc[card.rank] = (acc[card.rank] || 0) + 1;
-    return acc;
-  }, {});
-  RANKS.forEach((rank) => {
-    assert(ranks[rank] === 4, `Rank ${rank} should have 4 cards`);
+  it("data() should return correct card data", () => {
+    const card = new Card("Q", "♥");
+    const cardData = card.data();
+    expect(cardData.rank).to.equal("Q");
+    expect(cardData.suit).to.equal("♥");
+    expect(cardData.value).to.equal(card.value);
   });
-}
 
-function test_Deck_constructor_cardsHaveCorrectStructure() {
-  const deck = new Deck();
-  deck.cards.forEach((card) => {
-    assert(card.hasOwnProperty("rank"), "Card should have a rank property");
-    assert(card.hasOwnProperty("suit"), "Card should have a suit property");
-    assert(card.hasOwnProperty("value"), "Card should have a value property");
+  it("getValue() should return correct card values", () => {
+    expect(Card.getValue("3", "♠")).to.equal(0);
+    expect(Card.getValue("A", "♦")).to.equal(46);
+    expect(Card.getValue("2", "♥")).to.equal(51);
   });
-}
 
-function test_Deck_constructor_withCards() {
-  const cards = [{ rank: "A", suit: "♠" }, { rank: "K", suit: "♦" }];
-  const deck = new Deck(cards);
-  assert(deck.cards.length === 2, "Deck should be created with the provided cards");
-  assert(deck.cards[0] instanceof Card, "Deck should create Card instances");
-  assert(deck.cards[1].rank === "K", "Deck should correctly create cards from objects");
-}
-
-function test_Deck_deal_deals13CardsToEachPlayer() {
-  const deck = new Deck();
-  const numPlayers = 2;
-  const hands = deck.deal(numPlayers);
-  hands.forEach((hand, i) => {
-    assert(hand.length === 13, `Player ${i + 1} should have 13 cards`);
+  it("sort() should sort cards by value", () => {
+    const hand = [new Card("A", "♠"), new Card("3", "♦"), new Card("K", "♣")];
+    Card.sort(hand);
+    expect(hand[0].value).to.equal(Card.getValue("3", "♦"));
+    expect(hand[1].value).to.equal(Card.getValue("K", "♣"));
+    expect(hand[2].value).to.equal(Card.getValue("A", "♠"));
   });
-}
 
-function test_Deck_deal_dealsCorrectNumberOfHands() {
-  const deck = new Deck();
-  const numPlayers = 2;
-  const hands = deck.deal(numPlayers);
-  assert(hands.length === numPlayers, "Should deal the correct number of hands");
-}
+  it("allSameRank() should return true for an empty array", () => {
+    expect(Card.allSameRank([])).to.be.true;
+  });
 
-function test_Deck_deal_dealsCorrectTotalCards() {
-  const deck = new Deck();
-  const numPlayers = 4;
-  const hands = deck.deal(numPlayers);
-  const totalCardsInHands = hands.reduce((total, hand) => total + hand.length, 0);
-  assert(totalCardsInHands === 52, "Should deal 52 cards in total for 4 players");
+  it("allSameRank() should return true for cards with the same rank", () => {
+    const cards = [new Card("A", "♠"), new Card("A", "♣"), new Card("A", "♦")];
+    expect(Card.allSameRank(cards)).to.be.true;
+  });
 
-  const deck2 = new Deck();
-  const numPlayers2 = 2;
-  const hands2 = deck2.deal(numPlayers2);
-  const totalCardsInHands2 = hands2.reduce((total, hand) => total + hand.length, 0);
-  assert(totalCardsInHands2 === 26, "Should deal 26 cards in total for 2 players");
-}
+  it("allSameRank() should return false for cards with different ranks", () => {
+    const cards = [new Card("K", "♦"), new Card("A", "♠"), new Card("A", "♣")];
+    expect(Card.allSameRank(cards)).to.be.false;
+  });
 
-function test_Deck_deal_dealsShuffledCards() {
-  const deck = new Deck();
-  const hands1 = deck.deal(2);
-  const hands2 = deck.deal(2);
-  assert(JSON.stringify(hands1) !== JSON.stringify(hands2), "Dealt hands should be shuffled and different");
-}
+  it("findLowest() should find the lowest card among hands", () => {
+    const hands = [
+      [new Card("K", "♣"), new Card("A", "♠")],
+      [new Card("4", "♠"), new Card("3", "♦")],
+    ];
+    const lowestCard = Card.findLowest(hands);
+    expect(lowestCard.value).to.equal(Card.getValue("3", "♦"));
+  });
 
-function test_Deck_deal_doesNotModifyDeck() {
-  const deck = new Deck();
-  const originalCards = [...deck.cards];
-  deck.deal(2);
-  assert(JSON.stringify(deck.cards) === JSON.stringify(originalCards), "Deck should not be modified after dealing");
-}
+  it("listToObjects() and objectsToList() should correctly convert between lists and objects", () => {
+    const cards = [new Card("7", "♣"), new Card("J", "♥")];
+    const objects = Card.listToObjects(cards);
+    expect(objects).to.have.lengthOf(2);
+    expect(objects[0].rank).to.equal("7");
 
-export const deckTests = [
-  test_Card_allSameRank_emptyArray,
-  test_Card_allSameRank_returnsFalseForDifferentRank,
-  test_Card_allSameRank_returnsTrueForSameRank,
-  test_Card_createsCorrectCard,
-  test_Card_data_returnsCorrectData,
-  test_Card_findLowest_findsLowestCard,
-  test_Card_getValue_returnsCorrectValue,
-  test_Card_listToObjects_and_objectsToList,
-  test_Card_parse_returnsCard,
-  test_Card_sort_sortsByValue,
-  test_Deck_constructor_cardsHaveCorrectStructure,
-  test_Deck_constructor_has13CardsOfEachSuit,
-  test_Deck_constructor_has4CardsOfEachRank,
-  test_Deck_constructor_has52Cards,
-  test_Deck_constructor_withCards,
-  test_Deck_deal_deals13CardsToEachPlayer,
-  test_Deck_deal_dealsCorrectNumberOfHands,
-  test_Deck_deal_dealsCorrectTotalCards,
-  test_Deck_deal_dealsShuffledCards,
-  test_Deck_deal_doesNotModifyDeck,
-];
+    const newCards = Card.objectsToList(objects);
+    expect(newCards).to.have.lengthOf(2);
+    expect(newCards[0]).to.be.an.instanceOf(Card);
+    expect(newCards[1].suit).to.equal("♥");
+  });
+
+  it("parse() should correctly parse a JSON string to a Card object", () => {
+    const card = new Card("3", "♠");
+    const cardJson = JSON.stringify(card);
+    const parsed = Card.parse(cardJson);
+    expect(parsed.value).to.equal(card.value);
+  });
+});
+
+describe("Deck", () => {
+  it("should have 52 cards on construction", () => {
+    const deck = new Deck();
+    expect(deck.cards).to.have.lengthOf(52);
+  });
+
+  it("should have 13 cards of each suit", () => {
+    const deck = new Deck();
+    const suits = deck.cards.reduce((acc, card) => {
+      acc[card.suit] = (acc[card.suit] || 0) + 1;
+      return acc;
+    }, {});
+    SUITS.forEach((suit) => {
+      expect(suits[suit]).to.equal(13);
+    });
+  });
+
+  it("should have 4 cards of each rank", () => {
+    const deck = new Deck();
+    const ranks = deck.cards.reduce((acc, card) => {
+      acc[card.rank] = (acc[card.rank] || 0) + 1;
+      return acc;
+    }, {});
+    RANKS.forEach((rank) => {
+      expect(ranks[rank]).to.equal(4);
+    });
+  });
+
+  it("cards should have the correct structure", () => {
+    const deck = new Deck();
+    deck.cards.forEach((card) => {
+      expect(card).to.have.all.keys("rank", "suit", "value");
+    });
+  });
+
+  it("should be created with the provided cards", () => {
+    const cards = [
+      { rank: "A", suit: "♠" },
+      { rank: "K", suit: "♦" },
+    ];
+    const deck = new Deck(cards);
+    expect(deck.cards).to.have.lengthOf(2);
+    expect(deck.cards[0]).to.be.an.instanceOf(Card);
+    expect(deck.cards[1].rank).to.equal("K");
+  });
+
+  it("deal() should deal the correct number of hands", () => {
+    const deck = new Deck();
+    const numPlayers = 2;
+    const hands = deck.deal(numPlayers);
+    expect(hands).to.have.lengthOf(numPlayers);
+  });
+
+  it("deal() should deal 13 cards to each player", () => {
+    const deck = new Deck();
+    const numPlayers = 2;
+    const hands = deck.deal(numPlayers);
+    hands.forEach((hand) => {
+      expect(hand).to.have.lengthOf(13);
+    });
+  });
+
+  it("deal() should deal the correct total number of cards", () => {
+    const deck4p = new Deck();
+    const hands4p = deck4p.deal(4);
+    const totalCards4p = hands4p.reduce((total, hand) => total + hand.length, 0);
+    expect(totalCards4p).to.equal(52);
+
+    const deck2p = new Deck();
+    const hands2p = deck2p.deal(2);
+    const totalCards2p = hands2p.reduce((total, hand) => total + hand.length, 0);
+    expect(totalCards2p).to.equal(26);
+  });
+
+  it("deal() should not modify the original deck", () => {
+    const deck = new Deck();
+    const originalCards = [...deck.cards];
+    deck.deal(2);
+    expect(deck.cards).to.deep.equal(originalCards);
+  });
+
+  it("deal() should produce shuffled, different hands on subsequent calls", () => {
+    const deck = new Deck();
+    const hands1 = deck.deal(2);
+    const hands2 = deck.deal(2);
+    expect(hands1).to.not.deep.equal(hands2);
+  });
+});

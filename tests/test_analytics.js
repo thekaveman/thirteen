@@ -1,7 +1,6 @@
 import { Analytics } from "../src/app/analytics.js";
 import { Game } from "../src/app/game.js";
 import { PLAYER_TYPES } from "../src/app/constants.js";
-import { assert } from "./utils.js";
 import { MockDeck, MockAI, MockUI } from "./mocks.js";
 
 class MockAmplitude {
@@ -41,79 +40,65 @@ class MockAmplitude {
   }
 }
 
-function testSetup() {
-  const game = new Game(MockDeck, "test-game");
-  game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
-  game.setPlayers(game.createPlayers(new MockAI(game), new MockUI(game)));
-  const analytics = new Analytics();
-  const mockAmplitude = new MockAmplitude();
-  analytics.api = mockAmplitude;
-  return { game, analytics, mockAmplitude };
-}
+describe("Analytics", () => {
+  let game, analytics, mockAmplitude;
 
-function test_gameInit_sendsCorrectPayload() {
-  const { game, analytics, mockAmplitude } = testSetup();
-  analytics.gameInit(game);
-  const event = mockAmplitude.events[0];
-  assert(event.eventType === "game_initialized", "Event type should be game_initialized");
-  assert(event.payload.game.id === game.id, "Game ID should match");
-}
+  beforeEach(() => {
+    game = new Game(MockDeck, "test-game");
+    game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
+    game.setPlayers(game.createPlayers(new MockAI(game), new MockUI(game)));
+    analytics = new Analytics();
+    mockAmplitude = new MockAmplitude();
+    analytics.api = mockAmplitude;
+  });
 
-function test_gameReset_sendsCorrectPayload() {
-  const { game, analytics, mockAmplitude } = testSetup();
-  analytics.gameReset(game);
-  const event = mockAmplitude.events[0];
-  assert(event.eventType === "game_reset", "Event type should be game_reset");
-  assert(event.payload.game.id === game.id, "Game ID should match");
-}
+  it("gameInit() should send the correct payload", () => {
+    analytics.gameInit(game);
+    const event = mockAmplitude.events[0];
+    expect(event.eventType).to.equal("game_initialized");
+    expect(event.payload.game.id).to.equal(game.id);
+  });
 
-function test_gameStarted_sendsCorrectPayload() {
-  const { game, analytics, mockAmplitude } = testSetup();
-  analytics.gameStarted(game);
-  const event = mockAmplitude.events[0];
-  assert(event.eventType === "game_started", "Event type should be game_started");
-  assert(event.payload.game.id === game.id, "Game ID should match");
-  assert(mockAmplitude.identifiedPlayer, "Player should be identified");
-}
+  it("gameReset() should send the correct payload", () => {
+    analytics.gameReset(game);
+    const event = mockAmplitude.events[0];
+    expect(event.eventType).to.equal("game_reset");
+    expect(event.payload.game.id).to.equal(game.id);
+  });
 
-function test_gameWon_sendsCorrectPayload() {
-  const { game, analytics, mockAmplitude } = testSetup();
-  analytics.gameWon(game);
-  const event = mockAmplitude.events[0];
-  assert(event.eventType === "game_won", "Event type should be game_won");
-  assert(event.payload.game.id === game.id, "Game ID should match");
-}
+  it("gameStarted() should send the correct payload and identify the player", () => {
+    analytics.gameStarted(game);
+    const event = mockAmplitude.events[0];
+    expect(event.eventType).to.equal("game_started");
+    expect(event.payload.game.id).to.equal(game.id);
+    expect(mockAmplitude.identifiedPlayer).to.not.be.null;
+  });
 
-function test_roundPlayed_sendsCorrectPayload() {
-  const { game, analytics, mockAmplitude } = testSetup();
-  analytics.roundPlayed(game);
-  const event = mockAmplitude.events[0];
-  assert(event.eventType === "round_played", "Event type should be round_played");
-  assert(event.payload.game.id === game.id, "Game ID should match");
-}
+  it("gameWon() should send the correct payload", () => {
+    analytics.gameWon(game);
+    const event = mockAmplitude.events[0];
+    expect(event.eventType).to.equal("game_won");
+    expect(event.payload.game.id).to.equal(game.id);
+  });
 
-function test_playerMoved_sendsCorrectPayload() {
-  const { game, analytics, mockAmplitude } = testSetup();
-  analytics.playerMoved(game);
-  const event = mockAmplitude.events[0];
-  assert(event.eventType === "player_moved", "Event type should be player_moved");
-  assert(event.payload.game.id === game.id, "Game ID should match");
-}
+  it("roundPlayed() should send the correct payload", () => {
+    analytics.roundPlayed(game);
+    const event = mockAmplitude.events[0];
+    expect(event.eventType).to.equal("round_played");
+    expect(event.payload.game.id).to.equal(game.id);
+  });
 
-function test_playerPassed_sendsCorrectPayload() {
-  const { game, analytics, mockAmplitude } = testSetup();
-  analytics.playerPassed(game);
-  const event = mockAmplitude.events[0];
-  assert(event.eventType === "player_passed", "Event type should be player_passed");
-  assert(event.payload.game.id === game.id, "Game ID should match");
-}
+  it("playerMoved() should send the correct payload", () => {
+    analytics.playerMoved(game);
+    const event = mockAmplitude.events[0];
+    expect(event.eventType).to.equal("player_moved");
+    expect(event.payload.game.id).to.equal(game.id);
+  });
 
-export const analyticsTests = [
-  test_gameInit_sendsCorrectPayload,
-  test_gameReset_sendsCorrectPayload,
-  test_gameStarted_sendsCorrectPayload,
-  test_gameWon_sendsCorrectPayload,
-  test_roundPlayed_sendsCorrectPayload,
-  test_playerMoved_sendsCorrectPayload,
-  test_playerPassed_sendsCorrectPayload,
-];
+  it("playerPassed() should send the correct payload", () => {
+    analytics.playerPassed(game);
+    const event = mockAmplitude.events[0];
+    expect(event.eventType).to.equal("player_passed");
+    expect(event.payload.game.id).to.equal(game.id);
+  });
+});

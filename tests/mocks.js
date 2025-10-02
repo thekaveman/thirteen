@@ -249,6 +249,17 @@ export class MockPlayer extends Player {
 export class MockUI {
   constructor(game) {
     this.game = game;
+    this.id = {
+      gameMessages: "game-messages",
+      playersHands: "players-hands",
+      playArea: "play-area",
+      gameContent: "game-content",
+      playButton: "play-button",
+      passButton: "pass-button",
+      newGameButton: "new-game-button",
+      startGameButton: "start-game-button",
+      resetButton: "reset-button",
+    };
     this.initCalled = false;
     this.renderCalled = false;
     this.playButton = {
