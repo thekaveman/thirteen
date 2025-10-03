@@ -153,11 +153,19 @@ export class App {
       return;
     }
   }
-}
 
-export const init = function (stateKey = Game.STATE_KEY) {
-  const deck = new Deck();
-  const game = new Game(deck, stateKey);
-  const app = new App(game, new LowestCardAI(game), new UI(game));
-  app.init();
-};
+  static create(
+    stateKey = Game.STATE_KEY,
+    DeckClass = Deck,
+    GameClass = Game,
+    AIClass = LowestCardAI,
+    UIClass = UI,
+    AnalyticsClass = Analytics
+  ) {
+    const deck = new DeckClass();
+    const game = new GameClass(deck, stateKey);
+    const app = new App(game, new AIClass(game), new UIClass(game), new AnalyticsClass());
+    app.init();
+    return app;
+  }
+}

@@ -79,9 +79,42 @@ describe("App", () => {
     });
   });
 
+  describe("Factory Function", () => {
+    it("should create an App instance with all dependencies", () => {
+      const initSpy = sinon.spy(App.prototype, "init");
+
+      const app = App.create("test-key", MockDeck, MockGame, MockAI, MockUI, MockAnalytics);
+
+      expect(app).to.be.an.instanceOf(App);
+      expect(app.game).to.be.an.instanceOf(MockGame);
+      expect(app.ai).to.be.an.instanceOf(MockAI);
+      expect(app.ui).to.be.an.instanceOf(MockUI);
+      expect(app.analytics).to.be.an.instanceOf(MockAnalytics);
+      expect(initSpy.calledOnce).to.be.true;
+
+      initSpy.restore();
+    });
+  });
+
   describe("Event Handlers", () => {
     beforeEach(() => {
       app.init();
+    });
+
+    it("attachHandlers() should attach event listeners to UI buttons", () => {
+      const playButtonSpy = sinon.spy(ui.playButton, "addEventListener");
+      const passButtonSpy = sinon.spy(ui.passButton, "addEventListener");
+      const startGameButtonSpy = sinon.spy(ui.startGameButton, "addEventListener");
+      const newGameButtonSpy = sinon.spy(ui.newGameButton, "addEventListener");
+      const resetButtonSpy = sinon.spy(ui.resetButton, "addEventListener");
+
+      app.attachHandlers();
+
+      expect(playButtonSpy.calledWith("click")).to.be.true;
+      expect(passButtonSpy.calledWith("click")).to.be.true;
+      expect(startGameButtonSpy.calledWith("click")).to.be.true;
+      expect(newGameButtonSpy.calledWith("click")).to.be.true;
+      expect(resetButtonSpy.calledWith("click")).to.be.true;
     });
 
     it("handleStartGameClick() should start the game and trigger the next turn", () => {
@@ -155,6 +188,17 @@ describe("App", () => {
       const handleAITurnSpy = sinon.spy(app, "handleAITurn");
       app.nextTurn();
       expect(handleAITurnSpy.called).to.be.false;
+    });
+
+    it("handleAITurn() should return early if the current player is not an AI", () => {
+      game.gameState.currentPlayer = 0; // Human player
+      const humanPlayer = game.gameState.players[0];
+      humanPlayer.type = PLAYER_TYPES.HUMAN; // Ensure type is human
+      const takeTurnSpy = sinon.spy(ai, "takeTurn");
+
+      app.handleAITurn();
+
+      expect(takeTurnSpy.called).to.be.false;
     });
 
     it("handleAITurn() should play cards when a move is available", () => {
