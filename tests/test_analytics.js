@@ -6,6 +6,7 @@ import { MockDeck, MockAI, MockUI } from "./mocks.js";
 class MockAmplitude {
   constructor() {
     this.events = [];
+    this.error = new Error("Test analytics error");
     this.identifiedPlayer = null;
     this.Identify = class {
       constructor() {
@@ -59,11 +60,27 @@ describe("Analytics", () => {
     expect(event.payload.game.id).to.equal(game.id);
   });
 
+  it("gameInit() should handle analytics errors gracefully", () => {
+    mockAmplitude.track = () => {
+      throw mockAmplitude.error;
+    };
+    analytics.gameInit(game);
+    // No assertion, just checking for absence of errors
+  });
+
   it("gameReset() should send the correct payload", () => {
     analytics.gameReset(game);
     const event = mockAmplitude.events[0];
     expect(event.eventType).to.equal("game_reset");
     expect(event.payload.game.id).to.equal(game.id);
+  });
+
+  it("gameReset() should handle analytics errors gracefully", () => {
+    mockAmplitude.track = () => {
+      throw mockAmplitude.error;
+    };
+    analytics.gameReset(game);
+    // No assertion, just checking for absence of errors
   });
 
   it("gameStarted() should send the correct payload and identify the player", () => {
@@ -74,11 +91,27 @@ describe("Analytics", () => {
     expect(mockAmplitude.identifiedPlayer).to.not.be.null;
   });
 
+  it("gameStarted() should handle analytics errors gracefully", () => {
+    mockAmplitude.identify = () => {
+      throw mockAmplitude.error;
+    };
+    analytics.gameStarted(game);
+    // No assertion, just checking for absence of errors
+  });
+
   it("gameWon() should send the correct payload", () => {
     analytics.gameWon(game);
     const event = mockAmplitude.events[0];
     expect(event.eventType).to.equal("game_won");
     expect(event.payload.game.id).to.equal(game.id);
+  });
+
+  it("gameWon() should handle analytics errors gracefully", () => {
+    mockAmplitude.track = () => {
+      throw mockAmplitude.error;
+    };
+    analytics.gameWon(game);
+    // No assertion, just checking for absence of errors
   });
 
   it("roundPlayed() should send the correct payload", () => {
@@ -88,6 +121,14 @@ describe("Analytics", () => {
     expect(event.payload.game.id).to.equal(game.id);
   });
 
+  it("roundPlayed() should handle analytics errors gracefully", () => {
+    mockAmplitude.track = () => {
+      throw mockAmplitude.error;
+    };
+    analytics.roundPlayed(game);
+    // No assertion, just checking for absence of errors
+  });
+
   it("playerMoved() should send the correct payload", () => {
     analytics.playerMoved(game);
     const event = mockAmplitude.events[0];
@@ -95,10 +136,26 @@ describe("Analytics", () => {
     expect(event.payload.game.id).to.equal(game.id);
   });
 
+  it("playerMoved() should handle analytics errors gracefully", () => {
+    mockAmplitude.track = () => {
+      throw mockAmplitude.error;
+    };
+    analytics.playerMoved(game);
+    // No assertion, just checking for absence of errors
+  });
+
   it("playerPassed() should send the correct payload", () => {
     analytics.playerPassed(game);
     const event = mockAmplitude.events[0];
     expect(event.eventType).to.equal("player_passed");
     expect(event.payload.game.id).to.equal(game.id);
+  });
+
+  it("playerPassed() should handle analytics errors gracefully", () => {
+    mockAmplitude.track = () => {
+      throw mockAmplitude.error;
+    };
+    analytics.playerPassed(game);
+    // No assertion, just checking for absence of errors
   });
 });

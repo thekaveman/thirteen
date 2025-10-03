@@ -91,6 +91,12 @@ describe("AI", () => {
       ]);
     });
 
+    it("generateCombinations() should return no straights for small hands", () => {
+      const hand = [new Card("3", "♠"), new Card("4", "♦"), new Card("2", "♣")];
+      const straights = ai.generateCombinations(hand, COMBINATION_TYPES.STRAIGHT);
+      expect(straights).to.have.lengthOf(0);
+    });
+
     it("generateCombinations() should find all consecutive pairs", () => {
       const hand = [
         new Card("3", "♠"),
@@ -125,6 +131,18 @@ describe("AI", () => {
       expect(consecutivePairs).to.have.lengthOf(5);
       const hasInvalidLength = consecutivePairs.some((comb) => comb.length > 8);
       expect(hasInvalidLength).to.be.false;
+    });
+
+    it("generateCombinations() for consecutive pairs should handle small hands correctly", () => {
+      const hand = [new Card("3", "♠"), new Card("3", "♦"), new Card("4", "♣"), new Card("4", "♥"), new Card("5", "♠"), new Card("6", "♦")];
+      const consecutivePairs = ai.generateCombinations(hand, COMBINATION_TYPES.CONSECUTIVE_PAIRS);
+      expect(consecutivePairs).to.have.lengthOf(0);
+    });
+
+    it("_deriveSubConsecutivePairs() should return an empty array for small sequences", () => {
+      const smallSequence = [[new Card("3", "♠"), new Card("3", "♦")]];
+      const subConsecutivePairs = ai._deriveSubConsecutivePairs(smallSequence);
+      expect(subConsecutivePairs).to.have.lengthOf(0);
     });
   });
 

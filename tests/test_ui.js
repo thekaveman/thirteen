@@ -115,6 +115,25 @@ describe("UI", () => {
     // A more robust test would involve simulating a click.
   });
 
+  it("renderPlayerHand() should render AI player hands correctly", () => {
+    const playerHandDiv = document.createElement("div");
+    ui.game.gameState.playerHands[1] = [new Card("A", "♠"), new Card("K", "♦")];
+    ui.game.gameState.currentPlayer = 1;
+    ui.renderPlayerHand(1, playerHandDiv);
+
+    const cardElements = playerHandDiv.querySelectorAll(".card");
+    expect(cardElements).to.have.lengthOf(2);
+    expect(playerHandDiv.textContent).to.include("Player 2 (AI) (Your Turn)");
+  });
+
+  it("renderPlayerHand() should display winner message", () => {
+    const playerHandDiv = document.createElement("div");
+    ui.game.gameState.playerHands[0] = [];
+    ui.game.gameState.gameOver = true;
+    ui.renderPlayerHand(0, playerHandDiv);
+    expect(playerHandDiv.textContent).to.include("(Winner!)");
+  });
+
   it("renderPlayerHands() should render all player hands with correct classes", () => {
     ui.renderPlayerHands();
     const playerHandElements = ui.playersHands.querySelectorAll(".player-hand");
@@ -141,6 +160,12 @@ describe("UI", () => {
     game.gameState.selectedCards = [];
     ui.renderSelectedCards();
     expect(cardElement1.classList.contains("selected")).to.be.false;
+  });
+
+  it("renderSelectedCards() should do nothing if player hand is not found", () => {
+    game.gameState.currentPlayer = 99; // Invalid player
+    ui.renderSelectedCards();
+    // No assertion, just checking for absence of errors
   });
 
   describe("Button States", () => {
