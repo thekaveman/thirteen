@@ -1,4 +1,4 @@
-import { LowestCardAI } from "./ai.js";
+import { LowestCardAI } from "./ai/index.js";
 import { Analytics } from "./analytics.js";
 import { PLAYER_TYPES } from "./constants.js";
 import { Deck } from "./deck.js";
