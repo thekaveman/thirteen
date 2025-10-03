@@ -39,7 +39,7 @@ export class MockAnalytics {
 
 export class MockAI extends AI {
   constructor(game, move) {
-    super(game);
+    super(game, "mock");
     this.move = move;
     this.takeTurnCalled = false;
   }
@@ -55,7 +55,21 @@ export class MockAI extends AI {
 
   takeTurn(hand, playPile, currentTurn, playerHands) {
     this.takeTurnCalled = true;
-    return this.move;
+    if (this.move !== undefined) {
+      return this.move;
+    }
+
+    // If the play pile is empty, the AI must play a card.
+    // For testing purposes, we'll make it play its lowest card.
+    if (playPile.length === 0) {
+      if (hand.length > 0) {
+        return [hand[0]]; // Play the lowest card
+      }
+      return []; // No cards to play, effectively a pass (shouldn't happen in valid game start)
+    }
+
+    // Otherwise, simulate a pass for default behavior in tests
+    return [];
   }
 }
 
