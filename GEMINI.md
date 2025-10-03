@@ -5,15 +5,15 @@ This document outlines the development plan for a web-based version of the card 
 ## Principles
 
 - Start with the absolute basics. No graphics, no frameworks, just plain HTML, CSS, and JavaScript to create a text/Unicode-based card game
-- Keep code clean and minimal; favor small, single-purpose, idempotent functions and composability. Game logic is found in `src/app.js`.
-- All game logic functions must have corresponding test function(s); use test-driven development practices to write the test(s) first and then implement the logic code. Test code is found in `src/tests.js`
+- Keep code clean and minimal; favor small, single-purpose, idempotent functions and composability. Game logic is found in `src/app/`.
+- All game logic must have corresponding tests; use test-driven development practices to write the test(s) first and then implement the logic code. Test code is found in `tests/`
 
 ## Stack
 
 - **Language:** Vanilla JavaScript (ES6+)
 - **Markup:** HTML5
 - **Styling:** CSS3
-- **Libraries/Frameworks:** None for now. We are building this from scratch to keep it simple.
+- **Libraries/Frameworks:** None for the game code. `mocha`, `chai`, and `sinon` are used for tests.
 
 ## MVP Vision
 
