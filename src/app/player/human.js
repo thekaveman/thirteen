@@ -1,28 +1,7 @@
-import { PLAYER_TYPES } from "./constants.js";
-import { Card } from "./deck.js";
-import { Game } from "./game.js";
-import { log } from "./utils.js";
-
-export class Player {
-  /**
-   * @param {string} type The type of player (human or ai).
-   * @param {Game} game The game instance.
-   */
-  constructor(type, game, number) {
-    this.type = type;
-    this.game = game;
-    this.number = number;
-    this.id = crypto.randomUUID();
-  }
-
-  data() {
-    return { game: this.game.id, id: this.id, number: this.number, type: this.type };
-  }
-
-  takeTurn() {
-    throw new Error("takeTurn() must be implemented by subclasses");
-  }
-}
+import { PLAYER_TYPES } from "../constants.js";
+import { Card } from "../deck.js";
+import { log } from "../utils.js";
+import { Player } from "./base.js";
 
 export class HumanPlayer extends Player {
   constructor(game, number, ui) {
@@ -82,26 +61,5 @@ export class HumanPlayer extends Player {
       this.ui.displayMessage("Invalid play", "error");
     }
     this.ui.render();
-  }
-}
-
-export class AIPlayer extends Player {
-  constructor(game, number, ai) {
-    super(PLAYER_TYPES.AI, game, number);
-    this.ai = ai;
-  }
-
-  data() {
-    const d = super.data();
-    d.ai = this.ai.data();
-    return d;
-  }
-
-  takeTurn() {
-    const playerHand = this.game.gameState.playerHands[this.game.gameState.currentPlayer];
-    const playPile = this.game.gameState.playPile;
-    const currentTurn = this.game.gameState.currentTurn;
-    const allPlayerHands = this.game.gameState.playerHands;
-    return this.ai.takeTurn(playerHand, playPile, currentTurn, allPlayerHands);
   }
 }

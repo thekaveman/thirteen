@@ -1,12 +1,19 @@
-const chai = require("chai");
-const sinon = require("sinon");
-const { JSDOM } = require("jsdom");
-const { MockDeck, MockGame, MockAI, MockUI, MockAnalytics, MockLocalStorage } = require("./mocks.js");
+import chai from "chai";
+import sinon from "sinon";
+import { JSDOM } from "jsdom";
+import {
+  MockDeck,
+  MockGame,
+  MockAI,
+  MockUI,
+  MockAnalytics,
+  MockLocalStorage,
+} from "./mocks.js";
 
 // Import the actual classes
-const { Game } = require("../src/app/game.js");
-const { UI } = require("../src/app/ui.js");
-const { App } = require("../src/app/app.js");
+import { Game } from "../src/app/game.js";
+import { UI } from "../src/app/ui.js";
+import { App } from "../src/app/app.js";
 
 global.expect = chai.expect;
 global.sinon = sinon;
@@ -26,7 +33,7 @@ sinon.useFakeTimers(); // Prevents endless test loop
 
 let gameStub, uiStub;
 
-exports.mochaHooks = {
+export const mochaHooks = {
   beforeEach() {
     // Setup JSDOM for Node.js tests that require DOM manipulation
     const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
@@ -69,5 +76,5 @@ exports.mochaHooks = {
   },
 };
 
-exports.getGameStub = () => gameStub;
-exports.getUiStub = () => uiStub;
+export const getGameStub = () => gameStub;
+export const getUiStub = () => uiStub;

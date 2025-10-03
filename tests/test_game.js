@@ -1,7 +1,7 @@
 import { Card } from "../src/app/deck.js";
 import { Game } from "../src/app/game.js";
 import { MockDeck, MockAI, MockUI, MockPlayer, MockLocalStorage } from "./mocks.js";
-import { HumanPlayer, AIPlayer } from "../src/app/player.js";
+import { HumanPlayer, AIPlayer } from "../src/app/player/index.js";
 import { COMBINATION_TYPES, PLAYER_TYPES } from "../src/app/constants.js";
 
 describe("Game", () => {

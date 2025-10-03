@@ -1,7 +1,7 @@
 import { MockDeck, MockGame, MockAI, MockLocalStorage } from "./mocks.js";
 import { COMBINATION_TYPES, PLAYER_TYPES } from "../src/app/constants.js";
 import { Card } from "../src/app/deck.js";
-import { HumanPlayer, AIPlayer } from "../src/app/player.js";
+import { HumanPlayer, AIPlayer } from "../src/app/player/index.js";
 import { UI } from "../src/app/ui.js";
 
 describe("UI", () => {

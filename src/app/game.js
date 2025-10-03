@@ -1,6 +1,6 @@
 import { COMBINATION_TYPES, PLAYER_TYPES, RANKS } from "./constants.js";
 import { Card, Deck } from "./deck.js";
-import { Player, AIPlayer, HumanPlayer } from "./player.js";
+import { AIPlayer, HumanPlayer } from "./player/index.js";
 import { log } from "./utils.js";
 
 export class Game {

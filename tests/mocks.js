@@ -1,7 +1,7 @@
 import { AI } from "../src/app/ai/index.js";
 import { Card } from "../src/app/deck.js";
 import { Game } from "../src/app/game.js";
-import { Player } from "../src/app/player.js";
+import { Player } from "../src/app/player/index.js";
 
 export class MockAnalytics {
   constructor() {
