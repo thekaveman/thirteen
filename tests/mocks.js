@@ -59,37 +59,9 @@ export class MockAI extends AI {
   }
 }
 
-export const MockDeck = {
-  cards: [
-    new Card("3", "♠"),
-    new Card("4", "♦"),
-    new Card("5", "♣"),
-    new Card("6", "♥"),
-    new Card("7", "♠"),
-    new Card("8", "♦"),
-    new Card("9", "♣"),
-    new Card("10", "♥"),
-    new Card("J", "♠"),
-    new Card("Q", "♦"),
-    new Card("K", "♣"),
-    new Card("A", "♥"),
-    new Card("2", "♠"),
-    new Card("3", "♦"),
-    new Card("4", "♣"),
-    new Card("5", "♥"),
-    new Card("6", "♠"),
-    new Card("7", "♦"),
-    new Card("8", "♣"),
-    new Card("9", "♥"),
-    new Card("10", "♠"),
-    new Card("J", "♦"),
-    new Card("Q", "♣"),
-    new Card("K", "♥"),
-    new Card("A", "♠"),
-    new Card("2", "♦"),
-  ],
-  deal: () => [
-    [
+export class MockDeck {
+  constructor() {
+    this.cards = [
       new Card("3", "♠"),
       new Card("4", "♦"),
       new Card("5", "♣"),
@@ -103,8 +75,6 @@ export const MockDeck = {
       new Card("K", "♣"),
       new Card("A", "♥"),
       new Card("2", "♠"),
-    ],
-    [
       new Card("3", "♦"),
       new Card("4", "♣"),
       new Card("5", "♥"),
@@ -118,10 +88,46 @@ export const MockDeck = {
       new Card("K", "♥"),
       new Card("A", "♠"),
       new Card("2", "♦"),
-    ],
-  ],
-  shuffle: () => {},
-};
+    ];
+  }
+
+  deal() {
+    return [
+      [
+        new Card("3", "♠"),
+        new Card("4", "♦"),
+        new Card("5", "♣"),
+        new Card("6", "♥"),
+        new Card("7", "♠"),
+        new Card("8", "♦"),
+        new Card("9", "♣"),
+        new Card("10", "♥"),
+        new Card("J", "♠"),
+        new Card("Q", "♦"),
+        new Card("K", "♣"),
+        new Card("A", "♥"),
+        new Card("2", "♠"),
+      ],
+      [
+        new Card("3", "♦"),
+        new Card("4", "♣"),
+        new Card("5", "♥"),
+        new Card("6", "♠"),
+        new Card("7", "♦"),
+        new Card("8", "♣"),
+        new Card("9", "♥"),
+        new Card("10", "♠"),
+        new Card("J", "♦"),
+        new Card("Q", "♣"),
+        new Card("K", "♥"),
+        new Card("A", "♠"),
+        new Card("2", "♦"),
+      ],
+    ];
+  }
+
+  shuffle() {}
+}
 
 export class MockGame extends Game {
   constructor(deck, stateKey) {
@@ -249,6 +255,17 @@ export class MockPlayer extends Player {
 export class MockUI {
   constructor(game) {
     this.game = game;
+    this.id = {
+      gameMessages: "game-messages",
+      playersHands: "players-hands",
+      playArea: "play-area",
+      gameContent: "game-content",
+      playButton: "play-button",
+      passButton: "pass-button",
+      newGameButton: "new-game-button",
+      startGameButton: "start-game-button",
+      resetButton: "reset-button",
+    };
     this.initCalled = false;
     this.renderCalled = false;
     this.playButton = {

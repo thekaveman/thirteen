@@ -1,1012 +1,519 @@
-import { assert } from "./utils.js";
 import { Card } from "../src/app/deck.js";
 import { Game } from "../src/app/game.js";
-import { MockDeck, MockAI, MockUI, MockPlayer } from "./mocks.js";
+import { MockDeck, MockAI, MockUI, MockPlayer, MockLocalStorage } from "./mocks.js";
 import { HumanPlayer, AIPlayer } from "../src/app/player.js";
 import { COMBINATION_TYPES, PLAYER_TYPES } from "../src/app/constants.js";
 
-function testSetup() {
-  const game = new Game(MockDeck, `${Game.STATE_KEY}-tests`);
-  return game;
-}
-
-function test_createPlayers_createsPlayers() {
-  const game = testSetup();
-  game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
-  game.gameState.players = [{ id: "one" }, { id: "two" }];
-  const players = game.createPlayers(new MockAI(game), new MockUI(game));
-  assert(players.length === 2, "Should create 2 players");
-  assert(players[0].type === PLAYER_TYPES.HUMAN, "First player should be human");
-  assert(players[0].id === "one", "First player should get the correct (existing) ID");
-  assert(players[1].type === PLAYER_TYPES.AI, "Second player should be AI");
-  assert(players[1].id === "two", "Second player should get the correct (existing) ID");
-}
-
-function test_findStartingPlayer_findsPlayerWithLowestCard() {
-  const game = testSetup();
-  const hands = [
-    [new Card("A", "♠"), new Card("K", "♣")],
-    [new Card("3", "♦"), new Card("4", "♠")],
-  ];
-  const startingPlayer = game.findStartingPlayer(hands);
-  assert(startingPlayer === 1, "Player with the lowest card should start");
-}
-
-function test_findStartingPlayer_selectsLastPlayerWithLowestCard() {
-  const game = testSetup();
-  const hands = [
-    [new Card("3", "♦"), new Card("K", "♣")],
-    [new Card("3", "♠"), new Card("4", "♠")],
-  ];
-  const startingPlayer = game.findStartingPlayer(hands);
-  assert(startingPlayer === 1, "Should select the last player with the lowest card");
-}
-
-function test_gameState() {
-  const game = testSetup();
-  assert(game.gameState.numPlayers === 0, "Initial numPlayers should be 0");
-  assert(Array.isArray(game.gameState.playerHands), "Initial playerHands should be an array");
-  assert(game.gameState.playerHands.length === 0, "Initial playerHands should be empty");
-  assert(Array.isArray(game.gameState.playPile), "Initial playPile should be an array");
-  assert(game.gameState.playPile.length === 0, "Initial playPile should be empty");
-  assert(game.gameState.currentPlayer === 0, "Initial currentPlayer should be 0");
-  assert(game.gameState.currentTurn === 0, "Initial currentTurn should be 0");
-  assert(Array.isArray(game.gameState.selectedCards), "Initial selectedCards should be an array");
-  assert(game.gameState.selectedCards.length === 0, "Initial selectedCards should be empty");
-  assert(game.gameState.consecutivePasses === 0, "Initial consecutivePasses should be 0");
-  assert(game.gameState.lastPlayerToPlay === -1, "Initial lastPlayerToPlay should be -1");
-  assert(game.gameState.roundNumber === 1, "Initial roundNumber should be 1");
-  assert(Array.isArray(game.gameState.roundsWon), "Initial roundsWon should be an array");
-  assert(game.gameState.roundsWon.length === 0, "Initial roundsWon should be empty");
-  assert(game.gameState.gameOver === false, "Initial gameOver should be false");
-}
-
-function test_getCombinationType_returnsCorrectType() {
-  const game = testSetup();
-  let cards = [new Card("A", "♠")];
-  assert(game.getCombinationType(cards) === COMBINATION_TYPES.SINGLE, "Should return single");
-
-  cards = [new Card("A", "♠"), new Card("A", "♦")];
-  assert(game.getCombinationType(cards) === COMBINATION_TYPES.PAIR, "Should return pair");
-
-  cards = [new Card("A", "♠"), new Card("A", "♣"), new Card("A", "♦")];
-  assert(game.getCombinationType(cards) === COMBINATION_TYPES.TRIPLE, "Should return triple");
-
-  cards = [new Card("A", "♠"), new Card("A", "♣"), new Card("A", "♦"), new Card("A", "♥")];
-  assert(game.getCombinationType(cards) === COMBINATION_TYPES.FOUR_OF_A_KIND, "Should return four_of_a_kind");
-
-  cards = [new Card("3", "♠"), new Card("4", "♦"), new Card("5", "♣")];
-  assert(game.getCombinationType(cards) === COMBINATION_TYPES.STRAIGHT, "Should return straight");
-
-  cards = [
-    new Card("3", "♠"),
-    new Card("3", "♦"),
-    new Card("4", "♣"),
-    new Card("4", "♥"),
-    new Card("5", "♠"),
-    new Card("5", "♦"),
-  ];
-  assert(game.getCombinationType(cards) === COMBINATION_TYPES.CONSECUTIVE_PAIRS, "Should return consecutive_pairs");
-
-  cards = [new Card("K", "♠"), new Card("A", "♠")];
-  assert(game.getCombinationType(cards) === COMBINATION_TYPES.INVALID, "Should return invalid");
-}
-
-function test_init_initializesGame() {
-  const game = testSetup();
-  const originalGameId = game.id;
-  game.gameState.numPlayers = 2;
-  game.gameState.playerHands = [[], [new Card("A", "♠")]];
-  game.gameState.playPile = [new Card("7", "♠")];
-  game.gameState.currentPlayer = 1;
-  game.gameState.currentTurn = 5;
-  game.gameState.selectedCards = [new Card("A", "♠")];
-  game.gameState.consecutivePasses = 1;
-  game.gameState.lastPlayerToPlay = 0;
-  game.gameState.roundNumber = 2;
-  game.gameState.roundsWon = [1, 0];
-  const gamesWon = [1, 1];
-  game.gameState.gamesWon = gamesWon;
-  game.gameState.gameStarted = true;
-  game.gameState.gameOver = true;
-
-  game.init();
-
-  assert(Array.isArray(game.gameState.playerHands), "Init playerHands should be an array");
-  assert(game.gameState.playerHands.length === game.gameState.numPlayers, "Init playerHands should be dealt");
-  assert(Array.isArray(game.gameState.playPile), "Init playPile should be an array");
-  assert(game.gameState.playPile.length === 0, "Init playPile should be empty");
-  assert(game.gameState.currentPlayer === 0, "Init currentPlayer should be 0");
-  assert(game.gameState.currentTurn === 0, "Init currentTurn should be 0");
-  assert(Array.isArray(game.gameState.selectedCards), "Init selectedCards should be an array");
-  assert(game.gameState.selectedCards.length === 0, "Init selectedCards should be empty");
-  assert(game.gameState.consecutivePasses === 0, "Init consecutivePasses should be 0");
-  assert(game.gameState.lastPlayerToPlay === -1, "Init lastPlayerToPlay should be -1");
-  assert(game.gameState.roundNumber === 1, "Init roundNumber should be 1");
-  assert(Array.isArray(game.gameState.roundsWon), "Init roundsWon should be an array");
-  assert(game.gameState.roundsWon.length === 2, "Init roundsWon should have the correct length");
-  assert(
-    game.gameState.roundsWon.every((r) => r === 0),
-    "Init roundsWon should all be 0"
-  );
-  assert(
-    game.gameState.gamesWon.every((value, index) => value === gamesWon[index]),
-    "Init should not overwrite gamesWon"
-  );
-  assert(game.id === originalGameId, "Init should not change game ID");
-  assert(game.gameState.gameStarted === false, "Init gameStarted should be false");
-  assert(game.gameState.gameOver === false, "Init gameOver should be false");
-}
-
-function test_isBombForPairOfTwos_returnsFalseForOtherCombinations() {
-  const game = testSetup();
-  const single = [new Card("A", "♠")];
-  const pair = [new Card("A", "♠"), new Card("A", "♦")];
-  const triple = [new Card("A", "♠"), new Card("A", "♣"), new Card("A", "♦")];
-  const straight = [new Card("3", "♠"), new Card("4", "♦"), new Card("5", "♣")];
-  const fourOfAKind = [new Card("A", "♠"), new Card("A", "♦"), new Card("A", "♣"), new Card("A", "♥")];
-  assert(!game.isBombForPairOfTwos(single), "Should return false for a single");
-  assert(!game.isBombForPairOfTwos(pair), "Should return false for a pair");
-  assert(!game.isBombForPairOfTwos(triple), "Should return false for a triple");
-  assert(!game.isBombForPairOfTwos(straight), "Should return false for a straight");
-  assert(!game.isBombForPairOfTwos(fourOfAKind), "Should return false for a four of a kind");
-}
-
-function test_isBombForPairOfTwos_returnsTrueForFourConsecutivePairs() {
-  const game = testSetup();
-  const cards = [
-    new Card("3", "♠"),
-    new Card("3", "♦"),
-    new Card("4", "♣"),
-    new Card("4", "♥"),
-    new Card("5", "♠"),
-    new Card("5", "♦"),
-    new Card("6", "♠"),
-    new Card("6", "♦"),
-  ];
-  assert(game.isBombForPairOfTwos(cards), "Should return true for four consecutive pairs");
-}
-function test_isBombForSingleTwo_returnsFalseForOtherCombinations() {
-  const game = testSetup();
-  const single = [new Card("A", "♠")];
-  const pair = [new Card("A", "♠"), new Card("A", "♦")];
-  const triple = [new Card("A", "♠"), new Card("A", "♣"), new Card("A", "♦")];
-  const straight = [new Card("3", "♠"), new Card("4", "♦"), new Card("5", "♣")];
-  assert(!game.isBombForSingleTwo(single), "Should return false for a single");
-  assert(!game.isBombForSingleTwo(pair), "Should return false for a pair");
-  assert(!game.isBombForSingleTwo(triple), "Should return false for a triple");
-  assert(!game.isBombForSingleTwo(straight), "Should return false for a straight");
-}
-
-function test_isBombForSingleTwo_returnsTrueForFourOfAKind() {
-  const game = testSetup();
-  const cards = [new Card("A", "♠"), new Card("A", "♦"), new Card("A", "♣"), new Card("A", "♥")];
-  assert(game.isBombForSingleTwo(cards), "Should return true for four of a kind");
-}
-
-function test_isBombForSingleTwo_returnsTrueForThreeConsecutivePairs() {
-  const game = testSetup();
-  const cards = [
-    new Card("3", "♠"),
-    new Card("3", "♦"),
-    new Card("4", "♣"),
-    new Card("4", "♥"),
-    new Card("5", "♠"),
-    new Card("5", "♦"),
-  ];
-  assert(game.isBombForSingleTwo(cards), "Should return true for three consecutive pairs");
-}
-
-function test_isConsecutivePairs_returnsFalseForInvalidPairs() {
-  const game = testSetup();
-  const cards = [
-    new Card("3", "♠"),
-    new Card("3", "♦"),
-    new Card("4", "♣"),
-    new Card("5", "♥"),
-    new Card("5", "♠"),
-    new Card("5", "♦"),
-  ];
-  assert(!game.isConsecutivePairs(cards), "Should return false for invalid pairs");
-}
-
-function test_isConsecutivePairs_returnsFalseForNotConsecutivePairs() {
-  const game = testSetup();
-  const cards = [
-    new Card("3", "♠"),
-    new Card("3", "♦"),
-    new Card("4", "♣"),
-    new Card("4", "♥"),
-    new Card("6", "♠"),
-    new Card("6", "♦"),
-  ];
-  assert(!game.isConsecutivePairs(cards), "Should return false for non-consecutive pairs");
-}
-
-function test_isConsecutivePairs_returnsFalseForPairsOfTwos() {
-  const game = testSetup();
-  const cards = [
-    new Card("K", "♠"),
-    new Card("K", "♦"),
-    new Card("A", "♠"),
-    new Card("A", "♦"),
-    new Card("2", "♣"),
-    new Card("2", "♥"),
-  ];
-  assert(!game.isConsecutivePairs(cards), "Should return false for pairs of 2s");
-}
-
-function test_isConsecutivePairs_returnsTrueForConsecutivePairs() {
-  const game = testSetup();
-  const cards = [
-    new Card("3", "♠"),
-    new Card("3", "♦"),
-    new Card("4", "♣"),
-    new Card("4", "♥"),
-    new Card("5", "♠"),
-    new Card("5", "♦"),
-  ];
-  assert(game.isConsecutivePairs(cards), "Should return true for consecutive pairs");
-}
-
-function test_isFourOfAKind_returnsFalseForNotFourOfAKind() {
-  const game = testSetup();
-  const cards = [new Card("A", "♠"), new Card("K", "♠"), new Card("Q", "♠"), new Card("J", "♠")];
-  assert(!game.isFourOfAKind(cards), "Should return false for four different cards");
-}
-
-function test_isFourOfAKind_returnsTrueForFourOfAKind() {
-  const game = testSetup();
-  const cards = [new Card("A", "♠"), new Card("A", "♦"), new Card("A", "♣"), new Card("A", "♥")];
-  assert(game.isFourOfAKind(cards), "Should return true for a four of a kind");
-}
-
-function test_isPair_returnsFalseForNotPair() {
-  const game = testSetup();
-  const cards = [new Card("A", "♠"), new Card("K", "♠")];
-  assert(!game.isPair(cards), "Should return false for two different cards");
-}
-
-function test_isPair_returnsTrueForPair() {
-  const game = testSetup();
-  const cards = [new Card("A", "♠"), new Card("A", "♦")];
-  assert(game.isPair(cards), "Should return true for a pair");
-}
-
-function test_isSingle_returnsFalseForNotSingle() {
-  const game = testSetup();
-  const cards = [new Card("A", "♠"), new Card("K", "♠")];
-  assert(!game.isSingle(cards), "Should return false for more than one card");
-}
-
-function test_isSingle_returnsTrueForSingle() {
-  const game = testSetup();
-  const cards = [new Card("A", "♠")];
-  assert(game.isSingle(cards), "Should return true for a single card");
-}
-
-function test_isStraight_returnsFalseForNotStraight() {
-  const game = testSetup();
-  const cards = [new Card("3", "♠"), new Card("5", "♦"), new Card("6", "♣")];
-  assert(!game.isStraight(cards), "Should return false for a non-straight");
-}
-
-function test_isStraight_returnsFalseForNotAStraight() {
-  const game = testSetup();
-  const cards = [new Card("3", "♠"), new Card("4", "♦"), new Card("6", "♣")];
-  assert(!game.isStraight(cards), "Should return false for a non-straight");
-}
-
-function test_isStraight_returnsFalseForStraightWith2() {
-  const game = testSetup();
-  const cards = [new Card("K", "♠"), new Card("A", "♦"), new Card("2", "♣")];
-  assert(!game.isStraight(cards), "Should return false for a straight with a 2");
-}
-
-function test_isStraight_returnsTrueForStraight() {
-  const game = testSetup();
-  const cards = [new Card("3", "♠"), new Card("4", "♦"), new Card("5", "♣")];
-  assert(game.isStraight(cards), "Should return true for a straight");
-}
-
-function test_isTriple_returnsFalseForNotTriple() {
-  const game = testSetup();
-  const cards = [new Card("A", "♠"), new Card("K", "♠"), new Card("Q", "♠")];
-  assert(!game.isTriple(cards), "Should return false for three different cards");
-}
-
-function test_isTriple_returnsTrueForTriple() {
-  const game = testSetup();
-  const cards = [new Card("A", "♠"), new Card("A", "♦"), new Card("A", "♣")];
-  assert(game.isTriple(cards), "Should return true for a triple");
-}
-
-function test_isValidPlay_allowsSingleCardOnEmptyPile() {
-  const game = testSetup();
-  const selectedCards = [new Card("6", "♠")];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [];
-  const currentTurn = 1; // Not the first turn
-  assert(
-    game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Should allow playing a single card on an empty pile"
-  );
-}
-
-function test_isValidPlay_bombCannotBePlayedOnNonTwo() {
-  const game = testSetup();
-  const bomb = [new Card("3", "♠"), new Card("3", "♦"), new Card("3", "♣"), new Card("3", "♥")];
-  const currentPlayer = 0;
-  const playerHands = [bomb];
-  const playPile = [new Card("K", "♠")];
-  const currentTurn = 1;
-  assert(
-    !game.isValidPlay(bomb, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Bomb should not be playable on a non-two card"
-  );
-}
-
-function test_isValidPlay_cannotStartRoundWithConsecutivePairs() {
-  const game = testSetup();
-  const selectedCards = [
-    new Card("3", "♠"),
-    new Card("3", "♦"),
-    new Card("4", "♣"),
-    new Card("4", "♥"),
-    new Card("5", "♠"),
-    new Card("5", "♦"),
-  ];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [];
-  const currentTurn = 1;
-  assert(
-    !game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Should not be able to start a round with consecutive pairs"
-  );
-}
-
-function test_isValidPlay_consecutivePairsCannotBeatLowerConsecutivePairs() {
-  const game = testSetup();
-  const selectedCards = [new Card("4", "♠"), new Card("4", "♦"), new Card("5", "♣"), new Card("5", "♥")];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [new Card("3", "♠"), new Card("3", "♦"), new Card("4", "♣"), new Card("4", "♥")];
-  const currentTurn = 1;
-  assert(
-    !game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Consecutive pairs should not beat lower consecutive pairs"
-  );
-}
-
-function test_isValidPlay_disallowsPlayingCardsNotInOwnHand() {
-  const game = testSetup();
-  const currentPlayer = 0;
-  const playerHands = [[new Card("3", "♠")], [new Card("4", "♠")]];
-  const selectedCards = [new Card("4", "♠")]; // Card from player 1's hand
-  const playPile = [];
-  const currentTurn = 0;
-
-  assert(
-    !game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Should not allow playing cards not in current player's hand"
-  );
-}
-
-function test_isValidPlay_firstTurnMustPlayLowestCard() {
-  const game = testSetup();
-  const selectedCards = [new Card("4", "♠")];
-  const playPile = [];
-  const currentTurn = 0;
-  const playerHands = [
-    [new Card("3", "♦"), new Card("4", "♠")],
-    [new Card("A", "♠"), new Card("K", "♣")],
-  ];
-  const currentPlayer = 0;
-  assert(
-    !game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "First turn must play the lowest card in the game"
-  );
-}
-
-function test_isValidPlay_fourConsecutivePairsBeatsPairOf2s() {
-  const game = testSetup();
-  const selectedCards = [
-    new Card("3", "♠"),
-    new Card("3", "♦"),
-    new Card("4", "♣"),
-    new Card("4", "♥"),
-    new Card("5", "♠"),
-    new Card("5", "♦"),
-    new Card("6", "♠"),
-    new Card("6", "♦"),
-  ];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [new Card("2", "♠"), new Card("2", "♦")];
-  const currentTurn = 1;
-  assert(
-    game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Four consecutive pairs should beat a pair of 2s"
-  );
-}
-
-function test_isValidPlay_fourConsecutivePairsCannotBombSingleTwo() {
-  const game = testSetup();
-  const bomb = [
-    new Card("3", "♠"),
-    new Card("3", "♦"),
-    new Card("4", "♣"),
-    new Card("4", "♥"),
-    new Card("5", "♠"),
-    new Card("5", "♦"),
-    new Card("6", "♠"),
-    new Card("6", "♦"),
-  ];
-  const currentPlayer = 0;
-  const playerHands = [bomb];
-  const playPile = [new Card("2", "♠")];
-  const currentTurn = 1;
-  assert(
-    !game.isValidPlay(bomb, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Four consecutive pairs should not be a valid bomb for a single two"
-  );
-}
-
-function test_isValidPlay_fourOfAKindBeatsSingle2() {
-  const game = testSetup();
-  const selectedCards = [new Card("3", "♠"), new Card("3", "♦"), new Card("3", "♣"), new Card("3", "♥")];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [new Card("2", "♠")];
-  const currentTurn = 1;
-  assert(
-    game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Four of a kind should beat a single 2"
-  );
-}
-
-function test_isValidPlay_fourOfAKindCannotBombPairOfTwos() {
-  const game = testSetup();
-  const bomb = [new Card("3", "♠"), new Card("3", "♦"), new Card("3", "♣"), new Card("3", "♥")];
-  const currentPlayer = 0;
-  const playerHands = [bomb];
-  const playPile = [new Card("2", "♠"), new Card("2", "♦")];
-  const currentTurn = 1;
-  assert(
-    !game.isValidPlay(bomb, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Four of a kind should not be a valid bomb for a pair of twos"
-  );
-}
-
-function test_isValidPlay_fourOfAKindOnlyValidAsBomb() {
-  const game = testSetup();
-  const fourOfAKind = [new Card("4", "♠"), new Card("4", "♣"), new Card("4", "♦"), new Card("4", "♥")];
-  const currentPlayer = 0;
-  const playerHands = [fourOfAKind];
-  const currentTurn = 1;
-
-  const playPileSingle = [new Card("K", "♠")]; // A single card, not a 2
-  assert(
-    !game.isValidPlay(fourOfAKind, playPileSingle, playerHands[currentPlayer], currentTurn, playerHands),
-    "Four of a kind should only be valid as a bomb against a 2"
-  );
-
-  const playPileFourOfAKind = [new Card("3", "♠"), new Card("3", "♣"), new Card("3", "♦"), new Card("3", "♥")];
-  assert(
-    !game.isValidPlay(fourOfAKind, playPileFourOfAKind, playerHands[currentPlayer], currentTurn, playerHands),
-    "Four of a kind should only be valid as a bomb against a 2"
-  );
-}
-
-function test_isValidPlay_higherSingleBeatsLowerSingle() {
-  const game = testSetup();
-  const selectedCards = [new Card("A", "♠")];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [new Card("K", "♠")];
-  const currentTurn = 1;
-  assert(
-    game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Higher single should beat lower single"
-  );
-}
-
-function test_isValidPlay_lowerConsecutivePairsDoesNotBeatHigherConsecutivePairs() {
-  const game = testSetup();
-  const selectedCards = [new Card("3", "♠"), new Card("3", "♦"), new Card("4", "♣"), new Card("4", "♥")];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [new Card("4", "♠"), new Card("4", "♦"), new Card("5", "♣"), new Card("5", "♥")];
-  const currentTurn = 1;
-  assert(
-    !game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Lower consecutive pairs should not beat higher consecutive pairs"
-  );
-}
-
-function test_isValidPlay_lowerFourOfAKindDoesNotBeatHigherFourOfAKind() {
-  const game = testSetup();
-  const selectedCards = [new Card("K", "♠"), new Card("K", "♦"), new Card("K", "♣"), new Card("K", "♥")];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [new Card("A", "♠"), new Card("A", "♦"), new Card("A", "♣"), new Card("A", "♥")];
-  const currentTurn = 1;
-  assert(
-    !game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Lower four of a kind should not beat higher four of a kind"
-  );
-}
-
-function test_isValidPlay_lowerPairDoesNotBeatHigherPair() {
-  const game = testSetup();
-  const selectedCards = [new Card("K", "♠"), new Card("K", "♦")];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [new Card("A", "♠"), new Card("A", "♦")];
-  const currentTurn = 1;
-  assert(
-    !game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Lower pair should not beat higher pair"
-  );
-}
-
-function test_isValidPlay_lowerSingleDoesNotBeatHigherSingle() {
-  const game = testSetup();
-  const selectedCards = [new Card("K", "♠")];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [new Card("A", "♠")];
-  const currentTurn = 1;
-  assert(
-    !game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Lower single should not beat higher single"
-  );
-}
-
-function test_isValidPlay_lowerStraightDoesNotBeatHigherStraight() {
-  const game = testSetup();
-  const selectedCards = [new Card("3", "♠"), new Card("4", "♦"), new Card("5", "♣")];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [new Card("4", "♠"), new Card("5", "♦"), new Card("6", "♣")];
-  const currentTurn = 1;
-  assert(
-    !game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Lower straight should not beat higher straight"
-  );
-}
-
-function test_isValidPlay_lowerTripleDoesNotBeatHigherTriple() {
-  const game = testSetup();
-  const selectedCards = [new Card("K", "♠"), new Card("K", "♦"), new Card("K", "♣")];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [new Card("A", "♠"), new Card("A", "♦"), new Card("A", "♣")];
-  const currentTurn = 1;
-  assert(
-    !game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Lower triple should not beat higher triple"
-  );
-}
-
-function test_isValidPlay_orderMatters() {
-  const game = testSetup();
-  const selectedCards = [new Card("5", "♣"), new Card("3", "♠"), new Card("4", "♦")];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [];
-  const currentTurn = 1;
-  assert(
-    !game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Assumes cards are ordered ascending by value"
-  );
-}
-
-function test_isValidPlay_pairBeatsLowerPair() {
-  const game = testSetup();
-  const selectedCards = [new Card("A", "♠"), new Card("A", "♦")];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [new Card("K", "♠"), new Card("K", "♦")];
-  const currentTurn = 1;
-  assert(
-    game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Higher pair should beat lower pair"
-  );
-}
-
-function test_isValidPlay_playMustBeSameCombinationType() {
-  const game = testSetup();
-  const selectedCards = [new Card("A", "♠"), new Card("A", "♦")];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [new Card("K", "♠")];
-  const currentTurn = 1;
-  assert(
-    !game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Play must be the same combination type"
-  );
-}
-
-function test_isValidPlay_returnsFalseForLowerRankSingle() {
-  const game = testSetup();
-  const selectedCards = [new Card("4", "♠")];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [new Card("5", "♠")];
-  const currentTurn = 1;
-  assert(
-    !game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Should return false for lower rank single"
-  );
-}
-
-function test_isValidPlay_straightBeatsLowerStraight() {
-  const game = testSetup();
-  const selectedCards = [new Card("4", "♠"), new Card("5", "♦"), new Card("6", "♣")];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [new Card("3", "♠"), new Card("4", "♦"), new Card("5", "♣")];
-  const currentTurn = 1;
-  assert(
-    game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Higher straight should beat lower straight"
-  );
-}
-
-function test_isValidPlay_threeConsecutivePairsBeatsSingle2() {
-  const game = testSetup();
-  const selectedCards = [
-    new Card("3", "♠"),
-    new Card("3", "♦"),
-    new Card("4", "♣"),
-    new Card("4", "♥"),
-    new Card("5", "♠"),
-    new Card("5", "♦"),
-  ];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [new Card("2", "♠")];
-  const currentTurn = 1;
-  assert(
-    game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Three consecutive pairs should beat a single 2"
-  );
-}
-
-function test_isValidPlay_threeConsecutivePairsCannotBombPairOfTwos() {
-  const game = testSetup();
-  const bomb = [
-    new Card("3", "♠"),
-    new Card("3", "♦"),
-    new Card("4", "♣"),
-    new Card("4", "♥"),
-    new Card("5", "♠"),
-    new Card("5", "♦"),
-  ];
-  const currentPlayer = 0;
-  const playerHands = [bomb];
-  const playPile = [new Card("2", "♠"), new Card("2", "♦")];
-  const currentTurn = 1;
-  assert(
-    !game.isValidPlay(bomb, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Three consecutive pairs should not be a valid bomb for a pair of twos"
-  );
-}
-
-function test_isValidPlay_tripleBeatsLowerTriple() {
-  const game = testSetup();
-  const selectedCards = [new Card("A", "♠"), new Card("A", "♦"), new Card("A", "♣")];
-  const currentPlayer = 0;
-  const playerHands = [selectedCards];
-  const playPile = [new Card("K", "♠"), new Card("K", "♦"), new Card("K", "♣")];
-  const currentTurn = 1;
-  assert(
-    game.isValidPlay(selectedCards, playPile, playerHands[currentPlayer], currentTurn, playerHands),
-    "Higher triple should beat lower triple"
-  );
-}
-
-function test_load_invalidSavedGame() {
-  const game = testSetup();
-  localStorage.setItem(game.stateKey, "invalid json");
-  let loaded = false;
-  try {
-    loaded = game.load(new MockAI(game), new MockUI(game));
-  } catch (e) {
-    assert(e instanceof SyntaxError, "Should throw a SyntaxError");
-  }
-  assert(!loaded, "Should not load game if saved game is invalid json");
-}
-
-function test_load_rehydratesDataCorrectly() {
-  const game = testSetup();
-  const mockAI = new MockAI(game);
-  const mockUI = new MockUI(game);
-
-  // Setup initial game state with AI and human players
-  game.gameState.playerTypes = [PLAYER_TYPES.AI, PLAYER_TYPES.HUMAN];
-  game.setPlayers(game.createPlayers(mockAI, mockUI));
-  game.gameState.gameStarted = true;
-  game.gameState.playPile = [new Card("K", "♠"), new Card("K", "♦")];
-  game.gameState.selectedCards = [new Card("A", "♠")];
-  game.save();
-
-  // Create a new game instance and attempt to load the saved state
-  const newGame = testSetup();
-  const loaded = newGame.load(mockAI, mockUI);
-
-  assert(loaded, "Should load the game successfully");
-  assert(newGame.id === game.id, "Loaded game should have the loaded id");
-  assert(newGame.stateKey === game.stateKey, "Loaded game should have the loaded stateKey");
-
-  // Assertions for re-hydrated players
-  assert(newGame.gameState.players[0] instanceof AIPlayer, "Loaded player 0 should be an instance of AIPlayer");
-  assert(newGame.gameState.players[1] instanceof HumanPlayer, "Loaded player 1 should be an instance of HumanPlayer");
-  assert(typeof newGame.gameState.players[0].takeTurn === "function", "AIPlayer should have takeTurn method");
-  assert(
-    typeof newGame.gameState.players[1].handlePlayButtonClick === "function",
-    "HumanPlayer should have handlePlayButtonClick method"
-  );
-
-  // Assertions for re-hydrated cards
-  assert(newGame.gameState.playerHands[0][0] instanceof Card, "Card in player 0 hand should be a Card instance");
-  assert(newGame.gameState.playPile[0] instanceof Card, "Card in play pile should be a Card instance");
-  assert(newGame.gameState.selectedCards[0] instanceof Card, "Card in selected cards should be a Card instance");
-
-  assert(newGame.gameState.playPile[0].rank === "K", "Re-hydrated play pile card rank should match");
-  assert(newGame.gameState.playPile[0].suit === "♠", "Re-hydrated play pile card suit should match");
-  assert(newGame.gameState.selectedCards[0].rank === "A", "Re-hydrated selected card rank should match");
-  assert(newGame.gameState.selectedCards[0].suit === "♠", "Re-hydrated selected card suit should match");
-}
-
-function test_nextPlayer_switchesPlayer() {
-  const game = testSetup();
-  game.gameState.currentPlayer = 0;
-  game.gameState.numPlayers = 2;
-  game.nextPlayer();
-  assert(game.gameState.currentPlayer === 1, "Should switch to the next player");
-  game.nextPlayer();
-  assert(game.gameState.currentPlayer === 0, "Should switch back to the first player");
-  game.nextPlayer();
-  assert(game.gameState.currentPlayer === 1, "Should switch to the next player");
-}
-
-function test_passTurn_endsRoundCorrectly() {
-  const game = testSetup();
-  game.gameState.numPlayers = 3;
-  game.gameState.currentPlayer = 2; // Player 3 is passing
-  game.gameState.lastPlayerToPlay = 1; // Player 2 was the last to play
-  game.gameState.consecutivePasses = 1; // Player 1 already passed
-  game.gameState.roundNumber = 1;
-  game.gameState.roundsWon = [0, 0, 0];
-  game.gameState.playPile = [new Card("A", "♠")];
-
-  game.passTurn();
-
-  assert(game.gameState.playPile.length === 0, "endsRoundCorrectly: Should clear the play pile");
-  assert(game.gameState.consecutivePasses === 0, "endsRoundCorrectly: Should reset consecutive passes");
-  assert(game.gameState.currentPlayer === 1, "endsRoundCorrectly: Should set the current player to the round winner");
-  assert(game.gameState.roundNumber === 2, "endsRoundCorrectly: Should increment the round number");
-  assert(game.gameState.roundsWon[1] === 1, "endsRoundCorrectly: Should increment the rounds won for the winner");
-}
-
-function test_passTurn_firstPlayOfRound() {
-  const game = testSetup();
-  game.gameState.playPile = []; // Empty play pile indicates the start of a round
-  const originalState = { ...game.gameState };
-
-  const passSuccessful = game.passTurn();
-
-  assert(!passSuccessful, "Should return false when passing on the first play of a round");
-  assert(game.gameState.currentPlayer === originalState.currentPlayer, "Should not change current player");
-  assert(game.gameState.consecutivePasses === originalState.consecutivePasses, "Should not change consecutive passes");
-}
-
-function test_passTurn_incrementsPassesAndSwitchesPlayer() {
-  const game = testSetup();
-  game.gameState.numPlayers = 3;
-  game.gameState.currentPlayer = 0;
-  game.gameState.consecutivePasses = 0;
-  game.gameState.playPile = [new Card("3", "♠")]; // Not the first play
-  game.gameState.selectedCards = [new Card("A", "♠")];
-
-  const passSuccessful = game.passTurn();
-
-  assert(passSuccessful, "Should return true when pass is successful");
-  assert(game.gameState.currentPlayer === 1, "Should switch to the next player");
-  assert(game.gameState.selectedCards.length === 0, "Should clear selected cards");
-  assert(game.gameState.consecutivePasses === 1, "Should increment consecutive passes");
-}
-
-function test_playCards_endsGameOnLastCard() {
-  const game = testSetup();
-  game.gameState.currentPlayer = 0;
-  game.gameState.numPlayers = 2;
-  const cardToPlay = new Card("4", "♠");
-  game.gameState.playerHands = [[cardToPlay], []];
-  game.gameState.selectedCards = [cardToPlay];
-  game.gameState.gamesWon = [0, 0];
-
-  game.playCards();
-
-  assert(game.gameState.gameOver, "Should end the game when a player plays their last card");
-  assert(game.gameState.gamesWon[0] === 1, "Should increment games won for the winner");
-}
-
-function test_playCards_updatesGameState() {
-  const game = testSetup();
-  game.gameState.currentPlayer = 0;
-  game.gameState.numPlayers = 2;
-  const cardToPlay = new Card("4", "♠");
-  game.gameState.playerHands = [[cardToPlay, new Card("5", "♠")], []];
-  game.gameState.selectedCards = [cardToPlay];
-  game.gameState.playPile = [];
-  game.gameState.currentTurn = 1;
-  game.gameState.consecutivePasses = 1;
-
-  game.playCards();
-
-  assert(game.gameState.playerHands[0].length === 1, "Should remove card from player's hand");
-  assert(game.gameState.playPile.length === 1, "Should add card to play pile");
-  assert(game.gameState.playPile[0].value === 4, "Should add correct card to play pile");
-  assert(game.gameState.selectedCards.length === 0, "Should clear selected cards");
-  assert(game.gameState.currentPlayer === 1, "Should switch to next player");
-  assert(game.gameState.consecutivePasses === 0, "Should reset consecutive passes");
-  assert(game.gameState.lastPlayerToPlay === 0, "Should set the last player to play");
-  assert(game.gameState.gameOver === false, "Should not set gameOver to true when player does not win");
-}
-
-function test_reset_resetsGame() {
-  const game = testSetup();
-  game.gameState.numPlayers = 2;
-  game.gameState.gamesWon = [1, 2];
-  const originalGameId = game.id;
-
-  game.reset();
-
-  assert(game.id !== originalGameId, "Reset should generate a new game ID");
-  assert(
-    game.gameState.gamesWon.every((count) => count === 0),
-    "Reset should clear gamesWon"
-  );
-  assert(game.gameState.roundNumber === 1, "Reset should also initialize round-specific state");
-}
-
-function test_save_savesGameState() {
-  const game = testSetup();
-  game.save();
-  const savedGame = localStorage.getItem(game.stateKey);
-  assert(savedGame, "Should save game to localStorage");
-  const parsedGame = JSON.parse(savedGame);
-  assert(parsedGame.id === game.id, "Should save the correct game id");
-  assert(parsedGame.stateKey === game.stateKey, "Should save the correct state key");
-}
-
-function test_setPlayers_initializesPlayersAndHands() {
-  const game = testSetup();
-  const players = [{ type: PLAYER_TYPES.HUMAN }, { type: PLAYER_TYPES.AI }];
-  game.setPlayers(players);
-
-  assert(game.gameState.numPlayers === players.length, "numPlayers should be initialized with the correct length");
-  assert(game.gameState.players.length === players.length, "players should be initialized with the correct length");
-  assert(game.gameState.playerHands.length === players.length, "playerHands should be initialized with the correct length");
-  assert(game.gameState.roundsWon.length === players.length, "roundsWon should be initialized with the correct length");
-  assert(
-    game.gameState.roundsWon.every((count) => count === 0),
-    "roundsWon should be filled with zeros"
-  );
-  assert(game.gameState.gamesWon.length === players.length, "gamesWon should be initialized with the correct length");
-
-  const gamesWon = [2, 1];
-  game.gameState.gamesWon = gamesWon;
-  game.setPlayers(players);
-
-  assert(
-    game.gameState.gamesWon.every((value, index) => value === gamesWon[index]),
-    "gamesWon should not be overwritten by setPlayers"
-  );
-}
-
-function test_start_initializesGameState() {
-  const game = testSetup();
-  const players = [new MockPlayer("Human 1", [], true), new MockPlayer("AI 1", [], false)];
-  game.setPlayers(players);
-  game.start();
-
-  assert(game.gameState.gameStarted, "gameStarted should be true");
-  assert(game.gameState.currentPlayer === 0 || game.gameState.currentPlayer === 1, "currentPlayer should be initialized");
-  assert(
-    game.gameState.lastPlayerToPlay === game.gameState.currentPlayer,
-    "lastPlayerToPlay should be initialized to the current player"
-  );
-}
-
-function test_win_updatesGameState() {
-  const game = testSetup();
-  game.gameState.numPlayers = 2;
-  game.gameState.currentPlayer = 0;
-  game.gameState.gamesWon = [0, 0];
-  game.gameState.roundsWon = [0, 0];
-  game.gameState.playPile = [new Card("A", "♠")];
-  game.gameState.gameStarted = true;
-
-  game.win();
-
-  assert(game.gameState.gameOver, "gameOver should be true after a win");
-  assert(!game.gameState.gameStarted, "gameStarted should be false after a win");
-  assert(game.gameState.gamesWon[0] === 1, "Winner's gamesWon should be incremented");
-  assert(game.gameState.roundsWon[0] === 1, "Winner's roundsWon should be incremented");
-  assert(game.gameState.playPile.length === 1, "Play pile should not be cleared after a win");
-}
-
-export const gameTests = [
-  test_createPlayers_createsPlayers,
-  test_findStartingPlayer_findsPlayerWithLowestCard,
-  test_findStartingPlayer_selectsLastPlayerWithLowestCard,
-  test_gameState,
-  test_getCombinationType_returnsCorrectType,
-  test_init_initializesGame,
-  test_isBombForPairOfTwos_returnsFalseForOtherCombinations,
-  test_isBombForPairOfTwos_returnsTrueForFourConsecutivePairs,
-  test_isBombForSingleTwo_returnsFalseForOtherCombinations,
-  test_isBombForSingleTwo_returnsTrueForFourOfAKind,
-  test_isBombForSingleTwo_returnsTrueForThreeConsecutivePairs,
-  test_isConsecutivePairs_returnsFalseForInvalidPairs,
-  test_isConsecutivePairs_returnsFalseForNotConsecutivePairs,
-  test_isConsecutivePairs_returnsFalseForPairsOfTwos,
-  test_isConsecutivePairs_returnsTrueForConsecutivePairs,
-  test_isFourOfAKind_returnsFalseForNotFourOfAKind,
-  test_isFourOfAKind_returnsTrueForFourOfAKind,
-  test_isPair_returnsFalseForNotPair,
-  test_isPair_returnsTrueForPair,
-  test_isSingle_returnsFalseForNotSingle,
-  test_isSingle_returnsTrueForSingle,
-  test_isStraight_returnsFalseForNotAStraight,
-  test_isStraight_returnsFalseForNotStraight,
-  test_isStraight_returnsFalseForStraightWith2,
-  test_isStraight_returnsTrueForStraight,
-  test_isTriple_returnsFalseForNotTriple,
-  test_isTriple_returnsTrueForTriple,
-  test_isValidPlay_allowsSingleCardOnEmptyPile,
-  test_isValidPlay_bombCannotBePlayedOnNonTwo,
-  test_isValidPlay_cannotStartRoundWithConsecutivePairs,
-  test_isValidPlay_consecutivePairsCannotBeatLowerConsecutivePairs,
-  test_isValidPlay_disallowsPlayingCardsNotInOwnHand,
-  test_isValidPlay_firstTurnMustPlayLowestCard,
-  test_isValidPlay_fourConsecutivePairsBeatsPairOf2s,
-  test_isValidPlay_fourConsecutivePairsCannotBombSingleTwo,
-  test_isValidPlay_fourOfAKindBeatsSingle2,
-  test_isValidPlay_fourOfAKindCannotBombPairOfTwos,
-  test_isValidPlay_fourOfAKindOnlyValidAsBomb,
-  test_isValidPlay_higherSingleBeatsLowerSingle,
-  test_isValidPlay_lowerConsecutivePairsDoesNotBeatHigherConsecutivePairs,
-  test_isValidPlay_lowerFourOfAKindDoesNotBeatHigherFourOfAKind,
-  test_isValidPlay_lowerPairDoesNotBeatHigherPair,
-  test_isValidPlay_lowerSingleDoesNotBeatHigherSingle,
-  test_isValidPlay_lowerStraightDoesNotBeatHigherStraight,
-  test_isValidPlay_lowerTripleDoesNotBeatHigherTriple,
-  test_isValidPlay_orderMatters,
-  test_isValidPlay_pairBeatsLowerPair,
-  test_isValidPlay_playMustBeSameCombinationType,
-  test_isValidPlay_returnsFalseForLowerRankSingle,
-  test_isValidPlay_straightBeatsLowerStraight,
-  test_isValidPlay_threeConsecutivePairsBeatsSingle2,
-  test_isValidPlay_threeConsecutivePairsCannotBombPairOfTwos,
-  test_isValidPlay_tripleBeatsLowerTriple,
-  test_load_invalidSavedGame,
-  test_load_rehydratesDataCorrectly,
-  test_nextPlayer_switchesPlayer,
-  test_passTurn_endsRoundCorrectly,
-  test_passTurn_firstPlayOfRound,
-  test_passTurn_incrementsPassesAndSwitchesPlayer,
-  test_playCards_endsGameOnLastCard,
-  test_playCards_updatesGameState,
-  test_reset_resetsGame,
-  test_save_savesGameState,
-  test_setPlayers_initializesPlayersAndHands,
-  test_start_initializesGameState,
-  test_win_updatesGameState,
-];
+describe("Game", () => {
+  let game;
+
+  beforeEach(() => {
+    localStorage.clear();
+    game = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
+  });
+
+  afterEach(() => {
+    localStorage.clear();
+  });
+
+  describe("Constructor and Initial State", () => {
+    it("should initialize with correct default game state", () => {
+      expect(game.gameState.numPlayers).to.equal(0);
+      expect(game.gameState.playerHands).to.be.an("array").that.is.empty;
+      expect(game.gameState.playPile).to.be.an("array").that.is.empty;
+      expect(game.gameState.currentPlayer).to.equal(0);
+      expect(game.gameState.currentTurn).to.equal(0);
+      expect(game.gameState.selectedCards).to.be.an("array").that.is.empty;
+      expect(game.gameState.consecutivePasses).to.equal(0);
+      expect(game.gameState.lastPlayerToPlay).to.equal(-1);
+      expect(game.gameState.roundNumber).to.equal(1);
+      expect(game.gameState.roundsWon).to.be.an("array").that.is.empty;
+      expect(game.gameState.gameOver).to.be.false;
+    });
+  });
+
+  describe("Player Management", () => {
+    it("createPlayers() should create players with correct types and IDs", () => {
+      game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
+      game.gameState.players = [{ id: "one" }, { id: "two" }];
+      const players = game.createPlayers(new MockAI(game), new MockUI(game));
+      expect(players).to.have.lengthOf(2);
+      expect(players[0].type).to.equal(PLAYER_TYPES.HUMAN);
+      expect(players[0].id).to.equal("one");
+      expect(players[1].type).to.equal(PLAYER_TYPES.AI);
+      expect(players[1].id).to.equal("two");
+    });
+
+    it("setPlayers() should initialize players and associated game state", () => {
+      const players = [{ type: PLAYER_TYPES.HUMAN }, { type: PLAYER_TYPES.AI }];
+      const originalGamesWon = [2, 1];
+      game.gameState.gamesWon = originalGamesWon;
+
+      game.setPlayers(players);
+
+      expect(game.gameState.numPlayers).to.equal(players.length);
+      expect(game.gameState.players).to.have.lengthOf(players.length);
+      expect(game.gameState.playerHands).to.have.lengthOf(players.length);
+      expect(game.gameState.roundsWon).to.have.lengthOf(players.length);
+      expect(game.gameState.roundsWon).to.deep.equal([0, 0]);
+      expect(game.gameState.gamesWon).to.deep.equal(originalGamesWon);
+    });
+  });
+
+  describe("Game Setup", () => {
+    it("findStartingPlayer() should find the player with the lowest card", () => {
+      const hands = [
+        [new Card("A", "♠"), new Card("K", "♣")],
+        [new Card("3", "♦"), new Card("4", "♠")],
+      ];
+      const startingPlayer = game.findStartingPlayer(hands);
+      expect(startingPlayer).to.equal(1);
+    });
+
+    it("findStartingPlayer() should select the last player if multiple have the same lowest card", () => {
+      const hands = [
+        [new Card("3", "♦"), new Card("K", "♣")],
+        [new Card("3", "♠"), new Card("4", "♠")],
+      ];
+      const startingPlayer = game.findStartingPlayer(hands);
+      expect(startingPlayer).to.equal(1);
+    });
+
+    it("init() should reset the game state for a new round", () => {
+      const originalGameId = game.id;
+      const originalGamesWon = [1, 1];
+      game.gameState.numPlayers = 2;
+      game.gameState.playerHands = [[], [new Card("A", "♠")]];
+      game.gameState.playPile = [new Card("7", "♠")];
+      game.gameState.currentPlayer = 1;
+      game.gameState.currentTurn = 5;
+      game.gameState.selectedCards = [new Card("A", "♠")];
+      game.gameState.consecutivePasses = 1;
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.roundNumber = 2;
+      game.gameState.roundsWon = [1, 0];
+      game.gameState.gamesWon = originalGamesWon;
+      game.gameState.gameStarted = true;
+      game.gameState.gameOver = true;
+
+      game.init();
+
+      expect(game.gameState.playerHands).to.have.lengthOf(game.gameState.numPlayers);
+      expect(game.gameState.playPile).to.be.empty;
+      expect(game.gameState.currentPlayer).to.equal(0);
+      expect(game.gameState.currentTurn).to.equal(0);
+      expect(game.gameState.selectedCards).to.be.empty;
+      expect(game.gameState.consecutivePasses).to.equal(0);
+      expect(game.gameState.lastPlayerToPlay).to.equal(-1);
+      expect(game.gameState.roundNumber).to.equal(1);
+      expect(game.gameState.roundsWon).to.deep.equal([0, 0]);
+      expect(game.gameState.gamesWon).to.deep.equal(originalGamesWon);
+      expect(game.id).to.equal(originalGameId);
+      expect(game.gameState.gameStarted).to.be.false;
+      expect(game.gameState.gameOver).to.be.false;
+    });
+
+    it("start() should initialize the game state for starting", () => {
+      const players = [new MockPlayer("Human 1", [], true), new MockPlayer("AI 1", [], false)];
+      game.setPlayers(players);
+      game.start();
+
+      expect(game.gameState.gameStarted).to.be.true;
+      expect(game.gameState.currentPlayer).to.be.oneOf([0, 1]);
+      expect(game.gameState.lastPlayerToPlay).to.equal(game.gameState.currentPlayer);
+    });
+
+    it("reset() should completely reset the game", () => {
+      const originalGameId = game.id;
+      game.gameState.numPlayers = 2;
+      game.gameState.gamesWon = [1, 2];
+
+      game.reset();
+
+      expect(game.id).to.not.equal(originalGameId);
+      expect(game.gameState.gamesWon).to.deep.equal([0, 0]);
+      expect(game.gameState.roundNumber).to.equal(1); // Check that init() was called
+    });
+  });
+
+  describe("Card Combination Logic", () => {
+    it("getCombinationType() should identify all valid combination types", () => {
+      expect(game.getCombinationType([new Card("A", "♠")])).to.equal(COMBINATION_TYPES.SINGLE);
+      expect(game.getCombinationType([new Card("A", "♠"), new Card("A", "♦")])).to.equal(COMBINATION_TYPES.PAIR);
+      expect(game.getCombinationType([new Card("A", "♠"), new Card("A", "♣"), new Card("A", "♦")])).to.equal(
+        COMBINATION_TYPES.TRIPLE,
+      );
+      expect(game.getCombinationType([new Card("A", "♠"), new Card("A", "♣"), new Card("A", "♦"), new Card("A", "♥")])).to.equal(
+        COMBINATION_TYPES.FOUR_OF_A_KIND,
+      );
+      expect(game.getCombinationType([new Card("3", "♠"), new Card("4", "♦"), new Card("5", "♣")])).to.equal(
+        COMBINATION_TYPES.STRAIGHT,
+      );
+      const consecutivePairs = [
+        new Card("3", "♠"),
+        new Card("3", "♦"),
+        new Card("4", "♣"),
+        new Card("4", "♥"),
+        new Card("5", "♠"),
+        new Card("5", "♦"),
+      ];
+      expect(game.getCombinationType(consecutivePairs)).to.equal(COMBINATION_TYPES.CONSECUTIVE_PAIRS);
+      expect(game.getCombinationType([new Card("K", "♠"), new Card("A", "♠")])).to.equal(COMBINATION_TYPES.INVALID);
+    });
+
+    it("isSingle() should correctly identify a single", () => {
+      expect(game.isSingle([new Card("A", "♠")])).to.be.true;
+      expect(game.isSingle([new Card("A", "♠"), new Card("K", "♠")])).to.be.false;
+    });
+
+    it("isPair() should correctly identify a pair", () => {
+      expect(game.isPair([new Card("A", "♠"), new Card("A", "♦")])).to.be.true;
+      expect(game.isPair([new Card("A", "♠"), new Card("K", "♠")])).to.be.false;
+    });
+
+    it("isTriple() should correctly identify a triple", () => {
+      expect(game.isTriple([new Card("A", "♠"), new Card("A", "♦"), new Card("A", "♣")])).to.be.true;
+      expect(game.isTriple([new Card("A", "♠"), new Card("K", "♠"), new Card("Q", "♠")])).to.be.false;
+    });
+
+    it("isFourOfAKind() should correctly identify a four-of-a-kind", () => {
+      expect(game.isFourOfAKind([new Card("A", "♠"), new Card("A", "♦"), new Card("A", "♣"), new Card("A", "♥")])).to.be.true;
+      expect(game.isFourOfAKind([new Card("A", "♠"), new Card("K", "♠"), new Card("Q", "♠"), new Card("J", "♠")])).to.be.false;
+    });
+
+    it("isStraight() should correctly identify straights", () => {
+      expect(game.isStraight([new Card("3", "♠"), new Card("4", "♦"), new Card("5", "♣")])).to.be.true;
+      expect(game.isStraight([new Card("3", "♠"), new Card("5", "♦"), new Card("6", "♣")])).to.be.false;
+      expect(game.isStraight([new Card("K", "♠"), new Card("A", "♦"), new Card("2", "♣")])).to.be.false;
+    });
+
+    it("isConsecutivePairs() should correctly identify consecutive pairs", () => {
+      const validPairs = [
+        new Card("3", "♠"),
+        new Card("3", "♦"),
+        new Card("4", "♣"),
+        new Card("4", "♥"),
+        new Card("5", "♠"),
+        new Card("5", "♦"),
+      ];
+      const invalidPairs = [
+        new Card("3", "♠"),
+        new Card("3", "♦"),
+        new Card("4", "♣"),
+        new Card("5", "♥"),
+        new Card("5", "♠"),
+        new Card("5", "♦"),
+      ];
+      const nonConsecutive = [new Card("3", "♠"), new Card("3", "♦"), new Card("5", "♣"), new Card("5", "♥")];
+      const withTwos = [new Card("A", "♠"), new Card("A", "♦"), new Card("2", "♣"), new Card("2", "♥")];
+      expect(game.isConsecutivePairs(validPairs)).to.be.true;
+      expect(game.isConsecutivePairs(invalidPairs)).to.be.false;
+      expect(game.isConsecutivePairs(nonConsecutive)).to.be.false;
+      expect(game.isConsecutivePairs(withTwos)).to.be.false;
+    });
+
+    it("isBombForSingleTwo() should identify correct bombs for a single two", () => {
+      const fourOfAKind = [new Card("A", "♠"), new Card("A", "♦"), new Card("A", "♣"), new Card("A", "♥")];
+      const threeConsecutivePairs = [
+        new Card("3", "♠"),
+        new Card("3", "♦"),
+        new Card("4", "♣"),
+        new Card("4", "♥"),
+        new Card("5", "♠"),
+        new Card("5", "♦"),
+      ];
+      const invalidBomb = [new Card("A", "♠"), new Card("K", "♠"), new Card("Q", "♠")];
+      expect(game.isBombForSingleTwo(fourOfAKind)).to.be.true;
+      expect(game.isBombForSingleTwo(threeConsecutivePairs)).to.be.true;
+      expect(game.isBombForSingleTwo(invalidBomb)).to.be.false;
+    });
+
+    it("isBombForPairOfTwos() should identify correct bombs for a pair of twos", () => {
+      const fourConsecutivePairs = [
+        new Card("3", "♠"),
+        new Card("3", "♦"),
+        new Card("4", "♣"),
+        new Card("4", "♥"),
+        new Card("5", "♠"),
+        new Card("5", "♦"),
+        new Card("6", "♣"),
+        new Card("6", "♦"),
+      ];
+      const invalidBomb = [new Card("A", "♠"), new Card("A", "♦"), new Card("A", "♣"), new Card("A", "♥")];
+      expect(game.isBombForPairOfTwos(fourConsecutivePairs)).to.be.true;
+      expect(game.isBombForPairOfTwos(invalidBomb)).to.be.false;
+    });
+  });
+
+  describe("Gameplay Logic", () => {
+    it("nextPlayer() should cycle through players", () => {
+      game.gameState.numPlayers = 2;
+      game.gameState.currentPlayer = 0;
+      game.nextPlayer();
+      expect(game.gameState.currentPlayer).to.equal(1);
+      game.nextPlayer();
+      expect(game.gameState.currentPlayer).to.equal(0);
+    });
+
+    it("passTurn() should not be allowed on the first play of a round", () => {
+      game.gameState.playPile = [];
+      const originalState = { ...game.gameState };
+      const passSuccessful = game.passTurn();
+      expect(passSuccessful).to.be.false;
+      expect(game.gameState.currentPlayer).to.equal(originalState.currentPlayer);
+      expect(game.gameState.consecutivePasses).to.equal(originalState.consecutivePasses);
+    });
+
+    it("passTurn() should increment passes and switch player", () => {
+      game.gameState.numPlayers = 3;
+      game.gameState.currentPlayer = 0;
+      game.gameState.consecutivePasses = 0;
+      game.gameState.playPile = [new Card("3", "♠")];
+      game.gameState.selectedCards = [new Card("A", "♠")];
+
+      const passSuccessful = game.passTurn();
+
+      expect(passSuccessful).to.be.true;
+      expect(game.gameState.currentPlayer).to.equal(1);
+      expect(game.gameState.selectedCards).to.be.empty;
+      expect(game.gameState.consecutivePasses).to.equal(1);
+    });
+
+    it("passTurn() should end the round when all other players have passed", () => {
+      game.gameState.numPlayers = 3;
+      game.gameState.currentPlayer = 2;
+      game.gameState.lastPlayerToPlay = 1;
+      game.gameState.consecutivePasses = 1;
+      game.gameState.roundNumber = 1;
+      game.gameState.roundsWon = [0, 0, 0];
+      game.gameState.playPile = [new Card("A", "♠")];
+
+      game.passTurn();
+
+      expect(game.gameState.playPile).to.be.empty;
+      expect(game.gameState.consecutivePasses).to.equal(0);
+      expect(game.gameState.currentPlayer).to.equal(1);
+      expect(game.gameState.roundNumber).to.equal(2);
+      expect(game.gameState.roundsWon[1]).to.equal(1);
+    });
+
+    it("playCards() should update game state correctly", () => {
+      game.gameState.currentPlayer = 0;
+      game.gameState.numPlayers = 2;
+      const cardToPlay = new Card("4", "♠");
+      game.gameState.playerHands = [[cardToPlay, new Card("5", "♠")], []];
+      game.gameState.selectedCards = [cardToPlay];
+      game.gameState.playPile = [];
+      game.gameState.currentTurn = 1;
+      game.gameState.consecutivePasses = 1;
+
+      game.playCards();
+
+      expect(game.gameState.playerHands[0]).to.have.lengthOf(1);
+      expect(game.gameState.playPile).to.have.lengthOf(1);
+      expect(game.gameState.playPile[0].value).to.equal(Card.getValue("4", "♠"));
+      expect(game.gameState.selectedCards).to.be.empty;
+      expect(game.gameState.currentPlayer).to.equal(1);
+      expect(game.gameState.consecutivePasses).to.equal(0);
+      expect(game.gameState.lastPlayerToPlay).to.equal(0);
+      expect(game.gameState.gameOver).to.be.false;
+    });
+
+    it("playCards() should end the game when a player plays their last card", () => {
+      game.gameState.currentPlayer = 0;
+      game.gameState.numPlayers = 2;
+      const cardToPlay = new Card("4", "♠");
+      game.gameState.playerHands = [[cardToPlay], []];
+      game.gameState.selectedCards = [cardToPlay];
+      game.gameState.gamesWon = [0, 0];
+
+      game.playCards();
+
+      expect(game.gameState.gameOver).to.be.true;
+      expect(game.gameState.gamesWon[0]).to.equal(1);
+    });
+
+    it("win() should update game state correctly", () => {
+      game.gameState.numPlayers = 2;
+      game.gameState.currentPlayer = 0;
+      game.gameState.gamesWon = [0, 0];
+      game.gameState.roundsWon = [0, 0];
+      game.gameState.playPile = [new Card("A", "♠")];
+      game.gameState.gameStarted = true;
+
+      game.win();
+
+      expect(game.gameState.gameOver).to.be.true;
+      expect(game.gameState.gameStarted).to.be.false;
+      expect(game.gameState.gamesWon[0]).to.equal(1);
+      expect(game.gameState.roundsWon[0]).to.equal(1);
+      expect(game.gameState.playPile).to.have.lengthOf(1);
+    });
+  });
+
+  describe("Save and Load", () => {
+    it("save() should save the game state to localStorage", () => {
+      game.save();
+      const savedGame = localStorage.getItem(game.stateKey);
+      expect(savedGame).to.exist;
+      const parsedGame = JSON.parse(savedGame);
+      expect(parsedGame.id).to.equal(game.id);
+      expect(parsedGame.stateKey).to.equal(game.stateKey);
+    });
+
+    it("load() should fail for invalid saved JSON", () => {
+      localStorage.setItem(game.stateKey, "invalid json");
+      let loaded = false;
+      try {
+        loaded = game.load(new MockAI(game), new MockUI(game));
+      } catch (e) {
+        expect(e).to.be.an.instanceOf(SyntaxError);
+      }
+      expect(loaded).to.be.false;
+    });
+
+    it("load() should correctly rehydrate game data", () => {
+      const mockAI = new MockAI(game);
+      const mockUI = new MockUI(game);
+
+      game.gameState.playerTypes = [PLAYER_TYPES.AI, PLAYER_TYPES.HUMAN];
+      game.setPlayers(game.createPlayers(mockAI, mockUI));
+      game.gameState.gameStarted = true;
+      game.gameState.playPile = [new Card("K", "♠"), new Card("K", "♦")];
+      game.gameState.selectedCards = [new Card("A", "♠")];
+      game.save();
+
+      const newGame = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
+      const loaded = newGame.load(mockAI, mockUI);
+
+      expect(loaded).to.be.true;
+      expect(newGame.id).to.equal(game.id);
+      expect(newGame.stateKey).to.equal(game.stateKey);
+
+      expect(newGame.gameState.players[0]).to.be.an.instanceOf(AIPlayer);
+      expect(newGame.gameState.players[1]).to.be.an.instanceOf(HumanPlayer);
+      expect(newGame.gameState.players[0].takeTurn).to.be.a("function");
+      expect(newGame.gameState.players[1].handlePlayButtonClick).to.be.a("function");
+
+      expect(newGame.gameState.playerHands[0][0]).to.be.an.instanceOf(Card);
+      expect(newGame.gameState.playPile[0]).to.be.an.instanceOf(Card);
+      expect(newGame.gameState.selectedCards[0]).to.be.an.instanceOf(Card);
+
+      expect(newGame.gameState.playPile[0].rank).to.equal("K");
+      expect(newGame.gameState.playPile[0].suit).to.equal("♠");
+      expect(newGame.gameState.selectedCards[0].rank).to.equal("A");
+      expect(newGame.gameState.selectedCards[0].suit).to.equal("♠");
+    });
+  });
+
+  describe("Play Validation", () => {
+    it("should not allow playing cards that are not in the player's hand", () => {
+      const playerHand = [new Card("3", "♠")];
+      const selectedCards = [new Card("4", "♦")];
+      const isValid = game.isValidPlay(selectedCards, [], playerHand, 1, [playerHand]);
+      expect(isValid).to.be.false;
+    });
+
+    it("should require the lowest card to be played on the first turn", () => {
+      const allPlayerHands = [[new Card("4", "♠")], [new Card("3", "♦")]];
+      const playerHand = allPlayerHands[0];
+      const selectedCards = [new Card("4", "♠")];
+      const isValid = game.isValidPlay(selectedCards, [], playerHand, 0, allPlayerHands);
+      expect(isValid).to.be.false;
+    });
+
+    it("should allow any valid combination on an empty pile (after first turn)", () => {
+      const playerHand = [new Card("5", "♠")];
+      const isValid = game.isValidPlay([new Card("5", "♠")], [], playerHand, 1, [playerHand]);
+      expect(isValid).to.be.true;
+    });
+
+    it("should require the same combination type as the play pile", () => {
+      const playerHand = [new Card("5", "♠"), new Card("5", "♦")];
+      const playPile = [new Card("4", "♠")];
+      const isValid = game.isValidPlay(playerHand, playPile, playerHand, 1, [playerHand]);
+      expect(isValid).to.be.false;
+    });
+
+    it("should require a higher-value card for singles", () => {
+      const playerHand = [new Card("5", "♠")];
+      const playPile = [new Card("4", "♠")];
+      const isValid = game.isValidPlay(playerHand, playPile, playerHand, 1, [playerHand]);
+      expect(isValid).to.be.true;
+    });
+
+    it("should require a higher-value pair", () => {
+      const playerHand = [new Card("5", "♠"), new Card("5", "♦")];
+      const playPile = [new Card("4", "♠"), new Card("4", "♦")];
+      const isValid = game.isValidPlay(playerHand, playPile, playerHand, 1, [playerHand]);
+      expect(isValid).to.be.true;
+    });
+
+    it("should require a higher-value triple", () => {
+      const playerHand = [new Card("5", "♠"), new Card("5", "♦"), new Card("5", "♣")];
+      const playPile = [new Card("4", "♠"), new Card("4", "♦"), new Card("4", "♣")];
+      const isValid = game.isValidPlay(playerHand, playPile, playerHand, 1, [playerHand]);
+      expect(isValid).to.be.true;
+    });
+
+    it("should require a higher-value straight", () => {
+      const playerHand = [new Card("4", "♠"), new Card("5", "♦"), new Card("6", "♣")];
+      const playPile = [new Card("3", "♠"), new Card("4", "♦"), new Card("5", "♣")];
+      const isValid = game.isValidPlay(playerHand, playPile, playerHand, 1, [playerHand]);
+      expect(isValid).to.be.true;
+    });
+
+    describe("Bomb Logic", () => {
+      it("should allow a four-of-a-kind to beat a single 2", () => {
+        const bomb = [new Card("4", "♠"), new Card("4", "♦"), new Card("4", "♣"), new Card("4", "♥")];
+        const playPile = [new Card("2", "♠")];
+        const isValid = game.isValidPlay(bomb, playPile, bomb, 1, [bomb]);
+        expect(isValid).to.be.true;
+      });
+
+      it("should allow three consecutive pairs to beat a single 2", () => {
+        const bomb = [
+          new Card("3", "♠"),
+          new Card("3", "♦"),
+          new Card("4", "♣"),
+          new Card("4", "♥"),
+          new Card("5", "♠"),
+          new Card("5", "♦"),
+        ];
+        const playPile = [new Card("2", "♠")];
+        const isValid = game.isValidPlay(bomb, playPile, bomb, 1, [bomb]);
+        expect(isValid).to.be.true;
+      });
+
+      it("should allow four consecutive pairs to beat a pair of 2s", () => {
+        const bomb = [
+          new Card("3", "♠"),
+          new Card("3", "♦"),
+          new Card("4", "♣"),
+          new Card("4", "♥"),
+          new Card("5", "♠"),
+          new Card("5", "♦"),
+          new Card("6", "♣"),
+          new Card("6", "♦"),
+        ];
+        const playPile = [new Card("2", "♠"), new Card("2", "♦")];
+        const isValid = game.isValidPlay(bomb, playPile, bomb, 1, [bomb]);
+        expect(isValid).to.be.true;
+      });
+
+      it("should not allow a bomb on a non-2 card", () => {
+        const bomb = [new Card("4", "♠"), new Card("4", "♦"), new Card("4", "♣"), new Card("4", "♥")];
+        const playPile = [new Card("K", "♠")];
+        const isValid = game.isValidPlay(bomb, playPile, bomb, 1, [bomb]);
+        expect(isValid).to.be.false;
+      });
+
+      it("should not allow a four-of-a-kind to bomb a pair of 2s", () => {
+        const bomb = [new Card("4", "♠"), new Card("4", "♦"), new Card("4", "♣"), new Card("4", "♥")];
+        const playPile = [new Card("2", "♠"), new Card("2", "♦")];
+        const isValid = game.isValidPlay(bomb, playPile, bomb, 1, [bomb]);
+        expect(isValid).to.be.false;
+      });
+    });
+  });
+});

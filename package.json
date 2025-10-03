@@ -7,8 +7,21 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "node tests/runner_cli.js",
+    "test": "nyc mocha --require @babel/register --require ./tests/setup.js tests/test_*.js",
     "start": "live-server --port=8888"
+  },
+  "nyc": {
+    "all": true,
+    "include": [
+      "src/app/**/*.js"
+    ],
+    "exclude": [
+      "tests"
+    ],
+    "reporter": [
+      "text",
+      "html"
+    ]
   },
   "repository": {
     "type": "git",
@@ -23,7 +36,14 @@
   },
   "homepage": "https://thekaveman.github.io/thirteen/src/",
   "devDependencies": {
+    "@babel/core": "^7.28.4",
+    "@babel/preset-env": "^7.28.3",
+    "@babel/register": "^7.28.3",
+    "chai": "^6.2.0",
     "jsdom": "^27.0.0",
-    "live-server": "^1.2.0"
+    "live-server": "^1.2.0",
+    "mocha": "^11.7.4",
+    "nyc": "^17.1.0",
+    "sinon": "^21.0.0"
   }
 }
