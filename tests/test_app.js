@@ -40,6 +40,18 @@ describe("App", () => {
       expect(ui.startGameButton.handler).to.exist;
     });
 
+    it("init() should set setTimeout if provided", () => {
+      const mockSetTimeout = () => {};
+      app.init(mockSetTimeout);
+      expect(app.setTimeout).to.equal(mockSetTimeout);
+    });
+
+    it("init() should use default setTimeout if not provided", () => {
+      app.init();
+      expect(typeof app.setTimeout).to.equal("function");
+      expect(app.setTimeout).to.not.be.null;
+    });
+
     it("init() should load a saved game if one exists and is not over", () => {
       game.loadWillSucceed = true;
       game.gameOverOnLoad = false;
@@ -51,6 +63,18 @@ describe("App", () => {
       expect(ui.renderCalled).to.be.true;
       expect(game.initCalled).to.be.false;
       expect(setPlayersSpy.called).to.be.false;
+    });
+
+    it("init() should start a new game if no saved game exists (false branch of load)", () => {
+      game.loadWillSucceed = false;
+      const setPlayersSpy = sinon.spy(game, "setPlayers");
+
+      app.init();
+
+      expect(game.loadCalled).to.be.true;
+      expect(game.initCalled).to.be.true;
+      expect(setPlayersSpy.called).to.be.true;
+      expect(ui.renderCalled).to.be.true;
     });
 
     it("init() should start a new game if no saved game exists", () => {
@@ -66,6 +90,19 @@ describe("App", () => {
     });
 
     it("init() should start a new game if the saved game is over", () => {
+      game.loadWillSucceed = true;
+      game.gameOverOnLoad = true;
+      const setPlayersSpy = sinon.spy(game, "setPlayers");
+
+      app.init();
+
+      expect(game.loadCalled).to.be.true;
+      expect(game.initCalled).to.be.true;
+      expect(setPlayersSpy.called).to.be.true;
+      expect(ui.renderCalled).to.be.true;
+    });
+
+    it("init() should start a new game if the saved game is over (false branch of gameOver)", () => {
       game.loadWillSucceed = true;
       game.gameOverOnLoad = true;
       const setPlayersSpy = sinon.spy(game, "setPlayers");
@@ -97,11 +134,8 @@ describe("App", () => {
   });
 
   describe("Event Handlers", () => {
-    beforeEach(() => {
-      app.init();
-    });
-
     it("attachHandlers() should attach event listeners to UI buttons", () => {
+      app.init();
       const playButtonSpy = sinon.spy(ui.playButton, "addEventListener");
       const passButtonSpy = sinon.spy(ui.passButton, "addEventListener");
       const startGameButtonSpy = sinon.spy(ui.startGameButton, "addEventListener");
@@ -118,16 +152,19 @@ describe("App", () => {
     });
 
     it("handleStartGameClick() should start the game and trigger the next turn", () => {
-      const nextTurnSpy = sinon.spy(app, "nextTurn");
+      const nextTurnSpy = sinon.spy(App.prototype, "nextTurn");
+      app.init();
       ui.startGameButton.handler(); // Simulate click
       expect(game.startCalled).to.be.true;
       expect(game.saveCalled).to.be.true;
       expect(ui.renderCalled).to.be.true;
       expect(nextTurnSpy.called).to.be.true;
+      nextTurnSpy.restore();
     });
 
     it("handleNewGameClick() should re-initialize the game", () => {
-      const initSpy = sinon.spy(app, "init");
+      const initSpy = sinon.spy(App.prototype, "init");
+      app.init();
       ui.newGameButton.handler(); // Simulate click
       expect(game.initCalled).to.be.true;
       expect(game.saveCalled).to.be.true;
@@ -136,6 +173,7 @@ describe("App", () => {
     });
 
     it("handleResetButtonClick() should clear storage and reset the game", () => {
+      app.init();
       const clearStorageSpy = sinon.spy(app, "clearStorage");
       const appInitSpy = sinon.spy(app, "init");
       const analyticsSpy = sinon.spy(analytics, "gameReset");
@@ -147,6 +185,7 @@ describe("App", () => {
       appInitSpy.restore();
     });
     it("handleHumanPlay() should call the human player's play handler", () => {
+      app.init();
       game.gameState.currentPlayer = 0; // Human
       const humanPlayer = game.gameState.players[0];
       const playSpy = sinon.spy(humanPlayer, "handlePlayButtonClick");
@@ -155,6 +194,7 @@ describe("App", () => {
     });
 
     it("handleHumanPass() should call the human player's pass handler", () => {
+      app.init();
       game.gameState.currentPlayer = 0; // Human
       const humanPlayer = game.gameState.players[0];
       const passSpy = sinon.spy(humanPlayer, "handlePassButtonClick");
@@ -164,12 +204,9 @@ describe("App", () => {
   });
 
   describe("Turn Logic", () => {
-    beforeEach(() => {
+    it("nextTurn() should not call handleAITurn for a human player", () => {
       app.init();
       ui.startGameButton.handler();
-    });
-
-    it("nextTurn() should not call handleAITurn for a human player", () => {
       game.gameState.currentPlayer = 0; // Human
       const handleAITurnSpy = sinon.spy(app, "handleAITurn");
       app.nextTurn();
@@ -177,12 +214,14 @@ describe("App", () => {
     });
 
     it("nextTurn() should call handleAITurn for an AI player", () => {
+      app.init();
       game.gameState.currentPlayer = 1; // AI
       const handleAITurnSpy = sinon.spy(app, "handleAITurn");
       app.nextTurn();
       sinon.clock.tick(1001); // Advance timers past the 1000ms delay
       expect(handleAITurnSpy.called).to.be.true;
     });
+
     it("nextTurn() should do nothing if the game is over", () => {
       game.gameState.gameOver = true;
       const handleAITurnSpy = sinon.spy(app, "handleAITurn");
@@ -191,9 +230,9 @@ describe("App", () => {
     });
 
     it("handleAITurn() should return early if the current player is not an AI", () => {
+      const humanPlayer = { type: PLAYER_TYPES.HUMAN };
       game.gameState.currentPlayer = 0; // Human player
-      const humanPlayer = game.gameState.players[0];
-      humanPlayer.type = PLAYER_TYPES.HUMAN; // Ensure type is human
+      game.gameState.players = [humanPlayer];
       const takeTurnSpy = sinon.spy(ai, "takeTurn");
 
       app.handleAITurn();
@@ -202,6 +241,7 @@ describe("App", () => {
     });
 
     it("handleAITurn() should play cards when a move is available", () => {
+      app.init();
       const move = [new Card("3", "♠")];
       ai.move = move; // Configure MockAI to return a move
       game.gameState.currentPlayer = 1; // AI
@@ -212,11 +252,13 @@ describe("App", () => {
       expect(ai.takeTurnCalled).to.be.true;
       expect(playCardsSpy.called).to.be.true;
       expect(ui.renderCalled).to.be.true;
+      playCardsSpy.restore();
     });
 
     it("handleAITurn() should pass turn when no move is available", () => {
-      ai.move = []; // Configure MockAI to return no move
+      app.init();
       game.gameState.currentPlayer = 1; // AI
+      ai.move = []; // Configure MockAI to return no move
       const passTurnSpy = sinon.spy(game, "passTurn");
 
       app.handleAITurn();
@@ -224,6 +266,7 @@ describe("App", () => {
       expect(ai.takeTurnCalled).to.be.true;
       expect(passTurnSpy.called).to.be.true;
       expect(ui.renderCalled).to.be.true;
+      passTurnSpy.restore();
     });
   });
 });
