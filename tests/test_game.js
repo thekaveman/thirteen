@@ -12,6 +12,10 @@ describe("Game", () => {
     game = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
   });
 
+  afterEach(() => {
+    localStorage.clear();
+  });
+
   describe("Constructor and Initial State", () => {
     it("should initialize with correct default game state", () => {
       expect(game.gameState.numPlayers).to.equal(0);
@@ -139,9 +143,9 @@ describe("Game", () => {
       expect(game.getCombinationType([new Card("A", "♠"), new Card("A", "♣"), new Card("A", "♦")])).to.equal(
         COMBINATION_TYPES.TRIPLE,
       );
-      expect(
-        game.getCombinationType([new Card("A", "♠"), new Card("A", "♣"), new Card("A", "♦"), new Card("A", "♥")]),
-      ).to.equal(COMBINATION_TYPES.FOUR_OF_A_KIND);
+      expect(game.getCombinationType([new Card("A", "♠"), new Card("A", "♣"), new Card("A", "♦"), new Card("A", "♥")])).to.equal(
+        COMBINATION_TYPES.FOUR_OF_A_KIND,
+      );
       expect(game.getCombinationType([new Card("3", "♠"), new Card("4", "♦"), new Card("5", "♣")])).to.equal(
         COMBINATION_TYPES.STRAIGHT,
       );
@@ -174,8 +178,7 @@ describe("Game", () => {
 
     it("isFourOfAKind() should correctly identify a four-of-a-kind", () => {
       expect(game.isFourOfAKind([new Card("A", "♠"), new Card("A", "♦"), new Card("A", "♣"), new Card("A", "♥")])).to.be.true;
-      expect(game.isFourOfAKind([new Card("A", "♠"), new Card("K", "♠"), new Card("Q", "♠"), new Card("J", "♠")])).to.be
-        .false;
+      expect(game.isFourOfAKind([new Card("A", "♠"), new Card("K", "♠"), new Card("Q", "♠"), new Card("J", "♠")])).to.be.false;
     });
 
     it("isStraight() should correctly identify straights", () => {

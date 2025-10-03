@@ -7,17 +7,6 @@ import { UI } from "../src/app/ui.js";
 describe("UI", () => {
   let game, ui, container;
 
-  before(() => {
-    if (typeof window === "undefined") {
-      // Running in Node.js, set up JSDOM
-      const { JSDOM } = require("jsdom"); // Use require for conditional import
-      const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
-      global.window = dom.window;
-      global.document = dom.window.document;
-      global.localStorage = new MockLocalStorage();
-    }
-  });
-
   after(() => {});
 
   beforeEach(() => {

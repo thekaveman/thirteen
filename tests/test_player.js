@@ -4,15 +4,6 @@ import { HumanPlayer, AIPlayer } from "../src/app/player.js";
 import { MockAI, MockUI, MockGame } from "./mocks.js";
 
 describe("Player", () => {
-  before(() => {
-    if (typeof window === "undefined") {
-      // Running in Node.js, set up JSDOM
-      const { JSDOM } = require("jsdom"); // Use require for conditional import
-      const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
-      global.window = dom.window;
-      global.document = dom.window.document;
-    }
-  });
   describe("Player Constructor", () => {
     it("should correctly initialize HumanPlayer", () => {
       const game = new MockGame();

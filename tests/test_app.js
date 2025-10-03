@@ -1,23 +1,10 @@
 import { App } from "../src/app/app.js";
 import { PLAYER_TYPES } from "../src/app/constants.js";
 import { Card } from "../src/app/deck.js";
-import { MockAI, MockDeck, MockGame, MockUI, MockAnalytics, MockLocalStorage } from "./mocks.js";
+import { MockAI, MockDeck, MockGame, MockUI, MockAnalytics } from "./mocks.js";
 
 describe("App", () => {
   let app, game, ai, ui, analytics, container;
-
-  before(() => {
-    if (typeof window === "undefined") {
-      // Running in Node.js, set up JSDOM
-      const { JSDOM } = require("jsdom"); // Use require for conditional import
-      const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
-      global.window = dom.window;
-      global.document = dom.window.document;
-      global.localStorage = new MockLocalStorage();
-    }
-  });
-
-  after(() => {});
 
   beforeEach(() => {
     game = new MockGame(new MockDeck());
@@ -28,13 +15,22 @@ describe("App", () => {
 
     // Mock UI elements
     container = document.createElement("div");
-    for (const [_, value] of Object.entries(ui.id)) {
+    for (const [key, value] of Object.entries(ui.id)) {
       const el = document.createElement("div");
       el.id = value;
+      // Add mock addEventListener and style for buttons
+      if (key.includes("Button")) {
+        el.addEventListener = (event, handler) => {
+          el.handler = handler;
+        };
+        el.style = {};
+      }
       container.appendChild(el);
     }
     document.body.appendChild(container);
   });
+
+  after(() => {});
 
   describe("Initialization", () => {
     it("init() should initialize the game and UI", () => {
@@ -103,6 +99,7 @@ describe("App", () => {
       expect(game.initCalled).to.be.true;
       expect(game.saveCalled).to.be.true;
       expect(initSpy.called).to.be.true;
+      initSpy.restore();
     });
 
     it("handleResetButtonClick() should clear storage and reset the game", () => {
@@ -114,6 +111,7 @@ describe("App", () => {
       expect(game.resetCalled).to.be.true;
       expect(appInitSpy.called).to.be.true;
       expect(analyticsSpy.called).to.be.true;
+      appInitSpy.restore();
     });
     it("handleHumanPlay() should call the human player's play handler", () => {
       game.gameState.currentPlayer = 0; // Human
