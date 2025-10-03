@@ -5,4 +5,5 @@ export { HighestValueAI } from "./highest_value.js";
 export { LowestCardAI } from "./lowest_card.js";
 export { LowestValueAI } from "./lowest_value.js";
 export { PassAI } from "./pass.js";
+export { PrioritizedComboAI } from "./prioritized_combo.js";
 export { RandomAI } from "./random.js";
