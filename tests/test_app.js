@@ -20,7 +20,7 @@ describe("App", () => {
   after(() => {});
 
   beforeEach(() => {
-    game = new MockGame(MockDeck);
+    game = new MockGame(new MockDeck());
     ai = new MockAI(game);
     ui = new MockUI(game);
     analytics = new MockAnalytics();

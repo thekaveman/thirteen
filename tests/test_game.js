@@ -9,7 +9,7 @@ describe("Game", () => {
 
   beforeEach(() => {
     localStorage.clear();
-    game = new Game(MockDeck, `${Game.STATE_KEY}-tests`);
+    game = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
   });
 
   describe("Constructor and Initial State", () => {
@@ -380,7 +380,7 @@ describe("Game", () => {
       game.gameState.selectedCards = [new Card("A", "♠")];
       game.save();
 
-      const newGame = new Game(MockDeck, `${Game.STATE_KEY}-tests`);
+      const newGame = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
       const loaded = newGame.load(mockAI, mockUI);
 
       expect(loaded).to.be.true;

@@ -44,7 +44,7 @@ describe("Analytics", () => {
   let game, analytics, mockAmplitude;
 
   beforeEach(() => {
-    game = new Game(MockDeck, "test-game");
+    game = new Game(new MockDeck(), "test-game");
     game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
     game.setPlayers(game.createPlayers(new MockAI(game), new MockUI(game)));
     analytics = new Analytics();

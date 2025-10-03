@@ -21,7 +21,7 @@ describe("UI", () => {
   after(() => {});
 
   beforeEach(() => {
-    game = new MockGame(MockDeck);
+    game = new MockGame(new MockDeck());
     ui = new UI(game);
 
     container = document.createElement("div");
