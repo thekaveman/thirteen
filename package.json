@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "nyc mocha --require @babel/register --require ./tests/setup.js tests/test_*.js",
+    "test": "nyc mocha --require @babel/register --require ./tests/setup.js tests/test_*.js tests/**/test_*.js",
     "start": "live-server --port=8888"
   },
   "nyc": {
