@@ -10,7 +10,7 @@ describe("App", function () {
   beforeEach(function () {
     this.sandbox = sinon.createSandbox();
     clock = this.sandbox.useFakeTimers();
-    game = new MockGame(new MockDeck());
+    game = new MockGame(new MockDeck(), "test-key");
     ai = new MockAI(game);
     ui = new MockUI(game);
     analytics = new MockAnalytics();
