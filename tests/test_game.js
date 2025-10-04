@@ -35,8 +35,9 @@ describe("Game", () => {
   describe("Player Management", () => {
     it("createPlayers() should create players with correct types and IDs", () => {
       game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
+      game.gameState.playerPersonas = [null, "random"];
       game.gameState.players = [{ id: "one" }, { id: "two" }];
-      const players = game.createPlayers(new MockAI(game), new MockUI(game));
+      const players = game.createPlayers(new MockUI(game));
       expect(players).to.have.lengthOf(2);
       expect(players[0].type).to.equal(PLAYER_TYPES.HUMAN);
       expect(players[0].id).to.equal("one");
@@ -365,7 +366,7 @@ describe("Game", () => {
       localStorage.setItem(game.stateKey, "invalid json");
       let loaded = false;
       try {
-        loaded = game.load(new MockAI(game), new MockUI(game));
+        loaded = game.load(new MockUI(game));
       } catch (e) {
         expect(e).to.be.an.instanceOf(SyntaxError);
       }
@@ -373,18 +374,18 @@ describe("Game", () => {
     });
 
     it("load() should correctly rehydrate game data", () => {
-      const mockAI = new MockAI(game);
       const mockUI = new MockUI(game);
 
       game.gameState.playerTypes = [PLAYER_TYPES.AI, PLAYER_TYPES.HUMAN];
-      game.setPlayers(game.createPlayers(mockAI, mockUI));
+      game.gameState.playerPersonas = ["random", null];
+      game.setPlayers(game.createPlayers(mockUI));
       game.gameState.gameStarted = true;
       game.gameState.playPile = [new Card("K", "♠"), new Card("K", "♦")];
       game.gameState.selectedCards = [new Card("A", "♠")];
       game.save();
 
       const newGame = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
-      const loaded = newGame.load(mockAI, mockUI);
+      const loaded = newGame.load(mockUI);
 
       expect(loaded).to.be.true;
       expect(newGame.id).to.equal(game.id);

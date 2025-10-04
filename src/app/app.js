@@ -1,4 +1,3 @@
-import { LowestCardAI } from "./ai/index.js";
 import { Analytics } from "./analytics.js";
 import { PLAYER_TYPES } from "./constants.js";
 import { Deck } from "./deck.js";
@@ -10,18 +9,16 @@ export class App {
   /**
    * Creates a new app instance with dependencies.
    * @param {Game} game
-   * @param {AI} ai
    * @param {UI} ui
    * @param {Analytics} analytics
    */
-  constructor(game, ai, ui, analytics = new Analytics()) {
+  constructor(game, ui, analytics = new Analytics()) {
     this.analytics = analytics;
     this.game = game;
     this.attachHooks(); // attach analytics hooks
 
-    this.ai = ai;
     this.ui = ui;
-    this.setTimeout = typeof window !== "undefined" ? window.setTimeout.bind(window) : setTimeout;
+    this.setTimeout = typeof window !== "undefined" ? setTimeout.bind(window) : setTimeout;
 
     this.ui.init(this.game);
     this.attachHandlers(); // attach handlers once after UI is initialized
@@ -111,13 +108,9 @@ export class App {
     this.nextTurn();
   }
 
-  init(currentSetTimeout = null) {
-    if (currentSetTimeout != null) {
-      this.setTimeout = currentSetTimeout;
-    }
-
+  init(aiPersona = "random") {
     // Attempt to load game state
-    if (this.game.load(this.ai, this.ui) && !this.game.gameState.gameOver) {
+    if (this.game.load(this.ui) && !this.game.gameState.gameOver) {
       // Render loaded UI
       this.ui.render();
       return;
@@ -128,7 +121,8 @@ export class App {
 
     // Initial game setup for display (hands dealt, starting player determined)
     this.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
-    this.game.setPlayers(this.game.createPlayers(this.ai, this.ui));
+    this.game.gameState.playerPersonas = [null, aiPersona];
+    this.game.setPlayers(this.game.createPlayers(this.ui));
     this.game.save();
 
     // Render initial UI with dealt hands and start button
@@ -154,18 +148,31 @@ export class App {
     }
   }
 
-  static create(
-    stateKey = Game.STATE_KEY,
-    DeckClass = Deck,
-    GameClass = Game,
-    AIClass = LowestCardAI,
-    UIClass = UI,
-    AnalyticsClass = Analytics
-  ) {
+  /**
+   * Factory function to create an App instance with customizable dependencies.
+   * @param {object} [options={}] - Options for creating the app.
+   * @param {string} [options.stateKey=Game.STATE_KEY] - The key for saving game state.
+   * @param {typeof Deck} [options.DeckClass=Deck] - The Deck class to use.
+   * @param {typeof Game} [options.GameClass=Game] - The Game class to use.
+   * @param {string} [options.aiPersona="random"] - The AI persona to use.
+   * @param {typeof UI} [options.UIClass=UI] - The UI class to use.
+   * @param {typeof Analytics} [options.AnalyticsClass=Analytics] - The Analytics class to use.
+   * @returns {App} A new App instance.
+   */
+  static create(options = {}) {
+    const {
+      stateKey = Game.STATE_KEY,
+      DeckClass = Deck,
+      GameClass = Game,
+      aiPersona = "random",
+      UIClass = UI,
+      AnalyticsClass = Analytics,
+    } = options;
+
     const deck = new DeckClass();
     const game = new GameClass(deck, stateKey);
-    const app = new App(game, new AIClass(game), new UIClass(game), new AnalyticsClass());
-    app.init();
+    const app = new App(game, new UIClass(game), new AnalyticsClass());
+    app.init(aiPersona);
     return app;
   }
 }

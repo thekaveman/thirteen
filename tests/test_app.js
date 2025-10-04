@@ -14,6 +14,8 @@ describe("App", function () {
     ai = new MockAI(game);
     ui = new MockUI(game);
     analytics = new MockAnalytics();
+    app = new App(game, ui, analytics);
+
     // Override createPlayers for this test file to inject the mock AI
     game.createPlayers = (ui) => {
       const human = new HumanPlayer(game, 0, ui);

@@ -1,6 +1,6 @@
 import { COMBINATION_TYPES, PLAYER_TYPES, RANKS } from "./constants.js";
 import { Card, Deck } from "./deck.js";
-import { AIPlayer, HumanPlayer } from "./player/index.js";
+import { createPlayer } from "./player/index.js";
 import { log } from "./utils.js";
 
 export class Game {
@@ -39,6 +39,7 @@ export class Game {
       gameOver: false,
       gameStarted: false,
       playerTypes: [],
+      playerPersonas: [],
     };
     this.id = crypto.randomUUID();
     this.stateKey = stateKey;
@@ -46,19 +47,20 @@ export class Game {
 
   /**
    * Create players from the game state's playerTypes.
-   * @param {AI} ai An AI instance for AIPlayers.
    * @param {UI} ui A UI instance for HumanPlayers.
    * @returns {Array<Player>} The list of players.
    */
-  createPlayers(ai, ui) {
+  createPlayers(ui) {
     const playerIds = this.gameState.players.map((p) => p.id);
     const players = this.gameState.playerTypes.map((type, index) => {
-      let player;
-      if (type === PLAYER_TYPES.AI) {
-        player = new AIPlayer(this, index, ai);
-      } else {
-        player = new HumanPlayer(this, index, ui);
-      }
+      const player = createPlayer({
+        game: this,
+        type,
+        number: index,
+        ui,
+        persona: this.gameState.playerPersonas ? this.gameState.playerPersonas[index] : null,
+      });
+
       if (playerIds.length > 0) {
         player.id = playerIds[index];
       }
@@ -347,10 +349,15 @@ export class Game {
    * Ends the current round and starts the next.
    */
   nextRound() {
-    this.gameState.roundsWon[this.gameState.lastPlayerToPlay]++;
+    if (this.gameState.lastPlayerToPlay !== -1) {
+      this.gameState.roundsWon[this.gameState.lastPlayerToPlay]++;
+    }
     this.gameState.playPile = [];
     this.gameState.consecutivePasses = 0;
-    this.gameState.currentPlayer = this.gameState.lastPlayerToPlay;
+    this.gameState.currentPlayer =
+      this.gameState.lastPlayerToPlay !== -1
+        ? this.gameState.lastPlayerToPlay
+        : this.findStartingPlayer(this.gameState.playerHands);
     this.gameState.roundNumber++;
     this.hooks.onRoundPlayed(this);
   }
@@ -423,16 +430,16 @@ export class Game {
 
   /**
    * Loads the game state from localStorage.
-   * @param {AI} ai An instance of an implementation of the AI class.
    * @param {UI} ui An instance of the UI class.
    * @returns {boolean} True if a saved game was loaded, false otherwise.
    */
-  load(ai, ui) {
+  load(ui) {
     const savedState = localStorage.getItem(this.stateKey);
     const parsedState = savedState ? JSON.parse(savedState) : null;
-    if (parsedState && ai && ui) {
+    if (parsedState && ui) {
       // Store playerTypes from the parsed state before overwriting this.gameState
       const loadedPlayerTypes = parsedState.gameState.players.map((p) => p.type);
+      const loadedPlayerPersonas = parsedState.gameState.players.map((p) => (p.ai ? p.ai.type : null));
 
       this.id = parsedState.id;
       this.stateKey = parsedState.stateKey;
@@ -445,8 +452,9 @@ export class Game {
       this.gameState.selectedCards = Card.objectsToList([...this.gameState.selectedCards]);
       // Assign the stored playerTypes back to gameState
       this.gameState.playerTypes = loadedPlayerTypes;
+      this.gameState.playerPersonas = loadedPlayerPersonas;
       // Re-hydrate players
-      this.gameState.players = this.createPlayers(ai, ui);
+      this.gameState.players = this.createPlayers(ui);
       log("Game loaded from localStorage.");
       return true;
     }
