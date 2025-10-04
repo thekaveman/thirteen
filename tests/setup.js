@@ -1,14 +1,7 @@
 import chai from "chai";
 import sinon from "sinon";
 import { JSDOM } from "jsdom";
-import {
-  MockDeck,
-  MockGame,
-  MockAI,
-  MockUI,
-  MockAnalytics,
-  MockLocalStorage,
-} from "./mocks.js";
+import { MockDeck, MockGame, MockAI, MockUI, MockAnalytics, MockLocalStorage } from "./mocks.js";
 
 // Import the actual classes
 import { Game } from "../src/app/game.js";
@@ -29,8 +22,6 @@ global.Game = Game;
 global.UI = UI;
 global.App = App;
 
-sinon.useFakeTimers(); // Prevents endless test loop
-
 let gameStub, uiStub;
 
 export const mochaHooks = {
@@ -38,6 +29,7 @@ export const mochaHooks = {
     // Setup JSDOM for Node.js tests that require DOM manipulation
     const dom = new JSDOM("<!DOCTYPE html><html><body></body></html>");
     global.window = dom.window;
+    global.window.sinon = sinon;
     global.document = global.window.document;
     global.localStorage = new MockLocalStorage();
     global.localStorage.clear(); // Clear localStorage before each test
@@ -70,8 +62,6 @@ export const mochaHooks = {
   afterEach() {
     gameStub.restore();
     uiStub.restore();
-  },
-  afterAll() {
     sinon.restore();
   },
 };

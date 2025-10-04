@@ -1,45 +1,7 @@
 import { Analytics } from "../src/app/analytics.js";
 import { Game } from "../src/app/game.js";
 import { PLAYER_TYPES } from "../src/app/constants.js";
-import { MockDeck, MockAI, MockUI } from "./mocks.js";
-
-class MockAmplitude {
-  constructor() {
-    this.events = [];
-    this.error = new Error("Test analytics error");
-    this.identifiedPlayer = null;
-    this.Identify = class {
-      constructor() {
-        this._properties = {};
-      }
-      setOnce(key, value) {
-        if (!this._properties.hasOwnProperty(key)) {
-          this._properties[key] = value;
-        }
-        return this;
-      }
-      set(key, value) {
-        this._properties[key] = value;
-        return this;
-      }
-      add(key, value) {
-        if (!this._properties.hasOwnProperty(key)) {
-          this._properties[key] = 0;
-        }
-        this._properties[key] += value;
-        return this;
-      }
-    };
-  }
-
-  track(eventType, payload) {
-    this.events.push({ eventType, payload });
-  }
-
-  identify(player) {
-    this.identifiedPlayer = player;
-  }
-}
+import { MockDeck, MockAI, MockUI, MockAmplitude } from "./mocks.js";
 
 describe("Analytics", () => {
   let game, analytics, mockAmplitude;

@@ -10,12 +10,27 @@
     <script src="https://cdn.jsdelivr.net/npm/sinon@latest/pkg/sinon.js"></script>
     <script type="module">
       import { expect as chaiExpect } from "https://cdn.jsdelivr.net/npm/chai@5.2.0/chai.min.js";
+      import { MockLocalStorage, MockAmplitude } from "./mocks.js";
       window.expect = chaiExpect;
 
       mocha.setup("bdd");
 
-      // Setup sinon fake timers for browser tests
-      window.sinon.clock = window.sinon.useFakeTimers();
+      const storageSandbox = sinon.createSandbox();
+
+      window.mochaHooks = {
+        beforeEach() {
+          const mockStorage = new MockLocalStorage();
+          storageSandbox.stub(window.localStorage, "getItem").callsFake(mockStorage.getItem.bind(mockStorage));
+          storageSandbox.stub(window.localStorage, "setItem").callsFake(mockStorage.setItem.bind(mockStorage));
+          storageSandbox.stub(window.localStorage, "removeItem").callsFake(mockStorage.removeItem.bind(mockStorage));
+          storageSandbox.stub(window.localStorage, "clear").callsFake(mockStorage.clear.bind(mockStorage));
+
+          window.amplitude = new MockAmplitude();
+        },
+        afterEach() {
+          storageSandbox.restore();
+        },
+      };
     </script>
     <script type="module" src="./test_deck.js"></script>
     <script type="module" src="./test_game.js"></script>

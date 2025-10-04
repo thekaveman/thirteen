@@ -3,6 +3,44 @@ import { Card } from "../src/app/deck.js";
 import { Game } from "../src/app/game.js";
 import { Player } from "../src/app/player/index.js";
 
+export class MockAmplitude {
+  constructor() {
+    this.events = [];
+    this.error = new Error("Test analytics error");
+    this.identifiedPlayer = null;
+    this.Identify = class {
+      constructor() {
+        this._properties = {};
+      }
+      setOnce(key, value) {
+        if (!this._properties.hasOwnProperty(key)) {
+          this._properties[key] = value;
+        }
+        return this;
+      }
+      set(key, value) {
+        this._properties[key] = value;
+        return this;
+      }
+      add(key, value) {
+        if (!this._properties.hasOwnProperty(key)) {
+          this._properties[key] = 0;
+        }
+        this._properties[key] += value;
+        return this;
+      }
+    };
+  }
+
+  track(eventType, payload) {
+    this.events.push({ eventType, payload });
+  }
+
+  identify(player) {
+    this.identifiedPlayer = player;
+  }
+}
+
 export class MockAnalytics {
   constructor() {
     this.events = [];
