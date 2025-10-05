@@ -4,7 +4,7 @@ import { PLAYER_TYPES } from "./constants.js";
 export class Analytics {
   constructor() {
     this.api =
-      typeof window != "undefined"
+      (typeof window != "undefined" && window.amplitude)
         ? window.amplitude
         : {
             track(eventType, payload) {

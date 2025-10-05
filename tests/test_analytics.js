@@ -1,7 +1,7 @@
 import { Analytics } from "../src/app/analytics.js";
 import { Game } from "../src/app/game.js";
 import { PLAYER_TYPES } from "../src/app/constants.js";
-import { MockDeck, MockAI, MockUI, MockAmplitude } from "./mocks.js";
+import { MockDeck, MockUI, MockAmplitude } from "./mocks.js";
 
 describe("Analytics", () => {
   let game, analytics, mockAmplitude;
@@ -66,15 +66,75 @@ describe("Analytics", () => {
     expect(event.payload.game.id).to.equal(game.id);
   });
 
+  it("test_idPlayer_identifiesHumanPlayerCorrectly", () => {
+    const humanPlayer = game.firstHumanPlayer();
+    analytics.gameStarted(game); // This calls #idPlayer
+
+    const identifiedId = mockAmplitude.identifiedPlayer;
+    expect(identifiedId).to.not.be.null;
+    expect(identifiedId._properties.player).to.equal(humanPlayer.id);
+    expect(identifiedId._properties.type).to.equal(humanPlayer.type);
+    expect(identifiedId._properties.persona).to.be.null; // Human players have null persona
+    expect(identifiedId._properties.data).to.deep.equal(humanPlayer.data());
+    expect(identifiedId._properties.game).to.equal(humanPlayer.game.id);
+    expect(identifiedId._properties.games_played).to.equal(1);
+  });
+
+  it("test_idPlayer_identifiesAIPlayerCorrectly", () => {
+    const mockAIPlayer = {
+      id: "ai-player-1",
+      type: PLAYER_TYPES.AI,
+      persona: "random",
+      data: () => ({ some: "ai data" }),
+      game: { id: "test-game" },
+    };
+    sinon.stub(game, "firstHumanPlayer").returns(mockAIPlayer);
+
+    analytics.gameStarted(game);
+
+    const identifiedId = mockAmplitude.identifiedPlayer;
+    expect(identifiedId).to.not.be.null;
+    expect(identifiedId._properties.player).to.equal(mockAIPlayer.id);
+    expect(identifiedId._properties.type).to.equal(mockAIPlayer.type);
+    expect(identifiedId._properties.persona).to.equal(mockAIPlayer.persona);
+    expect(identifiedId._properties.data).to.deep.equal(mockAIPlayer.data());
+    expect(identifiedId._properties.game).to.equal(mockAIPlayer.game.id);
+    expect(identifiedId._properties.games_played).to.equal(1);
+  });
+
   describe("Error Handling", () => {
-    let errorStub;
+    let errorStub, warnStub;
 
     beforeEach(() => {
       errorStub = sinon.stub(console, "error");
+      warnStub = sinon.stub(console, "warn");
     });
 
     afterEach(() => {
       errorStub.restore();
+      warnStub.restore();
+    });
+
+    it("should log errors to console if the library can't be loaded", () => {
+      // Ensure window.amplitude is undefined for this test
+      window.amplitude = undefined;
+
+      // Create a new Analytics instance so its constructor uses the fallback API
+      const analyticsWithFallback = new Analytics();
+      const eventType = "game_initialized";
+
+      // Call a method that triggers the fallback track
+      analyticsWithFallback.gameInit(game);
+
+      expect(warnStub.calledOnce).to.be.true;
+      expect(warnStub.calledWithMatch(`Coudn't send analytics for ${eventType}`)).to.be.true;
+    });
+
+    it("test_idPlayer_handlesErrorsGracefully", () => {
+      sinon.stub(mockAmplitude, "Identify").throws(mockAmplitude.error);
+      analytics.gameStarted(game);
+      expect(errorStub.calledOnce).to.be.true;
+      expect(errorStub.calledWithMatch("Error initializing player:")).to.be.true;
     });
 
     it("gameInit() should handle analytics errors gracefully", () => {
