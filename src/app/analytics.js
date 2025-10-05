@@ -1,4 +1,5 @@
 import { Game } from "./game.js";
+import { PLAYER_TYPES } from "./constants.js";
 
 export class Analytics {
   constructor() {
@@ -23,6 +24,8 @@ export class Analytics {
 
       id.setOnce("player", player.id);
       id.setOnce("type", player.type);
+      id.setOnce("persona", player.type === PLAYER_TYPES.AI ? player.persona : null);
+      id.setOnce("data", player.data());
       id.set("game", player.game.id);
       id.add("games_played", 1);
 
@@ -77,10 +80,14 @@ export class Analytics {
    * @param {Game} game The game instance sending this event.
    */
   gameStarted(game) {
+    const player = game.currentPlayer();
     this.#send("game_started", game, {
       event: {
-        player: game.currentPlayer().id,
-        type: game.currentPlayer().type,
+        player: player.id,
+        type: player.type,
+        player_data: player.data(),
+        persona: player.type === PLAYER_TYPES.AI ? player.ai.persona : null,
+        ai_data: player.type === PLAYER_TYPES.AI ? player.ai.data() : null,
       },
     });
     this.#idPlayer(game);
@@ -91,10 +98,14 @@ export class Analytics {
    * @param {Game} game The game instance sending this event.
    */
   gameWon(game) {
+    const player = game.currentPlayer();
     this.#send("game_won", game, {
       event: {
-        player: game.currentPlayer().id,
-        type: game.currentPlayer().type,
+        player: player.id,
+        type: player.type,
+        player_data: player.data(),
+        persona: player.type === PLAYER_TYPES.AI ? player.ai.persona : null,
+        ai_data: player.type === PLAYER_TYPES.AI ? player.ai.data() : null,
         rounds: game.gameState.roundNumber,
         rounds_won: game.gameState.roundsWon[game.gameState.currentPlayer],
         player_turns: game.gameState.playerTurns[game.gameState.currentPlayer],
@@ -122,10 +133,14 @@ export class Analytics {
    * @param {Game} game The game instance sending this event.
    */
   playerMoved(game) {
+    const player = game.currentPlayer();
     this.#send("player_moved", game, {
       event: {
-        player: game.currentPlayer().id,
-        type: game.currentPlayer().type,
+        player: player.id,
+        type: player.type,
+        player_data: player.data(),
+        persona: player.type === PLAYER_TYPES.AI ? player.ai.persona : null,
+        ai_data: player.type === PLAYER_TYPES.AI ? player.ai.data() : null,
         combination: game.getCombinationType(game.gameState.playPile),
         move: game.gameState.selectedCards,
         pile: game.gameState.playPile,
@@ -139,10 +154,14 @@ export class Analytics {
    * @param {Game} game The game instance sending this event.
    */
   playerPassed(game) {
+    const player = game.currentPlayer();
     this.#send("player_passed", game, {
       event: {
-        player: game.currentPlayer().id,
-        type: game.currentPlayer().type,
+        player: player.id,
+        type: player.type,
+        player_data: player.data(),
+        persona: player.type === PLAYER_TYPES.AI ? player.ai.persona : null,
+        ai_data: player.type === PLAYER_TYPES.AI ? player.ai.data() : null,
         combination: game.getCombinationType(game.gameState.playPile),
         passes: game.gameState.consecutivePasses,
         pile: game.gameState.playPile,
