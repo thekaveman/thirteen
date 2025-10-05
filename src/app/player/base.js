@@ -1,5 +1,3 @@
-import { Game } from "../game.js";
-
 export class Player {
   /**
    * @param {string} type The type of player (human or ai).
@@ -17,6 +15,6 @@ export class Player {
   }
 
   takeTurn() {
-    throw new Error("takeTurn() must be implemented by subclasses");
+    throw new Error("Subclasses must implement takeTurn");
   }
 }

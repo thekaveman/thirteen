@@ -1,3 +1,4 @@
+import { PLAYER_TYPES } from "../../src/app/constants.js";
 import { Card } from "../../src/app/deck.js";
 import { HumanPlayer } from "../../src/app/player/index.js";
 import { MockUI, MockGame } from "../mocks.js";
@@ -9,6 +10,12 @@ describe("HumanPlayer", () => {
     game = new MockGame();
     ui = new MockUI();
     humanPlayer = new HumanPlayer(game, 0, ui);
+  });
+
+  it("Constructor should correctly initialize HumanPlayer", () => {
+    const player = new HumanPlayer(game, 0, ui);
+    expect(player.type).to.equal(PLAYER_TYPES.HUMAN);
+    expect(player.ui).to.equal(ui);
   });
 
   it("takeTurn() should return null", () => {

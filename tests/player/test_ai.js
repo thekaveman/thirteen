@@ -4,6 +4,14 @@ import { AIPlayer } from "../../src/app/player/index.js";
 import { MockAI, MockGame } from "../mocks.js";
 
 describe("AIPlayer", () => {
+  it("Constructor should correctly initialize AIPlayer", () => {
+    const game = new MockGame();
+    const ai = new MockAI();
+    const aiPlayer = new AIPlayer(game, 1, ai);
+    expect(aiPlayer.type).to.equal(PLAYER_TYPES.AI);
+    expect(aiPlayer.ai).to.equal(ai);
+  });
+
   it("data() should return correct data", () => {
     const game = new MockGame();
     const ai = new MockAI(game);

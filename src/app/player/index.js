@@ -1,4 +1,4 @@
-export * from "./ai.js";
-export * from "./base.js";
-export * from "./factory.js";
-export * from "./human.js";
+export { AIPlayer } from "./ai.js";
+export { Player } from "./base.js";
+export { createPlayer } from "./factory.js";
+export { HumanPlayer } from "./human.js";
