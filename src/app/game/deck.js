@@ -1,4 +1,4 @@
-import { SUITS, RANKS } from "./constants.js";
+import { SUITS, RANKS } from "./index.js";
 
 export class Card {
   constructor(rank, suit) {

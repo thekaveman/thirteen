@@ -4,7 +4,7 @@ import { JSDOM } from "jsdom";
 import { MockDeck, MockGame, MockAI, MockUI, MockAnalytics, MockLocalStorage } from "./mocks.js";
 
 // Import the actual classes
-import { Game } from "../src/app/game.js";
+import { Game } from "../src/app/game/index.js";
 import { UI } from "../src/app/ui.js";
 import { App } from "../src/app/app.js";
 

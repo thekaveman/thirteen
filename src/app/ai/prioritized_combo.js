@@ -1,5 +1,5 @@
 import { ComboAI } from "./combo.js";
-import { AI_TYPES } from "./constants.js";
+import { AI_TYPES } from "./index.js";
 
 export class PrioritizedComboAI extends ComboAI {
   /**

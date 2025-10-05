@@ -1,6 +1,5 @@
-import { COMBINATION_TYPES, PLAYER_TYPES } from "./constants.js";
-import { Card } from "./deck.js";
-import { Game } from "./game.js";
+import { Card, Game, COMBINATION_TYPES } from "./game/index.js";
+import { PLAYER_TYPES } from "./player/index.js";
 import { log } from "./utils.js";
 
 export class UI {
@@ -167,7 +166,7 @@ export class UI {
    */
   renderPlayArea() {
     if (this.gameContent) {
-      const combinationType = this.game.getCombinationType(this.game.gameState.playPile);
+      const combinationType = this.game.rules.getCombinationType(this.game.gameState.playPile);
       const indicator = this.getCombinationTypeIndicator(combinationType);
       this.gameContent.innerHTML = `<h2>Play Area (Round ${this.game.gameState.roundNumber}) <span class="combination-type">${indicator}</span></h2>`;
       this.renderCardsContainer(this.game.gameState.playPile, this.gameContent);
@@ -244,7 +243,7 @@ export class UI {
           const playerHandDiv = document.createElement("div");
           playerHandDiv.id = `player-hand-${i}`;
           playerHandDiv.classList.add("player-hand");
-          playerHandDiv.classList.add(this.game.gameState.players[i].type); // Add 'human' or 'ai' class
+          playerHandDiv.classList.add(this.game.gameState.players[i].type);
           if (i === this.game.gameState.currentPlayer) {
             playerHandDiv.classList.add("current");
           }

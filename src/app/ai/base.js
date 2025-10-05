@@ -1,5 +1,4 @@
-import { COMBINATION_TYPES, RANKS } from "../constants.js";
-import { Card } from "../deck.js";
+import { Card, COMBINATION_TYPES, RANKS } from "../game/index.js";
 
 export class AI {
   /**
@@ -77,7 +76,7 @@ export class AI {
     const validMoves = [];
 
     for (const potentialPlay of potentialMoves) {
-      if (this.game.isValidPlay(potentialPlay, playPile, hand, currentTurn, allPlayerHands)) {
+      if (this.game.rules.isValidPlay(potentialPlay, playPile, hand, currentTurn, allPlayerHands)) {
         validMoves.push(potentialPlay);
       }
     }

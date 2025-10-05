@@ -1,6 +1,5 @@
 import { HighestValueAI } from "../../src/app/ai/index.js";
-import { Card } from "../../src/app/deck.js";
-import { Game } from "../../src/app/game.js";
+import { Card, Game } from "../../src/app/game/index.js";
 
 describe("HighestValueAI", () => {
   let game, highestValueAI;
@@ -35,14 +34,7 @@ describe("HighestValueAI", () => {
 
   it("takeTurn() should choose the valid triple with the highest total value", () => {
     const hand = [
-      [
-        new Card("3", "♠"),
-        new Card("3", "♦"),
-        new Card("3", "♣"),
-        new Card("4", "♠"),
-        new Card("4", "♦"),
-        new Card("4", "♣"),
-      ],
+      [new Card("3", "♠"), new Card("3", "♦"), new Card("3", "♣"), new Card("4", "♠"), new Card("4", "♦"), new Card("4", "♣")],
     ];
     const playPile = [new Card("3", "♥"), new Card("3", "♠"), new Card("3", "♦")]; // Lower than 4♠, 4♦, 4♣
     const move = highestValueAI.takeTurn(hand[0], playPile, 1, hand);

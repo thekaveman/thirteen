@@ -1,6 +1,5 @@
-import { PLAYER_TYPES } from "../../src/app/constants.js";
-import { Card } from "../../src/app/deck.js";
-import { HumanPlayer } from "../../src/app/player/index.js";
+import { Card } from "../../src/app/game/index.js";
+import { HumanPlayer, PLAYER_TYPES } from "../../src/app/player/index.js";
 import { MockUI, MockGame } from "../mocks.js";
 
 describe("HumanPlayer", () => {

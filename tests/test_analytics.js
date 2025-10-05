@@ -1,6 +1,6 @@
 import { Analytics } from "../src/app/analytics.js";
-import { Game } from "../src/app/game.js";
-import { PLAYER_TYPES } from "../src/app/constants.js";
+import { Game } from "../src/app/game/index.js";
+import { PLAYER_TYPES } from "../src/app/player/index.js";
 import { MockDeck, MockUI, MockAmplitude } from "./mocks.js";
 
 describe("Analytics", () => {

@@ -1,7 +1,6 @@
 import { App } from "../src/app/app.js";
-import { PLAYER_TYPES } from "../src/app/constants.js";
-import { Card } from "../src/app/deck.js";
-import { AIPlayer, HumanPlayer } from "../src/app/player/index.js";
+import { Card } from "../src/app/game/index.js";
+import { AIPlayer, HumanPlayer, PLAYER_TYPES } from "../src/app/player/index.js";
 import { MockAI, MockDeck, MockGame, MockUI, MockAnalytics } from "./mocks.js";
 
 describe("App", function () {

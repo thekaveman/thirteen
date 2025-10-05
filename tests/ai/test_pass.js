@@ -1,6 +1,5 @@
-import { PassAI, RandomAI } from "../../src/app/ai/index.js";
-import { Card } from "../../src/app/deck.js";
-import { Game } from "../../src/app/game.js";
+import { PassAI } from "../../src/app/ai/index.js";
+import { Card, Game } from "../../src/app/game/index.js";
 import { MockAI } from "../mocks.js";
 
 describe("PassAI", () => {

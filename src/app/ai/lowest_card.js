@@ -1,6 +1,6 @@
+import { Card } from "../game/index.js";
 import { AI } from "./base.js";
-import { Card } from "../deck.js";
-import { AI_TYPES } from "./constants.js";
+import { AI_TYPES } from "./index.js";
 
 export class LowestCardAI extends AI {
   /**

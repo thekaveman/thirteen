@@ -1,7 +1,5 @@
-import { Game } from "../../src/app/game.js";
-import { createPlayer, HumanPlayer, AIPlayer } from "../../src/app/player/index.js";
-import { PLAYER_TYPES } from "../../src/app/constants.js";
-import { Deck } from "../../src/app/deck.js";
+import { Deck, Game } from "../../src/app/game/index.js";
+import { createPlayer, HumanPlayer, AIPlayer, PLAYER_TYPES } from "../../src/app/player/index.js";
 
 describe("Player Factory", () => {
   let game;

@@ -1,7 +1,5 @@
-import { AI } from "./app/ai.js";
-import { COMBINATION_TYPES, RANKS, SUITS } from "./app/constants.js";
-import { Card, Deck } from "./app/deck.js";
-import { Game } from "./app/game.js";
+import { AI } from "./app/ai/index.js";
+import { Card, Deck, Game, COMBINATION_TYPES, RANKS, SUITS } from "./app/game/index.js";
 import { UI } from "./app/ui.js";
 
 class Help {
@@ -171,8 +169,8 @@ class Help {
           Card.sort(selectedCards);
 
           if (selectedCards.length > 0) {
-            const isValid = this.game.isValidPlay(selectedCards, this.game.gameState.playPile, hand, 1, [hand]);
-            const icon = isValid ? this.ui.getCombinationTypeIndicator(this.game.getCombinationType(selectedCards)) : "❌";
+            const isValid = this.game.rules.isValidPlay(selectedCards, this.game.gameState.playPile, hand, 1, [hand]);
+            const icon = isValid ? this.ui.getCombinationTypeIndicator(this.game.rules.getCombinationType(selectedCards)) : "❌";
             messageContainer.innerHTML = `<p>${isValid ? "Valid" : "Invalid"} combination ${icon}</p>`;
           } else {
             messageContainer.innerHTML = initMessageHtml;

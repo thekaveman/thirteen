@@ -1,10 +1,10 @@
-import { PLAYER_TYPES } from "../constants.js";
-import { Game } from "../game.js";
-import { UI } from "../ui.js";
 import { AI_PERSONAS } from "../ai/personas.js";
+import { Game } from "../game/index.js";
+import { UI } from "../ui.js";
 import { AIPlayer } from "./ai.js";
 import { Player } from "./base.js";
 import { HumanPlayer } from "./human.js";
+import { PLAYER_TYPES } from "./index.js";
 
 /**
  * Creates a player instance based on the provided configuration.

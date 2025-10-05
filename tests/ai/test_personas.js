@@ -1,7 +1,6 @@
-import { Game } from "../../src/app/game.js";
 import { AI_PERSONAS } from "../../src/app/ai/personas.js";
 import { AI, ComboAI } from "../../src/app/ai/index.js";
-import { Deck } from "../../src/app/deck.js";
+import { Deck, Game } from "../../src/app/game/index.js";
 
 describe("Personas", () => {
   let game;

@@ -1,10 +1,10 @@
-import { Game } from "./game.js";
-import { PLAYER_TYPES } from "./constants.js";
+import { Game } from "./game/index.js";
+import { PLAYER_TYPES } from "./player/index.js";
 
 export class Analytics {
   constructor() {
     this.api =
-      (typeof window != "undefined" && window.amplitude)
+      typeof window != "undefined" && window.amplitude
         ? window.amplitude
         : {
             track(eventType, payload) {
@@ -141,7 +141,7 @@ export class Analytics {
         player_data: player.data(),
         persona: player.type === PLAYER_TYPES.AI ? player.ai.persona : null,
         ai_data: player.type === PLAYER_TYPES.AI ? player.ai.data() : null,
-        combination: game.getCombinationType(game.gameState.playPile),
+        combination: game.rules.getCombinationType(game.gameState.playPile),
         move: game.gameState.selectedCards,
         pile: game.gameState.playPile,
         round: game.gameState.roundNumber,
@@ -162,7 +162,7 @@ export class Analytics {
         player_data: player.data(),
         persona: player.type === PLAYER_TYPES.AI ? player.ai.persona : null,
         ai_data: player.type === PLAYER_TYPES.AI ? player.ai.data() : null,
-        combination: game.getCombinationType(game.gameState.playPile),
+        combination: game.rules.getCombinationType(game.gameState.playPile),
         passes: game.gameState.consecutivePasses,
         pile: game.gameState.playPile,
         round: game.gameState.roundNumber,

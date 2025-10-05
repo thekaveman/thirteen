@@ -1,6 +1,5 @@
 import { LowestValueAI } from "../../src/app/ai/index.js";
-import { Card } from "../../src/app/deck.js";
-import { Game } from "../../src/app/game.js";
+import { Card, Game } from "../../src/app/game/index.js";
 
 describe("LowestValueAI", () => {
   let game, lowestValueAI;

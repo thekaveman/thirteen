@@ -1,7 +1,7 @@
 import { AI } from "../src/app/ai/index.js";
-import { Card } from "../src/app/deck.js";
-import { Game } from "../src/app/game.js";
+import { Card, Game } from "../src/app/game/index.js";
 import { Player } from "../src/app/player/index.js";
+import { UI } from "../src/app/ui.js";
 
 export class MockAmplitude {
   constructor() {

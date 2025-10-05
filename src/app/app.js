@@ -1,7 +1,6 @@
 import { Analytics } from "./analytics.js";
-import { PLAYER_TYPES } from "./constants.js";
-import { Deck } from "./deck.js";
-import { Game } from "./game.js";
+import { Deck, Game } from "./game/index.js";
+import { PLAYER_TYPES } from "./player/index.js";
 import { UI } from "./ui.js";
 import { log } from "./utils.js";
 

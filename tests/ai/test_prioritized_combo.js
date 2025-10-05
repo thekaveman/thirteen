@@ -1,6 +1,6 @@
 import { PrioritizedComboAI } from "../../src/app/ai/index.js";
 import { MockGame, MockAI } from "../mocks.js";
-import { Card } from "../../src/app/deck.js";
+import { Card } from "../../src/app/game/index.js";
 
 describe("PrioritizedComboAI", () => {
   let game, mockAI1, mockAI2, mockAI3, prioritizedComboAI;

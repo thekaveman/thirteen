@@ -1,5 +1,5 @@
-import { PLAYER_TYPES } from "../constants.js";
 import { Player } from "./base.js";
+import { PLAYER_TYPES } from "./index.js";
 
 export class AIPlayer extends Player {
   constructor(game, number, ai) {

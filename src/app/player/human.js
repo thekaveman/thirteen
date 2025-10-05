@@ -1,7 +1,7 @@
-import { PLAYER_TYPES } from "../constants.js";
-import { Card } from "../deck.js";
+import { Card } from "../game/index.js";
 import { log } from "../utils.js";
 import { Player } from "./base.js";
+import { PLAYER_TYPES } from "./index.js";
 
 export class HumanPlayer extends Player {
   constructor(game, number, ui) {
@@ -47,7 +47,7 @@ export class HumanPlayer extends Player {
   handlePlayButtonClick() {
     this.ui.clearMessage();
     if (
-      this.game.isValidPlay(
+      this.game.rules.isValidPlay(
         this.game.gameState.selectedCards,
         this.game.gameState.playPile,
         this.game.gameState.playerHands[this.game.gameState.currentPlayer],
