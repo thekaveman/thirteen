@@ -13,11 +13,12 @@ describe("AI", () => {
 
   describe("Base AI Class", () => {
     it("data() should return correct data", () => {
-      const specificAI = new AI(game, "test-type");
+      const specificAI = new AI(game, "test-type", "test-persona");
       const aiData = specificAI.data();
       expect(aiData.id).to.equal(specificAI.id);
-      expect(aiData.type).to.equal("test-type");
       expect(aiData.game).to.equal(game.id);
+      expect(aiData.type).to.equal("test-type");
+      expect(aiData.persona).to.equal("test-persona");
     });
 
     it("takeTurn() should throw an error for the base class", () => {

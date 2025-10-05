@@ -8,7 +8,7 @@ describe("ComboAI", () => {
     game = new MockGame();
     mockAI1 = new MockAI(game, ["card1"]);
     mockAI2 = new MockAI(game, ["card2"]);
-    comboAI = new ComboAI(game, "test-combo", [mockAI1, mockAI2]);
+    comboAI = new ComboAI(game, [mockAI1, mockAI2], "test-combo");
   });
 
   it("should be initialized with multiple AI strategies", () => {

@@ -5,9 +5,10 @@ export class RandomAI extends AI {
    * Creates an instance of RandomAI.
    * This AI chooses a random valid move from all available options.
    * @param {Game} game The game instance.
+   * @param {string} [persona=null] The persona of the AI.
    */
-  constructor(game) {
-    super(game, "random");
+  constructor(game, persona = null) {
+    super(game, "random", persona);
   }
 
   /**

@@ -1,5 +1,6 @@
 import { AI } from "./base.js";
 import { ComboAI } from "./combo.js";
+import { AI_TYPES } from "./constants.js";
 
 export class RandomComboAI extends ComboAI {
   /**
@@ -7,9 +8,10 @@ export class RandomComboAI extends ComboAI {
    * This AI chooses a random strategy from its available strategies.
    * @param {Game} game The game instance.
    * @param {Array<AI>} strategies An array of AI strategy instances.
+   * @param {string} [persona=null] The persona of the AI.
    */
-  constructor(game, strategies) {
-    super(game, "random-combo", strategies);
+  constructor(game, strategies, persona = null) {
+    super(game, strategies, AI_TYPES.RANDOM_COMBO, persona);
   }
 
   /**

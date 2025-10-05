@@ -6,11 +6,12 @@ export class PassAI extends AI {
    * Creates an instance of PassAI.
    * This AI passes unless forced to play, in which case it uses a provided strategy or defaults to RandomAI.
    * @param {Game} game The game instance.
-   * @param {AI} [strategy=null] The strategy to use when forced to play. Defaults to RandomAI.
+   * @param {AI} [strategy=null] The strategy to use when forced to play.
+   * @param {string} [persona=null] The persona of the AI.
    */
-  constructor(game, strategy = null) {
-    super(game, "pass");
-    this.strategy = strategy || new RandomAI(game);
+  constructor(game, strategy = null, persona = null) {
+    super(game, "pass", persona);
+    this.strategy = strategy || new RandomAI(game, persona);
   }
 
   /**

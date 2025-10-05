@@ -6,16 +6,17 @@ export class AI {
    * Creates an instance of AI.
    * This is a base class for all AI strategies.
    * @param {Game} game The game instance.
-   * @param {string} type The type of AI (e.g., "lowest-card", "random").
+   * @param {string} type The type of AI (e.g., "lowest_card", "random").
    */
-  constructor(game, type) {
+  constructor(game, type, persona = null) {
     this.game = game;
     this.type = type;
+    this.persona = persona;
     this.id = crypto.randomUUID();
   }
 
   data() {
-    return { game: this.game.id, id: this.id, type: this.type };
+    return { game: this.game.id, id: this.id, persona: this.persona, type: this.type };
   }
 
   /**

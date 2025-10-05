@@ -1,14 +1,16 @@
 import { AI } from "./base.js";
 import { Card } from "../deck.js";
+import { AI_TYPES } from "./constants.js";
 
 export class LowestCardAI extends AI {
   /**
    * Creates an instance of LowestCardAI.
    * This AI chooses the valid move with the lowest-value starting card.
    * @param {Game} game The game instance.
+   * @param {string} [persona=null] The persona of the AI.
    */
-  constructor(game) {
-    super(game, "lowest-card");
+  constructor(game, persona = null) {
+    super(game, AI_TYPES.LOWEST_CARD, persona);
   }
 
   /**

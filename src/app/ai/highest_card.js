@@ -1,14 +1,16 @@
 import { AI } from "./base.js";
 import { Card } from "../deck.js";
+import { AI_TYPES } from "./constants.js";
 
 export class HighestCardAI extends AI {
   /**
    * Creates an instance of HighestCardAI.
    * This AI chooses the valid move with the highest-value starting card.
    * @param {Game} game The game instance.
+   * @param {string} [persona=null] The persona of the AI.
    */
-  constructor(game) {
-    super(game, "highest-card");
+  constructor(game, persona = null) {
+    super(game, AI_TYPES.HIGHEST_CARD, persona);
   }
 
   /**
@@ -35,7 +37,7 @@ export class HighestCardAI extends AI {
   _findHighestValidMove(hand, playPile, currentTurn, allPlayerHands) {
     const allValidMoves = this.findAllValidMoves(hand, playPile, currentTurn, allPlayerHands);
 
-    allValidMoves.sort((a, b) => b[0].value - a[0].value); // Sort in descending order
+    allValidMoves.sort((a, b) => b[0].value - a[0].value);
 
     return allValidMoves.length > 0 ? allValidMoves[0] : [];
   }

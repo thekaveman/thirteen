@@ -1,13 +1,15 @@
 import { AI } from "./base.js";
+import { AI_TYPES } from "./constants.js";
 
 export class HighestValueAI extends AI {
   /**
    * Creates an instance of HighestValueAI.
    * This AI chooses the valid move with the highest total value of cards in the combination.
    * @param {Game} game The game instance.
+   * @param {string} [persona=null] The persona of the AI.
    */
-  constructor(game) {
-    super(game, "highest-value");
+  constructor(game, persona = null) {
+    super(game, AI_TYPES.HIGHEST_VALUE, persona);
   }
 
   /**

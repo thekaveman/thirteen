@@ -6,8 +6,8 @@ export class ComboAI extends AI {
    * @param {Game} game The game instance.
    * @param {Array<AI>} strategies An array of AI strategy instances.
    */
-  constructor(game, type = "combo", strategies = []) {
-    super(game, type);
+  constructor(game, strategies = [], type = "combo", persona = null) {
+    super(game, type, persona);
     this.strategies = strategies;
   }
 

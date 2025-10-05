@@ -1,4 +1,5 @@
 import { ComboAI } from "./combo.js";
+import { AI_TYPES } from "./constants.js";
 
 export class PrioritizedComboAI extends ComboAI {
   /**
@@ -6,9 +7,10 @@ export class PrioritizedComboAI extends ComboAI {
    * This AI iterates through a list of strategies and uses the first one that can make a valid move.
    * @param {Game} game The game instance.
    * @param {Array<AI>} strategies An array of AI strategy instances, ordered by priority.
+   * @param {string} [persona=null] The persona of the AI.
    */
-  constructor(game, strategies) {
-    super(game, "prioritized-combo", strategies);
+  constructor(game, strategies, persona = null) {
+    super(game, strategies, AI_TYPES.PRIORITIZED_COMBO, persona);
   }
 
   /**
