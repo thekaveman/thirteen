@@ -4,14 +4,14 @@ import { Rules } from "./rules.js";
 import { log } from "../utils.js";
 
 export class Game {
-  STATE_KEY = "13gs";
+  static STATE_KEY = "13gs";
 
   /**
    * Initializes a new game.
    * @param {Deck} deck The Deck instance for this game.
-   * @param {string} [stateKey=this.STATE_KEY] The key used to save and load state in localStorage.
+   * @param {string} [stateKey=Game.STATE_KEY] The key used to save and load state in localStorage.
    */
-  constructor(deck, stateKey = this.STATE_KEY) {
+  constructor(deck, stateKey = Game.STATE_KEY) {
     this.deck = deck;
     this.hooks = {
       onGameInit: (game) => {},
