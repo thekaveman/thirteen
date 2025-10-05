@@ -52,23 +52,21 @@ export class App {
   }
 
   handleAITurn() {
-    log("handleAITurn called.");
     const aiPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
     if (aiPlayer.type !== PLAYER_TYPES.AI) {
-      log("handleAITurn: Not an AI player, returning.");
       return;
     }
 
-    log("handleAITurn: Calling aiPlayer.takeTurn().");
+    log(`handleAITurn: Calling takeTurn() for ${aiPlayer.ai.persona}`);
     const move = aiPlayer.takeTurn();
-    log(`handleAITurn: aiPlayer.takeTurn() returned: ${JSON.stringify(move)}`);
+    log(`handleAITurn: takeTurn() for ${aiPlayer.ai.persona} returned: ${JSON.stringify(move)}`);
 
     if (move && move.length > 0) {
-      log("handleAITurn: AI is playing cards.");
+      log(`handleAITurn: ${aiPlayer.ai.persona} is playing cards.`);
       this.game.gameState.selectedCards = move;
       this.game.playCards();
     } else {
-      log("handleAITurn: AI is passing turn.");
+      log(`handleAITurn: ${aiPlayer.ai.persona} is passing turn.`);
       this.game.passTurn();
     }
 
