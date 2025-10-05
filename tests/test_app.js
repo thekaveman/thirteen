@@ -10,17 +10,12 @@ describe("App", function () {
     this.sandbox = sinon.createSandbox();
     clock = this.sandbox.useFakeTimers();
     game = new MockGame(new MockDeck(), "test-key");
-    ai = new MockAI(game);
+    ai = new MockAI(game, null);
     ui = new MockUI(game);
     analytics = new MockAnalytics();
     app = new App(game, ui, analytics);
 
-    // Override createPlayers for this test file to inject the mock AI
-    game.createPlayers = (ui) => {
-      const human = new HumanPlayer(game, 0, ui);
-      const aiPlayer = new AIPlayer(game, 1, ai); // Use the mock AI
-      return [human, aiPlayer];
-    };
+    game.players = [new HumanPlayer(game, 0, ui), new AIPlayer(game, 1, ai)];
 
     // Mock UI elements
     container = document.createElement("div");
@@ -68,7 +63,7 @@ describe("App", function () {
       expect(game.loadCalled).to.be.true;
       expect(ui.renderCalled).to.be.true;
       expect(game.initCalled).to.be.false;
-      expect(setPlayersSpy.called).to.be.false;
+      expect(setPlayersSpy.called).to.be.true;
     });
 
     it("init() should start a new game if no saved game exists (false branch of load)", function () {
@@ -130,7 +125,6 @@ describe("App", function () {
         stateKey: "test-key",
         DeckClass: MockDeck,
         GameClass: MockGame,
-        aiPersona: "random",
         UIClass: MockUI,
         AnalyticsClass: MockAnalytics,
       });
@@ -140,7 +134,6 @@ describe("App", function () {
       expect(app.ui).to.be.an.instanceOf(MockUI);
       expect(app.analytics).to.be.an.instanceOf(MockAnalytics);
       expect(initSpy.calledOnce).to.be.true;
-      expect(initSpy.calledWith("random")).to.be.true;
 
       initSpy.restore();
     });
@@ -264,16 +257,15 @@ describe("App", function () {
 
     it("should play cards when a move is available", function () {
       app.init();
-      const aiPlayer = game.gameState.players.find((p) => p.type === PLAYER_TYPES.AI);
-      const mockAI = aiPlayer.ai;
       const move = [new Card("3", "♠")];
-      mockAI.move = move; // Configure MockAI to return a move
+      const aiPlayer = game.gameState.players.find((p) => p.type === PLAYER_TYPES.AI);
+      const takeTurnStub = this.sandbox.stub(aiPlayer.ai, "takeTurn").returns(move);
       game.gameState.currentPlayer = 1; // AI
       const playCardsSpy = this.sandbox.spy(game, "playCards");
 
       app.handleAITurn();
 
-      expect(mockAI.takeTurnCalled).to.be.true;
+      expect(takeTurnStub.called).to.be.true;
       expect(playCardsSpy.called).to.be.true;
       expect(ui.renderCalled).to.be.true;
     });
@@ -281,14 +273,14 @@ describe("App", function () {
     it("should pass turn when no move is available", function () {
       app.init();
       const aiPlayer = game.gameState.players.find((p) => p.type === PLAYER_TYPES.AI);
-      const mockAI = aiPlayer.ai;
-      mockAI.move = []; // Configure MockAI to return no move
+      const takeTurnStub = this.sandbox.stub(aiPlayer.ai, "takeTurn").returns([]);
       game.gameState.currentPlayer = 1; // AI
+      game.gameState.playPile = [new Card("10", "♠")]; // Not the first play
       const passTurnSpy = this.sandbox.spy(game, "passTurn");
 
       app.handleAITurn();
 
-      expect(mockAI.takeTurnCalled).to.be.true;
+      expect(takeTurnStub.called).to.be.true;
       expect(passTurnSpy.called).to.be.true;
       expect(ui.renderCalled).to.be.true;
     });

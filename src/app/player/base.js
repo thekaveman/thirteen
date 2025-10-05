@@ -8,10 +8,11 @@ export class Player {
     this.game = game;
     this.number = number;
     this.id = crypto.randomUUID();
+    this.persona = null;
   }
 
   data() {
-    return { game: this.game.id, id: this.id, number: this.number, type: this.type };
+    return { game: this.game.id, id: this.id, number: this.number, persona: this.persona, type: this.type };
   }
 
   takeTurn() {

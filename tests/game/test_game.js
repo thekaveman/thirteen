@@ -1,6 +1,6 @@
 import { Card, Game } from "../../src/app/game/index.js";
 import { HumanPlayer, AIPlayer, PLAYER_TYPES } from "../../src/app/player/index.js";
-import { MockDeck, MockUI, MockPlayer } from "../mocks.js";
+import { MockAI, MockDeck, MockPlayer, MockUI } from "../mocks.js";
 
 describe("Game", () => {
   let game;
@@ -31,18 +31,6 @@ describe("Game", () => {
   });
 
   describe("Player Management", () => {
-    it("createPlayers() should create players with correct types and IDs", () => {
-      game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
-      game.gameState.playerPersonas = [null, "random"];
-      game.gameState.players = [{ id: "one" }, { id: "two" }];
-      const players = game.createPlayers(new MockUI(game));
-      expect(players).to.have.lengthOf(2);
-      expect(players[0].type).to.equal(PLAYER_TYPES.HUMAN);
-      expect(players[0].id).to.equal("one");
-      expect(players[1].type).to.equal(PLAYER_TYPES.AI);
-      expect(players[1].id).to.equal("two");
-    });
-
     it("setPlayers() should initialize players and associated game state", () => {
       const players = [{ type: PLAYER_TYPES.HUMAN }, { type: PLAYER_TYPES.AI }];
       const originalGamesWon = [2, 1];
@@ -264,26 +252,24 @@ describe("Game", () => {
 
     it("load() should correctly rehydrate game data", () => {
       const mockUI = new MockUI(game);
+      const mockAI = new MockAI(game, [new Card("3", "♠")], "random");
+      const mockPlayers = [new AIPlayer(game, 0, mockAI), new HumanPlayer(game, 1, mockUI)];
 
-      game.gameState.playerTypes = [PLAYER_TYPES.AI, PLAYER_TYPES.HUMAN];
-      game.gameState.playerPersonas = ["random", null];
-      game.setPlayers(game.createPlayers(mockUI));
+      game.setPlayers(mockPlayers);
       game.gameState.gameStarted = true;
       game.gameState.playPile = [new Card("K", "♠"), new Card("K", "♦")];
       game.gameState.selectedCards = [new Card("A", "♠")];
       game.save();
 
       const newGame = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
-      const loaded = newGame.load(mockUI);
+      const loadedGameState = newGame.load(mockUI);
 
-      expect(loaded).to.be.true;
+      expect(loadedGameState.loaded).to.be.true;
       expect(newGame.id).to.equal(game.id);
       expect(newGame.stateKey).to.equal(game.stateKey);
 
-      expect(newGame.gameState.players[0]).to.be.an.instanceOf(AIPlayer);
-      expect(newGame.gameState.players[1]).to.be.an.instanceOf(HumanPlayer);
-      expect(newGame.gameState.players[0].takeTurn).to.be.a("function");
-      expect(newGame.gameState.players[1].handlePlayButtonClick).to.be.a("function");
+      expect(loadedGameState.loadedPlayerTypes).to.deep.equal(game.gameState.playerTypes);
+      expect(loadedGameState.loadedPlayerPersonas).to.deep.equal(game.gameState.playerPersonas);
 
       expect(newGame.gameState.playerHands[0][0]).to.be.an.instanceOf(Card);
       expect(newGame.gameState.playPile[0]).to.be.an.instanceOf(Card);

@@ -1,5 +1,5 @@
 import { Card, Deck } from "./deck.js";
-import { createPlayer, PLAYER_TYPES } from "../player/index.js";
+import { PLAYER_TYPES } from "../player/index.js";
 import { Rules } from "./rules.js";
 import { log } from "../utils.js";
 
@@ -44,30 +44,6 @@ export class Game {
     this.id = crypto.randomUUID();
     this.rules = new Rules();
     this.stateKey = stateKey;
-  }
-
-  /**
-   * Create players from the game state's playerTypes.
-   * @param {UI} ui A UI instance for HumanPlayers.
-   * @returns {Array<Player>} The list of players.
-   */
-  createPlayers(ui) {
-    const playerIds = this.gameState.players.map((p) => p.id);
-    const players = this.gameState.playerTypes.map((type, index) => {
-      const player = createPlayer({
-        game: this,
-        type,
-        number: index,
-        ui,
-        persona: this.gameState.playerPersonas ? this.gameState.playerPersonas[index] : null,
-      });
-
-      if (playerIds.length > 0) {
-        player.id = playerIds[index];
-      }
-      return player;
-    });
-    return players;
   }
 
   /**
@@ -140,6 +116,37 @@ export class Game {
     this.gameState.selectedCards = [];
     this.deal();
     this.hooks.onGameInit(this);
+  }
+
+  /**
+   * Loads the game state from localStorage.
+   * @param {UI} ui An instance of the UI class.
+   * @returns {boolean} True if a saved game was loaded, false otherwise.
+   */
+  load(ui) {
+    const savedState = localStorage.getItem(this.stateKey);
+    const parsedState = savedState ? JSON.parse(savedState) : null;
+    if (parsedState && ui) {
+      // Store playerTypes from the parsed state before overwriting this.gameState
+      const loadedPlayerTypes = parsedState.gameState.players.map((p) => p.type);
+      const loadedPlayerPersonas = parsedState.gameState.players.map((p) => (p.type === PLAYER_TYPES.AI ? p.persona : null));
+
+      this.id = parsedState.id;
+      this.stateKey = parsedState.stateKey;
+      this.gameState = parsedState.gameState;
+      // Re-hydrate deck
+      this.deck = new Deck(parsedState.deck.cards);
+      // Re-hydrate cards
+      this.gameState.playerHands = [...this.gameState.playerHands].map((h) => Card.objectsToList(h));
+      this.gameState.playPile = Card.objectsToList([...this.gameState.playPile]);
+      this.gameState.selectedCards = Card.objectsToList([...this.gameState.selectedCards]);
+      // Assign the stored playerTypes back to gameState
+      this.gameState.playerTypes = loadedPlayerTypes;
+      this.gameState.playerPersonas = loadedPlayerPersonas;
+      log("Game loaded from localStorage.");
+      return { loaded: true, loadedPlayerTypes, loadedPlayerPersonas, gameOver: this.gameState.gameOver };
+    }
+    return { loaded: false };
   }
 
   /**
@@ -233,39 +240,6 @@ export class Game {
   }
 
   /**
-   * Loads the game state from localStorage.
-   * @param {UI} ui An instance of the UI class.
-   * @returns {boolean} True if a saved game was loaded, false otherwise.
-   */
-  load(ui) {
-    const savedState = localStorage.getItem(this.stateKey);
-    const parsedState = savedState ? JSON.parse(savedState) : null;
-    if (parsedState && ui) {
-      // Store playerTypes from the parsed state before overwriting this.gameState
-      const loadedPlayerTypes = parsedState.gameState.players.map((p) => p.type);
-      const loadedPlayerPersonas = parsedState.gameState.players.map((p) => (p.ai ? p.ai.persona : null));
-
-      this.id = parsedState.id;
-      this.stateKey = parsedState.stateKey;
-      this.gameState = parsedState.gameState;
-      // Re-hydrate deck
-      this.deck = new Deck(parsedState.deck.cards);
-      // Re-hydrate cards
-      this.gameState.playerHands = [...this.gameState.playerHands].map((h) => Card.objectsToList(h));
-      this.gameState.playPile = Card.objectsToList([...this.gameState.playPile]);
-      this.gameState.selectedCards = Card.objectsToList([...this.gameState.selectedCards]);
-      // Assign the stored playerTypes back to gameState
-      this.gameState.playerTypes = loadedPlayerTypes;
-      this.gameState.playerPersonas = loadedPlayerPersonas;
-      // Re-hydrate players
-      this.gameState.players = this.createPlayers(ui);
-      log("Game loaded from localStorage.");
-      return true;
-    }
-    return false;
-  }
-
-  /**
    * Resets the entire game, including generating a new game ID and clearing cumulative wins.
    */
   reset() {
@@ -299,6 +273,7 @@ export class Game {
       this.gameState.players = players;
       this.gameState.numPlayers = players.length;
       this.gameState.playerTypes = players.map((p) => p.type);
+      this.gameState.playerPersonas = players.map((p) => p.persona);
       this.gameState.roundsWon = new Array(players.length).fill(0);
       if (this.gameState.gamesWon.length !== players.length) {
         this.gameState.gamesWon = new Array(players.length).fill(0);

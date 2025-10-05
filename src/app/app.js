@@ -1,7 +1,8 @@
 import { Analytics } from "./analytics.js";
 import { Deck, Game } from "./game/index.js";
-import { PLAYER_TYPES } from "./player/index.js";
+import { createPlayer, PLAYER_TYPES } from "./player/index.js";
 import { UI } from "./ui.js";
+import { AI_PERSONAS } from "./ai/personas.js";
 import { log } from "./utils.js";
 
 export class App {
@@ -21,6 +22,18 @@ export class App {
 
     this.ui.init(this.game);
     this.attachHandlers(); // attach handlers once after UI is initialized
+    this.selectedAI = "random"; // Default AI persona
+    this.humanPlayer = createPlayer({ game: this.game, type: PLAYER_TYPES.HUMAN, number: 0, ui: this.ui });
+    this.aiPlayers = {};
+    // Populate aiPlayers
+    for (const personaKey in AI_PERSONAS) {
+      this.aiPlayers[personaKey] = createPlayer({
+        game: this.game,
+        type: PLAYER_TYPES.AI,
+        number: 1, // Assuming AI is always player 1
+        persona: personaKey,
+      });
+    }
   }
 
   attachHandlers() {
@@ -76,14 +89,14 @@ export class App {
 
   handleNewGameClick() {
     log(`Game initialized`);
-    this.init(this.setTimeout);
+    this.init();
   }
 
   handleResetButtonClick() {
     log(`Game reset`);
     this.clearStorage();
     this.game.reset();
-    this.init(this.setTimeout);
+    this.init();
   }
 
   handleStartGameClick() {
@@ -105,10 +118,15 @@ export class App {
     this.nextTurn();
   }
 
-  init(aiPersona = "random") {
+  init() {
     // Attempt to load game state
-    if (this.game.load(this.ui) && !this.game.gameState.gameOver) {
-      // Render loaded UI
+    const loadedGameState = this.game.load(this.ui);
+    if (loadedGameState.loaded && !loadedGameState.gameOver) {
+      // If game loaded, update selectedAI from loaded state
+      if (loadedGameState.loadedPlayerPersonas && loadedGameState.loadedPlayerPersonas[1]) {
+        this.selectedAI = loadedGameState.loadedPlayerPersonas[1];
+      }
+      this.game.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
       this.ui.render();
       return;
     }
@@ -118,8 +136,8 @@ export class App {
 
     // Initial game setup for display (hands dealt, starting player determined)
     this.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
-    this.game.gameState.playerPersonas = [null, aiPersona];
-    this.game.setPlayers(this.game.createPlayers(this.ui));
+    this.game.gameState.playerPersonas = [null, this.selectedAI];
+    this.game.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
     this.game.save();
 
     // Render initial UI with dealt hands and start button
@@ -151,25 +169,19 @@ export class App {
    * @param {string} [options.stateKey=Game.STATE_KEY] - The key for saving game state.
    * @param {typeof Deck} [options.DeckClass=Deck] - The Deck class to use.
    * @param {typeof Game} [options.GameClass=Game] - The Game class to use.
-   * @param {string} [options.aiPersona="random"] - The AI persona to use.
    * @param {typeof UI} [options.UIClass=UI] - The UI class to use.
    * @param {typeof Analytics} [options.AnalyticsClass=Analytics] - The Analytics class to use.
    * @returns {App} A new App instance.
    */
   static create(options = {}) {
-    const {
-      stateKey = Game.STATE_KEY,
-      DeckClass = Deck,
-      GameClass = Game,
-      aiPersona = "random",
-      UIClass = UI,
-      AnalyticsClass = Analytics,
-    } = options;
+    const { stateKey = Game.STATE_KEY, DeckClass = Deck, GameClass = Game, UIClass = UI, AnalyticsClass = Analytics } = options;
 
     const deck = new DeckClass();
     const game = new GameClass(deck, stateKey);
     const app = new App(game, new UIClass(game), new AnalyticsClass());
-    app.init(aiPersona);
+
+    app.ui.render();
+    app.init();
     return app;
   }
 }

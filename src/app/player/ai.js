@@ -5,6 +5,7 @@ export class AIPlayer extends Player {
   constructor(game, number, ai) {
     super(PLAYER_TYPES.AI, game, number);
     this.ai = ai;
+    this.persona = this.ai.persona;
   }
 
   data() {

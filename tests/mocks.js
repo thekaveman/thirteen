@@ -76,8 +76,8 @@ export class MockAnalytics {
 }
 
 export class MockAI extends AI {
-  constructor(game, move) {
-    super(game, "mock");
+  constructor(game, move, persona = null) {
+    super(game, "mock", persona);
     this.move = move;
     this.takeTurnCalled = false;
   }
@@ -238,9 +238,9 @@ export class MockGame extends Game {
     this.loadCalled = true;
     if (this.loadWillSucceed) {
       this.gameState.gameOver = this.gameOverOnLoad;
-      return true;
+      return { loaded: true, gameOver: this.gameOverOnLoad, loadedPlayerPersonas: [null, "random"] };
     }
-    return false;
+    return { loaded: false };
   }
   playCards() {
     this.playCardsCalled = true;
@@ -288,8 +288,9 @@ export class MockLocalStorage {
 }
 
 export class MockPlayer extends Player {
-  constructor(name, hand, isHuman = false) {
+  constructor(name, hand, isHuman = false, persona = null) {
     super(name, hand, isHuman);
+    this.persona = isHuman ? null : persona; // Set persona to null if it's a human player
   }
 
   data() {
@@ -298,6 +299,7 @@ export class MockPlayer extends Player {
       type: this.type,
       name: this.name,
       isHuman: this.isHuman,
+      persona: this.persona,
     };
   }
 

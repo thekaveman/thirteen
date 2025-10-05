@@ -1,16 +1,16 @@
 import { Analytics } from "../src/app/analytics.js";
 import { Game } from "../src/app/game/index.js";
-import { PLAYER_TYPES } from "../src/app/player/index.js";
-import { MockDeck, MockUI, MockAmplitude } from "./mocks.js";
+import { HumanPlayer, AIPlayer, PLAYER_TYPES } from "../src/app/player/index.js";
+import { MockDeck, MockUI, MockAmplitude, MockAI } from "./mocks.js";
 
 describe("Analytics", () => {
   let game, analytics, mockAmplitude;
 
   beforeEach(() => {
     game = new Game(new MockDeck(), "test-game");
-    game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
-    game.gameState.playerPersonas = [null, "random"];
-    game.setPlayers(game.createPlayers(new MockUI(game)));
+    const humanPlayer = new HumanPlayer(game, 0, new MockUI(game));
+    const aiPlayer = new AIPlayer(game, 1, new MockAI(game, []));
+    game.setPlayers([humanPlayer, aiPlayer]);
     analytics = new Analytics();
     mockAmplitude = new MockAmplitude();
     analytics.api = mockAmplitude;
