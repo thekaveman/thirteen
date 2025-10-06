@@ -1,8 +1,5 @@
-import { AI, LowestCardAI } from "../src/app/ai.js";
-import { COMBINATION_TYPES } from "../src/app/constants.js";
-import { Card } from "../src/app/deck.js";
-import { Game } from "../src/app/game.js";
-import { MockAI } from "./mocks.js";
+import { AI } from "../../src/app/ai/index.js";
+import { Card, Game, COMBINATION_TYPES } from "../../src/app/game/index.js";
 
 describe("AI", () => {
   let game, ai;
@@ -14,11 +11,12 @@ describe("AI", () => {
 
   describe("Base AI Class", () => {
     it("data() should return correct data", () => {
-      const specificAI = new AI(game, "test-type");
+      const specificAI = new AI(game, "test-type", "test-persona");
       const aiData = specificAI.data();
       expect(aiData.id).to.equal(specificAI.id);
-      expect(aiData.type).to.equal("test-type");
       expect(aiData.game).to.equal(game.id);
+      expect(aiData.type).to.equal("test-type");
+      expect(aiData.persona).to.equal("test-persona");
     });
 
     it("takeTurn() should throw an error for the base class", () => {
@@ -91,6 +89,12 @@ describe("AI", () => {
       ]);
     });
 
+    it("generateCombinations() should not create a straight with a gap", () => {
+      const hand = [new Card("3", "♠"), new Card("4", "♦"), new Card("6", "♣")];
+      const straights = ai.generateCombinations(hand, COMBINATION_TYPES.STRAIGHT);
+      expect(straights).to.have.lengthOf(0);
+    });
+
     it("generateCombinations() should return no straights for small hands", () => {
       const hand = [new Card("3", "♠"), new Card("4", "♦"), new Card("2", "♣")];
       const straights = ai.generateCombinations(hand, COMBINATION_TYPES.STRAIGHT);
@@ -133,8 +137,34 @@ describe("AI", () => {
       expect(hasInvalidLength).to.be.false;
     });
 
+    it("generateCombinations() for consecutive pairs should handle breaks in sequence", () => {
+      const hand = [
+        new Card("3", "♠"),
+        new Card("3", "♦"),
+        new Card("4", "♣"),
+        new Card("4", "♥"),
+        new Card("7", "♠"),
+        new Card("7", "♦"),
+        new Card("8", "♣"),
+        new Card("8", "♥"),
+        new Card("9", "♠"),
+        new Card("9", "♦"),
+      ];
+      const consecutivePairs = ai.generateCombinations(hand, COMBINATION_TYPES.CONSECUTIVE_PAIRS);
+      // Should find 7-8-9, but not a single sequence combining them with 3-4.
+      expect(consecutivePairs).to.have.lengthOf(1);
+      expect(consecutivePairs[0].map((c) => c.rank)).to.deep.equal(["7", "7", "8", "8", "9", "9"]);
+    });
+
     it("generateCombinations() for consecutive pairs should handle small hands correctly", () => {
-      const hand = [new Card("3", "♠"), new Card("3", "♦"), new Card("4", "♣"), new Card("4", "♥"), new Card("5", "♠"), new Card("6", "♦")];
+      const hand = [
+        new Card("3", "♠"),
+        new Card("3", "♦"),
+        new Card("4", "♣"),
+        new Card("4", "♥"),
+        new Card("5", "♠"),
+        new Card("6", "♦"),
+      ];
       const consecutivePairs = ai.generateCombinations(hand, COMBINATION_TYPES.CONSECUTIVE_PAIRS);
       expect(consecutivePairs).to.have.lengthOf(0);
     });
@@ -152,117 +182,6 @@ describe("AI", () => {
       const allValidMoves = ai.findAllValidMoves(hand, [], 1, [hand]);
       // Expected: 4 singles, 1 pair, 2 straights (3-4-5)
       expect(allValidMoves).to.have.lengthOf(7);
-    });
-  });
-
-  describe("LowestCardAI", () => {
-    let lowestCardAI;
-
-    beforeEach(() => {
-      lowestCardAI = new LowestCardAI(game);
-    });
-
-    it("takeTurn() should return an empty array if no valid move exists", () => {
-      const hand = [[new Card("4", "♠"), new Card("5", "♦")]];
-      const playPile = [new Card("6", "♣")];
-      const move = lowestCardAI.takeTurn(hand[0], playPile, 1, hand);
-      expect(move).to.be.an("array").that.is.empty;
-    });
-
-    it("takeTurn() should choose the lowest valid single", () => {
-      const hand = [[new Card("4", "♠"), new Card("5", "♦"), new Card("6", "♣")]];
-      const playPile = [new Card("3", "♠")];
-      const move = lowestCardAI.takeTurn(hand[0], playPile, 1, hand);
-      expect(move).to.have.lengthOf(1);
-      expect(move[0].value).to.equal(Card.getValue("4", "♠"));
-    });
-
-    it("takeTurn() should choose the lowest valid pair", () => {
-      const hand = [[new Card("4", "♠"), new Card("4", "♦"), new Card("5", "♣"), new Card("5", "♥")]];
-      const playPile = [new Card("3", "♠"), new Card("3", "♦")];
-      const move = lowestCardAI.takeTurn(hand[0], playPile, 1, hand);
-      expect(move).to.have.lengthOf(2);
-      expect(move[0].rank).to.equal("4");
-    });
-
-    it("takeTurn() should choose the lowest valid triple", () => {
-      const hand = [
-        [
-          new Card("5", "♠"),
-          new Card("5", "♦"),
-          new Card("5", "♣"),
-          new Card("6", "♠"),
-          new Card("6", "♦"),
-          new Card("6", "♣"),
-        ],
-      ];
-      const playPile = [new Card("4", "♠"), new Card("4", "♦"), new Card("4", "♣")];
-      const move = lowestCardAI.takeTurn(hand[0], playPile, 1, hand);
-      expect(move).to.have.lengthOf(3);
-      expect(move[0].rank).to.equal("5");
-    });
-
-    it("takeTurn() should choose the lowest valid straight", () => {
-      const hand = [[new Card("6", "♠"), new Card("7", "♦"), new Card("8", "♣"), new Card("9", "♠"), new Card("10", "♦")]];
-      const playPile = [new Card("3", "♠"), new Card("4", "♦"), new Card("5", "♣")];
-      const move = lowestCardAI.takeTurn(hand[0], playPile, 1, hand);
-      expect(move).to.have.lengthOf(3);
-      expect(move.map((c) => c.rank)).to.deep.equal(["6", "7", "8"]);
-    });
-
-    it("takeTurn() should choose the lowest four-of-a-kind bomb", () => {
-      const hand = [
-        [
-          new Card("3", "♠"),
-          new Card("3", "♦"),
-          new Card("3", "♣"),
-          new Card("3", "♥"),
-          new Card("4", "♠"),
-          new Card("4", "♣"),
-          new Card("4", "♦"),
-          new Card("4", "♥"),
-        ],
-      ];
-      const playPile = [new Card("2", "♠")];
-      const move = lowestCardAI.takeTurn(hand[0], playPile, 1, hand);
-      expect(move).to.have.lengthOf(4);
-      expect(move[0].rank).to.equal("3");
-    });
-
-    it("takeTurn() should choose the lowest consecutive pairs bomb", () => {
-      const hand = [
-        [
-          new Card("3", "♠"),
-          new Card("3", "♦"),
-          new Card("4", "♣"),
-          new Card("4", "♥"),
-          new Card("5", "♠"),
-          new Card("5", "♦"),
-          new Card("6", "♠"),
-          new Card("6", "♦"),
-        ],
-      ];
-      const playPile = [new Card("2", "♠")];
-      const move = lowestCardAI.takeTurn(hand[0], playPile, 1, hand);
-      expect(move).to.have.lengthOf(6);
-      expect(move.map((c) => c.rank)).to.deep.equal(["3", "3", "4", "4", "5", "5"]);
-    });
-
-    it("takeTurn() should choose the lowest value combination when pile is empty", () => {
-      const hand = [new Card("3", "♠"), new Card("4", "♦"), new Card("5", "♣"), new Card("6", "♥")];
-      const move = lowestCardAI.takeTurn(hand, [], 1, [hand]);
-      expect(move).to.have.lengthOf(1);
-      expect(move[0].rank).to.equal("3");
-      expect(move[0].suit).to.equal("♠");
-    });
-  });
-
-  describe("MockAI", () => {
-    it("takeTurn() should return the move it was constructed with", () => {
-      const move = [new Card("5", "♦")];
-      const mockAI = new MockAI(game, move);
-      const selectedMove = mockAI.takeTurn();
-      expect(selectedMove).to.equal(move);
     });
   });
 });

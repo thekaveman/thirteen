@@ -1,19 +1,26 @@
-import { COMBINATION_TYPES, RANKS } from "./constants.js";
-import { Card } from "./deck.js";
+import { Card, COMBINATION_TYPES, RANKS } from "../game/index.js";
 
 export class AI {
-  constructor(game, type) {
+  /**
+   * Creates an instance of AI.
+   * This is a base class for all AI strategies.
+   * @param {Game} game The game instance.
+   * @param {string} type The type of AI (e.g., "lowest_card", "random").
+   */
+  constructor(game, type, persona = null) {
     this.game = game;
     this.type = type;
+    this.persona = persona;
     this.id = crypto.randomUUID();
   }
 
   data() {
-    return { game: this.game.id, id: this.id, type: this.type };
+    return { game: this.game.id, id: this.id, persona: this.persona, type: this.type };
   }
 
   /**
    * Executes the AI's turn and returns the chosen move.
+   * Subclasses must implement this method.
    * @param {Array<Card>} playerHand The AI player's hand.
    * @param {Array<Card>} playPile The current play pile.
    * @param {number} currentTurn The current turn number.
@@ -69,7 +76,7 @@ export class AI {
     const validMoves = [];
 
     for (const potentialPlay of potentialMoves) {
-      if (this.game.isValidPlay(potentialPlay, playPile, hand, currentTurn, allPlayerHands)) {
+      if (this.game.rules.isValidPlay(potentialPlay, playPile, hand, currentTurn, allPlayerHands)) {
         validMoves.push(potentialPlay);
       }
     }
@@ -307,40 +314,5 @@ export class AI {
       }
     }
     return subConsecutivePairs;
-  }
-}
-
-export class LowestCardAI extends AI {
-  constructor(game) {
-    super(game, "lowest-card");
-  }
-
-  /**
-   * Executes the AI's turn by finding the lowest valid move.
-   * @param {Array<Card>} playerHand The AI player's hand.
-   * @param {Array<Card>} playPile The current play pile.
-   * @param {number} currentTurn The current turn number.
-   * @param {Array<Array<Card>>} allPlayerHands All players' hands.
-   * @returns {Array<Card>} The cards to play, or an empty array if the AI passes.
-   */
-  takeTurn(playerHand, playPile, currentTurn, allPlayerHands) {
-    const move = this._findLowestValidMove(playerHand, playPile, currentTurn, allPlayerHands);
-    return move.length > 0 ? move : [];
-  }
-
-  /**
-   * Finds the lowest valid move for the AI player.
-   * @param {Array<Card>} hand The AI player's hand.
-   * @param {Array<Card>} playPile The current play pile.
-   * @param {number} currentTurn The current turn number.
-   * @param {Array<Array<Card>>} allPlayerHands All players' hands.
-   * @returns {Array<Card>} The cards to play, or an empty array if no valid move is found.
-   */
-  _findLowestValidMove(hand, playPile, currentTurn, allPlayerHands) {
-    const allValidMoves = this.findAllValidMoves(hand, playPile, currentTurn, allPlayerHands);
-
-    allValidMoves.sort((a, b) => a[0].value - b[0].value);
-
-    return allValidMoves.length > 0 ? allValidMoves[0] : [];
   }
 }

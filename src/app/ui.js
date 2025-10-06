@@ -1,6 +1,6 @@
-import { COMBINATION_TYPES, PLAYER_TYPES } from "./constants.js";
-import { Card } from "./deck.js";
-import { Game } from "./game.js";
+import { AI_PERSONAS } from "./ai/personas.js";
+import { Card, Game, COMBINATION_TYPES } from "./game/index.js";
+import { PLAYER_TYPES } from "./player/index.js";
 import { log } from "./utils.js";
 
 export class UI {
@@ -20,6 +20,9 @@ export class UI {
       newGameButton: "new-game-button",
       startGameButton: "start-game-button",
       resetButton: "reset-button",
+      aiSelection: "ai-selection",
+      aiDropdown: "ai-dropdown",
+      aiDescription: "ai-description",
     };
     this.messageTimeout = null;
 
@@ -33,6 +36,9 @@ export class UI {
     this.newGameButton = null;
     this.startGameButton = null;
     this.resetButton = null;
+    this.aiSelection = null;
+    this.aiDropdown = null;
+    this.aiDescription = null;
   }
 
   /**
@@ -51,6 +57,12 @@ export class UI {
       this.newGameButton = document.getElementById(this.id.newGameButton);
       this.startGameButton = document.getElementById(this.id.startGameButton);
       this.resetButton = document.getElementById(this.id.resetButton);
+      this.aiSelection = document.createElement("div");
+      this.aiSelection.id = this.id.aiSelection;
+      this.aiDropdown = document.createElement("select");
+      this.aiDropdown.id = this.id.aiDropdown;
+      this.aiDescription = document.createElement("p");
+      this.aiDescription.id = this.id.aiDescription;
     }
   }
 
@@ -139,6 +151,57 @@ export class UI {
   }
 
   /**
+   * Creates and renders the AI selection UI.
+   * @param {HTMLElement} parentElement The element to append the UI to.
+   */
+  renderAISelection(parentElement) {
+    if (typeof document === "undefined" || !parentElement) {
+      return;
+    }
+    this.aiSelection.innerHTML = "";
+    this.aiDropdown.innerHTML = "";
+    this.aiDescription.innerHTML = "";
+
+    const label = document.createElement("label");
+    label.htmlFor = this.id.aiDropdown;
+    label.textContent = "Select AI opponent:";
+    this.aiSelection.appendChild(label);
+
+    for (const [key, persona] of Object.entries(AI_PERSONAS)) {
+      const option = document.createElement("option");
+      option.value = key;
+      option.textContent = `${persona.icon} ${persona.friendly_name}`;
+      this.aiDropdown.appendChild(option);
+    }
+
+    // Add event listener for changes
+    this.aiDropdown.onchange = (event) => {
+      const selectedPersonaKey = event.target.value;
+      this.game.gameState.playerPersonas[1] = selectedPersonaKey;
+      if (this.game.players && this.game.players[1]) {
+        this.game.players[1].ai.persona = selectedPersonaKey;
+      }
+      this.updateAIDescription(selectedPersonaKey);
+      this.renderPlayerHand(1, parentElement);
+    };
+
+    this.aiSelection.appendChild(this.aiDropdown);
+    this.aiSelection.appendChild(this.aiDescription);
+    parentElement.appendChild(this.aiSelection);
+
+    // Set initial selection based on game state
+    const currentAIPersona = this.game.gameState.playerPersonas[1];
+    if (currentAIPersona) {
+      this.aiDropdown.value = currentAIPersona;
+      this.updateAIDescription(currentAIPersona);
+    } else {
+      // Default option if none is set
+      this.aiDropdown.value = "random";
+      this.updateAIDescription("random");
+    }
+  }
+
+  /**
    * Renders cards to a target element.
    * @param {Array<Card>} cards The array of cards.
    * @param {HTMLElement} targetElement The element in which to render.
@@ -167,7 +230,7 @@ export class UI {
    */
   renderPlayArea() {
     if (this.gameContent) {
-      const combinationType = this.game.getCombinationType(this.game.gameState.playPile);
+      const combinationType = this.game.rules.getCombinationType(this.game.gameState.playPile);
       const indicator = this.getCombinationTypeIndicator(combinationType);
       this.gameContent.innerHTML = `<h2>Play Area (Round ${this.game.gameState.roundNumber}) <span class="combination-type">${indicator}</span></h2>`;
       this.renderCardsContainer(this.game.gameState.playPile, this.gameContent);
@@ -184,52 +247,75 @@ export class UI {
     let text = `Player ${playerIndex + 1}`;
 
     if (player.type === PLAYER_TYPES.AI) {
-      text += " (AI)";
+      const persona = player.ai.persona;
+      text += persona ? `: ${AI_PERSONAS[persona].icon} ${AI_PERSONAS[persona].friendly_name} AI` : " (AI)";
+    } else if (player.type === PLAYER_TYPES.HUMAN) {
+      text += ": 🎮 You";
     }
 
     if (this.game.gameState.gameOver && this.game.gameState.playerHands[playerIndex].length === 0) {
-      this.displayMessage(`${text} wins in ${this.game.gameState.roundNumber} rounds`, "info");
+      this.displayMessage(`${text} - wins in ${this.game.gameState.roundNumber} rounds!`, "info");
       text += " (Winner!)";
     } else if (this.game.gameState.currentPlayer === playerIndex) {
-      text += " (Your Turn)";
+      text = `👉 ${text}`;
     }
     if (handDiv) {
-      const h2 = document.createElement("h2");
+      let h2 = handDiv.querySelector("h2");
+      if (!h2) {
+        h2 = document.createElement("h2");
+        handDiv.prepend(h2);
+      }
       h2.textContent = text;
-      handDiv.appendChild(h2);
-    }
 
-    if (typeof document !== "undefined") {
-      const gamesWonEl = document.createElement("p");
-      gamesWonEl.classList.add("games-won");
+      let gamesWonEl = handDiv.querySelector(".games-won");
+      if (!gamesWonEl) {
+        gamesWonEl = document.createElement("p");
+        gamesWonEl.classList.add("games-won");
+        handDiv.appendChild(gamesWonEl);
+      }
       gamesWonEl.textContent = `Games won: ${this.game.gameState.gamesWon[playerIndex]}`;
-      if (handDiv) handDiv.appendChild(gamesWonEl);
 
-      const roundsWonEl = document.createElement("p");
-      roundsWonEl.classList.add("rounds-won");
+      let roundsWonEl = handDiv.querySelector(".rounds-won");
+      if (!roundsWonEl) {
+        roundsWonEl = document.createElement("p");
+        roundsWonEl.classList.add("rounds-won");
+        handDiv.appendChild(roundsWonEl);
+      }
       roundsWonEl.textContent = `Rounds won: ${this.game.gameState.roundsWon[playerIndex]}`;
-      if (handDiv) handDiv.appendChild(roundsWonEl);
-    }
 
-    const preRender = (cardSpan, card) => {
-      const currentPlayer = this.game.gameState.players[playerIndex];
-      if (playerIndex === this.game.gameState.currentPlayer && currentPlayer.type === PLAYER_TYPES.HUMAN) {
-        if (cardSpan && cardSpan.addEventListener) {
-          cardSpan.addEventListener("click", currentPlayer.handleCardClick.bind(currentPlayer));
+      // Clear the cards container before rendering new cards
+      let cardsContainer = handDiv.querySelector(".cards-container");
+      if (cardsContainer) {
+        cardsContainer.innerHTML = "";
+      } else {
+        cardsContainer = document.createElement("div");
+        cardsContainer.classList.add("cards-container");
+        handDiv.appendChild(cardsContainer);
+      }
+
+      const preRender = (cardSpan, card) => {
+        const currentPlayer = this.game.gameState.players[playerIndex];
+        if (playerIndex === this.game.gameState.currentPlayer && currentPlayer.type === PLAYER_TYPES.HUMAN) {
+          if (cardSpan && cardSpan.addEventListener) {
+            cardSpan.addEventListener("click", currentPlayer.handleCardClick.bind(currentPlayer));
+          }
         }
-      }
-      if (this.game.gameState.selectedCards.some((selectedCard) => selectedCard.value === card.value)) {
-        if (cardSpan) cardSpan.classList.add("selected");
-      }
-    };
-    const playerHand = this.game.gameState.playerHands[playerIndex];
-    this.renderCardsContainer(playerHand, handDiv, preRender);
+        if (this.game.gameState.selectedCards.some((selectedCard) => selectedCard.value === card.value)) {
+          if (cardSpan) cardSpan.classList.add("selected");
+        }
+      };
+      const playerHand = this.game.gameState.playerHands[playerIndex];
+      this.renderCardsContainer(playerHand, cardsContainer, preRender);
 
-    if (typeof document !== "undefined") {
-      const cardCountEl = document.createElement("p");
-      cardCountEl.classList.add("card-count");
-      cardCountEl.textContent = `Cards remaining: ${playerHand.length}`;
-      if (handDiv) handDiv.appendChild(cardCountEl);
+      const cardCountEl = handDiv.querySelector(".card-count");
+      if (!cardCountEl) {
+        const newCardCountEl = document.createElement("p");
+        newCardCountEl.classList.add("card-count");
+        handDiv.appendChild(newCardCountEl);
+        newCardCountEl.textContent = `Cards remaining: ${playerHand.length}`;
+      } else {
+        cardCountEl.textContent = `Cards remaining: ${playerHand.length}`;
+      }
     }
   }
 
@@ -238,20 +324,45 @@ export class UI {
    */
   renderPlayerHands() {
     if (this.playersHands) {
-      this.playersHands.innerHTML = ""; // Clear the hands
+      this.playersHands.innerHTML = ""; // Clear the entire container once
       this.game.gameState.playerHands.forEach((hand, i) => {
         if (typeof document !== "undefined") {
-          const playerHandDiv = document.createElement("div");
-          playerHandDiv.id = `player-hand-${i}`;
-          playerHandDiv.classList.add("player-hand");
-          playerHandDiv.classList.add(this.game.gameState.players[i].type); // Add 'human' or 'ai' class
+          let playerHandDiv = document.getElementById(`player-hand-${i}`);
+          if (!playerHandDiv) {
+            playerHandDiv = document.createElement("div");
+            playerHandDiv.id = `player-hand-${i}`;
+            playerHandDiv.classList.add("player-hand");
+            this.playersHands.appendChild(playerHandDiv);
+          }
+
+          playerHandDiv.classList.add(this.game.gameState.players[i].type);
           if (i === this.game.gameState.currentPlayer) {
             playerHandDiv.classList.add("current");
+          } else {
+            playerHandDiv.classList.remove("current");
           }
-          this.playersHands.appendChild(playerHandDiv);
           this.renderPlayerHand(i, playerHandDiv);
+
+          // If it's an AI player and game hasn't started or ended, render persona selection
+          if (
+            this.game.gameState.players[i].type === PLAYER_TYPES.AI &&
+            !this.game.gameState.gameStarted &&
+            !this.game.gameState.gameOver
+          ) {
+            this.renderAISelection(playerHandDiv);
+          }
         }
       });
+    }
+  }
+
+  /**
+   * Updates the description for the selected AI.
+   */
+  updateAIDescription(personaKey) {
+    if (this.aiDescription) {
+      const persona = AI_PERSONAS[personaKey];
+      this.aiDescription.textContent = persona ? persona.description : "";
     }
   }
 

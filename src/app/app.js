@@ -1,33 +1,44 @@
-import { LowestCardAI } from "./ai.js";
 import { Analytics } from "./analytics.js";
-import { PLAYER_TYPES } from "./constants.js";
-import { Deck } from "./deck.js";
-import { Game } from "./game.js";
+import { Deck, Game } from "./game/index.js";
+import { createPlayer, PLAYER_TYPES } from "./player/index.js";
 import { UI } from "./ui.js";
+import { AI_PERSONAS } from "./ai/personas.js";
 import { log } from "./utils.js";
 
 export class App {
   /**
    * Creates a new app instance with dependencies.
    * @param {Game} game
-   * @param {AI} ai
    * @param {UI} ui
    * @param {Analytics} analytics
    */
-  constructor(game, ai, ui, analytics = new Analytics()) {
+  constructor(game, ui, analytics = new Analytics()) {
     this.analytics = analytics;
     this.game = game;
     this.attachHooks(); // attach analytics hooks
 
-    this.ai = ai;
     this.ui = ui;
-    this.setTimeout = typeof window !== "undefined" ? window.setTimeout.bind(window) : setTimeout;
+    this.setTimeout = typeof window !== "undefined" ? setTimeout.bind(window) : setTimeout;
 
     this.ui.init(this.game);
     this.attachHandlers(); // attach handlers once after UI is initialized
+
+    this.humanPlayer = createPlayer({ game: this.game, type: PLAYER_TYPES.HUMAN, number: 0, ui: this.ui });
+    this.selectedAI = "random"; // Default AI persona
+    this.aiPlayers = {};
+    // Populate aiPlayers
+    for (const personaKey in AI_PERSONAS) {
+      this.aiPlayers[personaKey] = createPlayer({
+        game: this.game,
+        type: PLAYER_TYPES.AI,
+        number: 1, // Assuming AI is always player 1
+        persona: personaKey,
+      });
+    }
   }
 
   attachHandlers() {
+    this.ui.aiDropdown.addEventListener("change", () => this.handleAISelection());
     this.ui.playButton.addEventListener("click", () => this.handleHumanPlay());
     this.ui.passButton.addEventListener("click", () => this.handleHumanPass());
     this.ui.startGameButton.addEventListener("click", () => this.handleStartGameClick());
@@ -54,42 +65,46 @@ export class App {
     localStorage.clear();
   }
 
+  handleAISelection() {
+    this.selectedAI = this.ui.aiDropdown.value;
+    this.game.gameState.playerPersonas[1] = this.selectedAI;
+    this.game.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
+    this.ui.render();
+  }
+
   handleAITurn() {
-    log("handleAITurn called.");
     const aiPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
     if (aiPlayer.type !== PLAYER_TYPES.AI) {
-      log("handleAITurn: Not an AI player, returning.");
       return;
     }
 
-    log("handleAITurn: Calling aiPlayer.takeTurn().");
+    log(`handleAITurn: Calling takeTurn() for ${aiPlayer.ai.persona}`);
     const move = aiPlayer.takeTurn();
-    log(`handleAITurn: aiPlayer.takeTurn() returned: ${JSON.stringify(move)}`);
+    log(`handleAITurn: takeTurn() for ${aiPlayer.ai.persona} returned: ${JSON.stringify(move)}`);
 
     if (move && move.length > 0) {
-      log("handleAITurn: AI is playing cards.");
+      log(`handleAITurn: ${aiPlayer.ai.persona} is playing cards.`);
       this.game.gameState.selectedCards = move;
       this.game.playCards();
     } else {
-      log("handleAITurn: AI is passing turn.");
+      log(`handleAITurn: ${aiPlayer.ai.persona} is passing turn.`);
       this.game.passTurn();
     }
 
     this.ui.render();
-
     this.nextTurn();
   }
 
   handleNewGameClick() {
     log(`Game initialized`);
-    this.init(this.setTimeout);
+    this.init();
   }
 
   handleResetButtonClick() {
     log(`Game reset`);
     this.clearStorage();
     this.game.reset();
-    this.init(this.setTimeout);
+    this.init();
   }
 
   handleStartGameClick() {
@@ -111,14 +126,15 @@ export class App {
     this.nextTurn();
   }
 
-  init(currentSetTimeout = null) {
-    if (currentSetTimeout != null) {
-      this.setTimeout = currentSetTimeout;
-    }
-
+  init() {
     // Attempt to load game state
-    if (this.game.load(this.ai, this.ui) && !this.game.gameState.gameOver) {
-      // Render loaded UI
+    const loadedGameState = this.game.load(this.ui);
+    if (loadedGameState.loaded && !loadedGameState.gameOver) {
+      // If game loaded, update selectedAI from loaded state
+      if (loadedGameState.loadedPlayerPersonas && loadedGameState.loadedPlayerPersonas[1]) {
+        this.selectedAI = loadedGameState.loadedPlayerPersonas[1];
+      }
+      this.game.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
       this.ui.render();
       return;
     }
@@ -128,8 +144,8 @@ export class App {
 
     // Initial game setup for display (hands dealt, starting player determined)
     this.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
-    this.game.setPlayers(this.game.createPlayers(this.ai, this.ui));
-    this.game.save();
+    this.game.gameState.playerPersonas = [null, this.selectedAI];
+    this.game.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
 
     // Render initial UI with dealt hands and start button
     this.ui.render();
@@ -154,17 +170,24 @@ export class App {
     }
   }
 
-  static create(
-    stateKey = Game.STATE_KEY,
-    DeckClass = Deck,
-    GameClass = Game,
-    AIClass = LowestCardAI,
-    UIClass = UI,
-    AnalyticsClass = Analytics
-  ) {
+  /**
+   * Factory function to create an App instance with customizable dependencies.
+   * @param {object} [options={}] - Options for creating the app.
+   * @param {string} [options.stateKey=Game.STATE_KEY] - The key for saving game state.
+   * @param {typeof Deck} [options.DeckClass=Deck] - The Deck class to use.
+   * @param {typeof Game} [options.GameClass=Game] - The Game class to use.
+   * @param {typeof UI} [options.UIClass=UI] - The UI class to use.
+   * @param {typeof Analytics} [options.AnalyticsClass=Analytics] - The Analytics class to use.
+   * @returns {App} A new App instance.
+   */
+  static create(options = {}) {
+    const { stateKey = Game.STATE_KEY, DeckClass = Deck, GameClass = Game, UIClass = UI, AnalyticsClass = Analytics } = options;
+
     const deck = new DeckClass();
     const game = new GameClass(deck, stateKey);
-    const app = new App(game, new AIClass(game), new UIClass(game), new AnalyticsClass());
+    const app = new App(game, new UIClass(game), new AnalyticsClass());
+
+    app.ui.render();
     app.init();
     return app;
   }

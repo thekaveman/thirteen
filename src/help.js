@@ -1,7 +1,6 @@
-import { AI } from "./app/ai.js";
-import { COMBINATION_TYPES, RANKS, SUITS } from "./app/constants.js";
-import { Card, Deck } from "./app/deck.js";
-import { Game } from "./app/game.js";
+import { AI } from "./app/ai/index.js";
+import { AI_PERSONAS } from "./app/ai/personas.js";
+import { Card, Deck, Game, COMBINATION_TYPES, RANKS, SUITS } from "./app/game/index.js";
 import { UI } from "./app/ui.js";
 
 class Help {
@@ -26,6 +25,7 @@ class Help {
     this.setupRanking();
     this.setupCombos();
     this.setupTryIt();
+    this.setupAI();
   }
 
   getTryItHand() {
@@ -148,6 +148,23 @@ class Help {
     });
   }
 
+  setupAI() {
+    const aiContainer = document.getElementById("ai-container");
+    if (aiContainer) {
+      for (const persona of Object.values(AI_PERSONAS)) {
+        const aiDiv = document.createElement("div");
+        aiDiv.classList.add("ai");
+        const name = document.createElement("strong");
+        name.textContent = `${persona.icon} ${persona.friendly_name}`;
+        const description = document.createElement("p");
+        description.textContent = persona.description;
+        aiDiv.appendChild(name);
+        aiDiv.appendChild(description);
+        aiContainer.appendChild(aiDiv);
+      }
+    }
+  }
+
   setupTryIt() {
     const tryItContainer = document.getElementById("try-it");
     if (tryItContainer) {
@@ -171,8 +188,8 @@ class Help {
           Card.sort(selectedCards);
 
           if (selectedCards.length > 0) {
-            const isValid = this.game.isValidPlay(selectedCards, this.game.gameState.playPile, hand, 1, [hand]);
-            const icon = isValid ? this.ui.getCombinationTypeIndicator(this.game.getCombinationType(selectedCards)) : "❌";
+            const isValid = this.game.rules.isValidPlay(selectedCards, this.game.gameState.playPile, hand, 1, [hand]);
+            const icon = isValid ? this.ui.getCombinationTypeIndicator(this.game.rules.getCombinationType(selectedCards)) : "❌";
             messageContainer.innerHTML = `<p>${isValid ? "Valid" : "Invalid"} combination ${icon}</p>`;
           } else {
             messageContainer.innerHTML = initMessageHtml;

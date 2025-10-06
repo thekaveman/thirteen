@@ -1,7 +1,45 @@
-import { AI } from "../src/app/ai.js";
-import { Card } from "../src/app/deck.js";
-import { Game } from "../src/app/game.js";
-import { Player } from "../src/app/player.js";
+import { AI } from "../src/app/ai/index.js";
+import { Card, Game } from "../src/app/game/index.js";
+import { Player } from "../src/app/player/index.js";
+import { UI } from "../src/app/ui.js";
+
+export class MockAmplitude {
+  constructor() {
+    this.events = [];
+    this.error = new Error("Test analytics error");
+    this.identifiedPlayer = null;
+    this.Identify = class {
+      constructor() {
+        this._properties = {};
+      }
+      setOnce(key, value) {
+        if (!this._properties.hasOwnProperty(key)) {
+          this._properties[key] = value;
+        }
+        return this;
+      }
+      set(key, value) {
+        this._properties[key] = value;
+        return this;
+      }
+      add(key, value) {
+        if (!this._properties.hasOwnProperty(key)) {
+          this._properties[key] = 0;
+        }
+        this._properties[key] += value;
+        return this;
+      }
+    };
+  }
+
+  track(eventType, payload) {
+    this.events.push({ eventType, payload });
+  }
+
+  identify(player) {
+    this.identifiedPlayer = player;
+  }
+}
 
 export class MockAnalytics {
   constructor() {
@@ -38,8 +76,8 @@ export class MockAnalytics {
 }
 
 export class MockAI extends AI {
-  constructor(game, move) {
-    super(game);
+  constructor(game, move, persona = null) {
+    super(game, "mock", persona);
     this.move = move;
     this.takeTurnCalled = false;
   }
@@ -55,7 +93,21 @@ export class MockAI extends AI {
 
   takeTurn(hand, playPile, currentTurn, playerHands) {
     this.takeTurnCalled = true;
-    return this.move;
+    if (this.move !== undefined) {
+      return this.move;
+    }
+
+    // If the play pile is empty, the AI must play a card.
+    // For testing purposes, we'll make it play its lowest card.
+    if (playPile.length === 0) {
+      if (hand.length > 0) {
+        return [hand[0]]; // Play the lowest card
+      }
+      return []; // No cards to play, effectively a pass (shouldn't happen in valid game start)
+    }
+
+    // Otherwise, simulate a pass for default behavior in tests
+    return [];
   }
 }
 
@@ -186,9 +238,9 @@ export class MockGame extends Game {
     this.loadCalled = true;
     if (this.loadWillSucceed) {
       this.gameState.gameOver = this.gameOverOnLoad;
-      return true;
+      return { loaded: true, gameOver: this.gameOverOnLoad, loadedPlayerPersonas: [null, "random"] };
     }
-    return false;
+    return { loaded: false };
   }
   playCards() {
     this.playCardsCalled = true;
@@ -236,8 +288,9 @@ export class MockLocalStorage {
 }
 
 export class MockPlayer extends Player {
-  constructor(name, hand, isHuman = false) {
+  constructor(name, hand, isHuman = false, persona = null) {
     super(name, hand, isHuman);
+    this.persona = isHuman ? null : persona; // Set persona to null if it's a human player
   }
 
   data() {
@@ -246,6 +299,7 @@ export class MockPlayer extends Player {
       type: this.type,
       name: this.name,
       isHuman: this.isHuman,
+      persona: this.persona,
     };
   }
 
@@ -255,17 +309,7 @@ export class MockPlayer extends Player {
 export class MockUI {
   constructor(game) {
     this.game = game;
-    this.id = {
-      gameMessages: "game-messages",
-      playersHands: "players-hands",
-      playArea: "play-area",
-      gameContent: "game-content",
-      playButton: "play-button",
-      passButton: "pass-button",
-      newGameButton: "new-game-button",
-      startGameButton: "start-game-button",
-      resetButton: "reset-button",
-    };
+    this.id = new UI(game).id;
     this.initCalled = false;
     this.renderCalled = false;
     this.playButton = {
@@ -297,6 +341,12 @@ export class MockUI {
         this.resetButton.handler = handler;
       },
       style: { display: "" },
+    };
+    this.aiDropdown = {
+      addEventListener: (event, handler) => {
+        this.aiDropdown.handler = handler;
+      },
+      value: "random",
     };
     this.gameMessages = { textContent: "", classList: { add: () => {}, remove: () => {} } };
     this.playersHands = { innerHTML: "", appendChild: () => {} };

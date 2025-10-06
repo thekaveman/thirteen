@@ -1,5 +1,4 @@
-import { SUITS, RANKS } from "../src/app/constants.js";
-import { Deck, Card } from "../src/app/deck.js";
+import { SUITS, RANKS, Card, Deck } from "../../src/app/game/index.js";
 
 describe("Card", () => {
   it("should create a card with correct rank, suit, and value", () => {
