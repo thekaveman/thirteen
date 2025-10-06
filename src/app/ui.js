@@ -170,7 +170,7 @@ export class UI {
     for (const [key, persona] of Object.entries(AI_PERSONAS)) {
       const option = document.createElement("option");
       option.value = key;
-      option.textContent = persona.friendly_name;
+      option.textContent = `${persona.icon} ${persona.friendly_name}`;
       this.aiDropdown.appendChild(option);
     }
 
@@ -243,7 +243,7 @@ export class UI {
 
     if (player.type === PLAYER_TYPES.AI) {
       const persona = player.ai.persona;
-      text += persona ? ` (${AI_PERSONAS[persona].friendly_name})` : " (AI)";
+      text += persona ? ` (${AI_PERSONAS[persona].icon} ${AI_PERSONAS[persona].friendly_name})` : " (AI)";
     }
 
     if (this.game.gameState.gameOver && this.game.gameState.playerHands[playerIndex].length === 0) {
