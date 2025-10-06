@@ -14,8 +14,9 @@ describe("Personas", () => {
     describe(`Persona: ${personaKey}`, () => {
       const persona = AI_PERSONAS[personaKey];
 
-      it("should have a name and description", () => {
-        expect(persona.name).to.be.a("string").and.not.be.empty;
+      it("should have a name, friendly_name, and description", () => {
+        expect(persona.name).to.equal(personaKey);
+        expect(persona.friendly_name).to.be.a("string").and.not.be.empty;
         expect(persona.description).to.be.a("string").and.not.be.empty;
       });
 

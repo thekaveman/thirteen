@@ -37,6 +37,7 @@ export class App {
   }
 
   attachHandlers() {
+    this.ui.aiDropdown.addEventListener("change", () => this.handleAISelection());
     this.ui.playButton.addEventListener("click", () => this.handleHumanPlay());
     this.ui.passButton.addEventListener("click", () => this.handleHumanPass());
     this.ui.startGameButton.addEventListener("click", () => this.handleStartGameClick());
@@ -63,6 +64,13 @@ export class App {
     localStorage.clear();
   }
 
+  handleAISelection() {
+    this.selectedAI = this.ui.aiDropdown.value;
+    this.game.gameState.playerPersonas[1] = this.selectedAI;
+    this.game.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
+    this.game.save();
+  }
+
   handleAITurn() {
     const aiPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
     if (aiPlayer.type !== PLAYER_TYPES.AI) {
@@ -83,7 +91,6 @@ export class App {
     }
 
     this.ui.render();
-
     this.nextTurn();
   }
 

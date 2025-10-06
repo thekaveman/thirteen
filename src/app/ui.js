@@ -1,3 +1,4 @@
+import { AI_PERSONAS } from "./ai/personas.js";
 import { Card, Game, COMBINATION_TYPES } from "./game/index.js";
 import { PLAYER_TYPES } from "./player/index.js";
 import { log } from "./utils.js";
@@ -19,6 +20,9 @@ export class UI {
       newGameButton: "new-game-button",
       startGameButton: "start-game-button",
       resetButton: "reset-button",
+      aiSelection: "ai-selection",
+      aiDropdown: "ai-dropdown",
+      aiDescription: "ai-description",
     };
     this.messageTimeout = null;
 
@@ -32,6 +36,9 @@ export class UI {
     this.newGameButton = null;
     this.startGameButton = null;
     this.resetButton = null;
+    this.aiSelection = null;
+    this.aiDropdown = null;
+    this.aiDescription = null;
   }
 
   /**
@@ -50,6 +57,12 @@ export class UI {
       this.newGameButton = document.getElementById(this.id.newGameButton);
       this.startGameButton = document.getElementById(this.id.startGameButton);
       this.resetButton = document.getElementById(this.id.resetButton);
+      this.aiSelection = document.createElement("div");
+      this.aiSelection.id = this.id.aiSelection;
+      this.aiDropdown = document.createElement("select");
+      this.aiDropdown.id = this.id.aiDropdown;
+      this.aiDescription = document.createElement("p");
+      this.aiDescription.id = this.id.aiDescription;
     }
   }
 
@@ -138,6 +151,52 @@ export class UI {
   }
 
   /**
+   * Creates and renders the AI selection UI.
+   * @param {HTMLElement} parentElement The element to append the UI to.
+   */
+  renderAISelection(parentElement) {
+    if (typeof document === "undefined" || !parentElement) {
+      return;
+    }
+    this.aiSelection.innerHTML = "";
+    this.aiDropdown.innerHTML = "";
+    this.aiDescription.innerHTML = "";
+
+    const label = document.createElement("label");
+    label.htmlFor = this.id.aiDropdown;
+    label.textContent = "Select AI opponent:";
+    this.aiSelection.appendChild(label);
+
+    for (const [key, persona] of Object.entries(AI_PERSONAS)) {
+      const option = document.createElement("option");
+      option.value = key;
+      option.textContent = persona.friendly_name;
+      this.aiDropdown.appendChild(option);
+    }
+
+    // Add event listener for changes
+    this.aiDropdown.onchange = (event) => {
+      const selectedPersonaKey = event.target.value;
+      this.updateAIDescription(selectedPersonaKey);
+    };
+
+    this.aiSelection.appendChild(this.aiDropdown);
+    this.aiSelection.appendChild(this.aiDescription);
+    parentElement.appendChild(this.aiSelection);
+
+    // Set initial selection based on game state
+    const currentAIPersona = this.game.gameState.playerPersonas[1];
+    if (currentAIPersona) {
+      this.aiDropdown.value = currentAIPersona;
+      this.updateAIDescription(currentAIPersona);
+    } else {
+      // Default option if none is set
+      this.aiDropdown.value = "random";
+      this.updateAIDescription("random");
+    }
+  }
+
+  /**
    * Renders cards to a target element.
    * @param {Array<Card>} cards The array of cards.
    * @param {HTMLElement} targetElement The element in which to render.
@@ -183,7 +242,8 @@ export class UI {
     let text = `Player ${playerIndex + 1}`;
 
     if (player.type === PLAYER_TYPES.AI) {
-      text += " (AI)";
+      const persona = player.ai.persona;
+      text += persona ? ` (${AI_PERSONAS[persona].friendly_name})` : " (AI)";
     }
 
     if (this.game.gameState.gameOver && this.game.gameState.playerHands[playerIndex].length === 0) {
@@ -249,8 +309,27 @@ export class UI {
           }
           this.playersHands.appendChild(playerHandDiv);
           this.renderPlayerHand(i, playerHandDiv);
+
+          // If it's an AI player and game hasn't started or ended, render persona selection
+          if (
+            this.game.gameState.players[i].type === PLAYER_TYPES.AI &&
+            !this.game.gameState.gameStarted &&
+            !this.game.gameState.gameOver
+          ) {
+            this.renderAISelection(playerHandDiv);
+          }
         }
       });
+    }
+  }
+
+  /**
+   * Updates the description for the selected AI.
+   */
+  updateAIDescription(personaKey) {
+    if (this.aiDescription) {
+      const persona = AI_PERSONAS[personaKey];
+      this.aiDescription.textContent = persona ? persona.description : "";
     }
   }
 

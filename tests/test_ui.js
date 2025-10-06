@@ -2,6 +2,7 @@ import { MockDeck, MockGame, MockAI } from "./mocks.js";
 import { Card, COMBINATION_TYPES } from "../src/app/game/index.js";
 import { HumanPlayer, AIPlayer, PLAYER_TYPES } from "../src/app/player/index.js";
 import { UI } from "../src/app/ui.js";
+import { AI_PERSONAS } from "../src/app/ai/personas.js";
 
 describe("UI", () => {
   let game, ui, container;
@@ -102,7 +103,7 @@ describe("UI", () => {
     const card = new Card("A", "♠");
     ui.game.gameState.playerHands[0] = [card, new Card("K", "♦")];
     ui.game.gameState.currentPlayer = 0;
-    const spy = sinon.spy(playerHandDiv, "addEventListener");
+    const handleCardClickSpy = sinon.spy(game.gameState.players[0], "handleCardClick");
 
     ui.renderPlayerHand(0, playerHandDiv);
 
@@ -110,8 +111,10 @@ describe("UI", () => {
     expect(cardElements).to.have.lengthOf(2);
     expect(cardElements[0].textContent).to.equal("A♠");
     expect(cardElements[0].dataset.card).to.equal(JSON.stringify(card));
-    // Sinon can't directly check listeners on children, but we can check if the parent got a listener.
-    // A more robust test would involve simulating a click.
+
+    // Simulate click
+    cardElements[0].dispatchEvent(new window.Event("click", { bubbles: true }));
+    expect(handleCardClickSpy.called).to.be.true;
   });
 
   it("renderPlayerHand() should render AI player hands correctly", () => {
@@ -142,6 +145,13 @@ describe("UI", () => {
     expect(document.getElementById("player-hand-1").classList.contains("current")).to.be.false; // Player 0 is current
   });
 
+  it("renderPlayerHands() should render AI selection for AI players when game is not started", () => {
+    game.gameState.gameStarted = false;
+    const renderAISpy = sinon.spy(ui, "renderAISelection");
+    ui.renderPlayerHands();
+    expect(renderAISpy.called).to.be.true;
+  });
+
   it("renderSelectedCards() should apply 'selected' class to correct cards", () => {
     const card1 = new Card("3", "♠");
     const card2 = new Card("4", "♦");
@@ -165,6 +175,14 @@ describe("UI", () => {
     game.gameState.currentPlayer = 99; // Invalid player
     ui.renderSelectedCards();
     // No assertion, just checking for absence of errors
+  });
+
+  it("renderCardsContainer() should call preRender for each card", () => {
+    const cards = [new Card("3", "♠"), new Card("4", "♦")];
+    const targetElement = document.createElement("div");
+    const preRenderSpy = sinon.spy();
+    ui.renderCardsContainer(cards, targetElement, preRenderSpy);
+    expect(preRenderSpy.callCount).to.equal(2);
   });
 
   describe("Button States", () => {
@@ -206,6 +224,47 @@ describe("UI", () => {
       expect(ui.playButton.disabled).to.be.true;
       expect(ui.passButton.disabled).to.be.true;
       expect(ui.resetButton.disabled).to.be.true;
+    });
+  });
+
+  describe("AI Selection", () => {
+    let playerHandDiv;
+
+    beforeEach(() => {
+      playerHandDiv = document.createElement("div");
+      game.gameState.gameStarted = false; // Prerequisite for rendering AI selection
+      game.gameState.playerPersonas[1] = "random";
+    });
+
+    it("renderAISelection() should populate dropdown and set initial value", () => {
+      ui.renderAISelection(playerHandDiv);
+      const dropdown = ui.aiDropdown;
+      expect(dropdown.options.length).to.equal(Object.keys(AI_PERSONAS).length);
+      expect(dropdown.value).to.equal("random");
+      expect(ui.aiDescription.textContent).to.equal(AI_PERSONAS.random.description);
+    });
+
+    it("should update description on dropdown change", () => {
+      ui.renderAISelection(playerHandDiv);
+      const dropdown = ui.aiDropdown;
+      dropdown.value = "aggressive";
+      dropdown.dispatchEvent(new window.Event("change"));
+      expect(ui.aiDescription.textContent).to.equal(AI_PERSONAS.aggressive.description);
+    });
+
+    it("renderAISelection() should default to random if no persona is set", () => {
+      game.gameState.playerPersonas[1] = null;
+      ui.renderAISelection(playerHandDiv);
+      const dropdown = ui.aiDropdown;
+      expect(dropdown.value).to.equal("random");
+      expect(ui.aiDescription.textContent).to.equal(AI_PERSONAS.random.description);
+    });
+
+    it("updateAIDescription() should set the description text", () => {
+      ui.updateAIDescription("cautious");
+      expect(ui.aiDescription.textContent).to.equal(AI_PERSONAS.cautious.description);
+      ui.updateAIDescription("nonexistent");
+      expect(ui.aiDescription.textContent).to.equal("");
     });
   });
 });

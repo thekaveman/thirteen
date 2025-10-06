@@ -157,6 +157,29 @@ describe("App", function () {
       expect(resetButtonSpy.calledWith("click")).to.be.true;
     });
 
+    it("attachHooks() should attach analytics hooks correctly", function () {
+      const gameInitSpy = this.sandbox.spy(analytics, "gameInit");
+      const gameResetSpy = this.sandbox.spy(analytics, "gameReset");
+
+      app.attachHooks();
+
+      game.init();
+      expect(gameInitSpy.called).to.be.true;
+
+      game.reset();
+      expect(gameResetSpy.called).to.be.true;
+    });
+
+    it("handleAISelection() should be called on dropdown change", function () {
+      const handleSpy = this.sandbox.spy(app, "handleAISelection");
+      app.init(); // this calls attachHandlers
+
+      // Simulate change event
+      ui.aiDropdown.handler();
+
+      expect(handleSpy.called).to.be.true;
+    });
+
     it("handleStartGameClick() should start the game and trigger the next turn", function () {
       const nextTurnSpy = this.sandbox.spy(app, "nextTurn");
       app.init();

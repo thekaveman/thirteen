@@ -374,6 +374,50 @@ button:disabled,
   border-color: var(--color-disabled-border);
 }
 
+/* AI Selection UI */
+#ai-selection {
+  position: absolute;
+  bottom: var(--spacing-s);
+  left: var(--spacing-s);
+  right: var(--spacing-s);
+  background-color: var(--color-light-gray);
+  padding: var(--spacing-s);
+  border-radius: var(--border-radius-s);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  box-shadow: var(--box-shadow-s);
+}
+
+#ai-selection label {
+  font-size: var(--font-size-xs);
+  font-weight: bold;
+  color: var(--color-darker-gray);
+}
+
+#ai-dropdown {
+  width: 100%;
+  padding: var(--spacing-xs);
+  border-radius: var(--border-radius-s);
+  border: 1px solid var(--color-dark-gray);
+  background-color: var(--color-white);
+  font-size: var(--font-size-s);
+  cursor: pointer;
+}
+
+#ai-dropdown:focus {
+  outline: none;
+  border-color: var(--color-primary-blue);
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+#ai-description {
+  font-size: var(--font-size-xs);
+  color: var(--color-medium-gray);
+  margin-top: var(--spacing-xs);
+  min-height: 3em;
+}
+
 #game-container.help {
   padding-bottom: var(--spacing-s);
   height: unset;
@@ -532,6 +576,18 @@ button:disabled,
     margin-left: var(--spacing-xs);
   }
 
+  #game-messages.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translate(-50%, -25%) scale(1);
+  }
+
+  #ai-selection {
+    bottom: calc(var(--spacing-xxl) * 1.75);
+    left: var(--spacing-m);
+    right: var(--spacing-m);
+  }
+
   .help .cards-container {
     overflow-x: visible;
     justify-content: left;
@@ -551,12 +607,6 @@ button:disabled,
 
   .card.selected {
     transform: translateY(calc(var(--spacing-xxs) * -1));
-  }
-
-  #game-messages.visible {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translate(-50%, -25%) scale(1);
   }
 
   .combination-examples {

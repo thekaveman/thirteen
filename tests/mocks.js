@@ -309,17 +309,7 @@ export class MockPlayer extends Player {
 export class MockUI {
   constructor(game) {
     this.game = game;
-    this.id = {
-      gameMessages: "game-messages",
-      playersHands: "players-hands",
-      playArea: "play-area",
-      gameContent: "game-content",
-      playButton: "play-button",
-      passButton: "pass-button",
-      newGameButton: "new-game-button",
-      startGameButton: "start-game-button",
-      resetButton: "reset-button",
-    };
+    this.id = new UI(game).id;
     this.initCalled = false;
     this.renderCalled = false;
     this.playButton = {
@@ -351,6 +341,12 @@ export class MockUI {
         this.resetButton.handler = handler;
       },
       style: { display: "" },
+    };
+    this.aiDropdown = {
+      addEventListener: (event, handler) => {
+        this.aiDropdown.handler = handler;
+      },
+      value: "random",
     };
     this.gameMessages = { textContent: "", classList: { add: () => {}, remove: () => {} } };
     this.playersHands = { innerHTML: "", appendChild: () => {} };
