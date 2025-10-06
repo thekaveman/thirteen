@@ -32,7 +32,7 @@ describe("Game", () => {
 
   describe("Player Management", () => {
     it("setPlayers() should initialize players and associated game state", () => {
-      const players = [{ type: PLAYER_TYPES.HUMAN }, { type: PLAYER_TYPES.AI }];
+      const players = [new HumanPlayer(game, 0, new MockUI(game)), new AIPlayer(game, 1, new MockAI(game, [], "mock"))];
       const originalGamesWon = [2, 1];
       game.gameState.gamesWon = originalGamesWon;
 

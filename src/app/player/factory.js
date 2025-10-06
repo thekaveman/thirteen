@@ -9,6 +9,7 @@ import { PLAYER_TYPES } from "./index.js";
 /**
  * Creates a player instance based on the provided configuration.
  * @param {object} config The player configuration.
+ * @param {string} config.id Set the id of the player.
  * @param {Game} config.game The game instance.
  * @param {string} config.type The type of player ('human' or 'ai').
  * @param {number} config.number The player number.
@@ -17,10 +18,11 @@ import { PLAYER_TYPES } from "./index.js";
  * @returns {Player} The created player instance.
  */
 export function createPlayer(config) {
-  const { game, type, number, ui, persona } = config;
+  const { id, game, type, number, ui, persona } = config;
+  let player;
 
   if (type === PLAYER_TYPES.HUMAN) {
-    return new HumanPlayer(game, number, ui);
+    player = new HumanPlayer(game, number, ui);
   }
 
   if (type === PLAYER_TYPES.AI) {
@@ -29,7 +31,14 @@ export function createPlayer(config) {
       throw new Error(`Unknown AI persona: ${persona}`);
     }
     const ai = aiPersona.create(game);
-    return new AIPlayer(game, number, ai);
+    player = new AIPlayer(game, number, ai);
+  }
+
+  if (player) {
+    if (id) {
+      player.id = id;
+    }
+    return player;
   }
 
   throw new Error(`Unknown player type: ${type}`);

@@ -1,5 +1,5 @@
 import { Card, Deck } from "./deck.js";
-import { PLAYER_TYPES } from "../player/index.js";
+import { PLAYER_TYPES, createPlayer } from "../player/index.js";
 import { Rules } from "./rules.js";
 import { log } from "../utils.js";
 
@@ -127,7 +127,8 @@ export class Game {
     const savedState = localStorage.getItem(this.stateKey);
     const parsedState = savedState ? JSON.parse(savedState) : null;
     if (parsedState && ui) {
-      // Store playerTypes from the parsed state before overwriting this.gameState
+      // Store data from the parsed state before overwriting this.gameState
+      const loadedPlayerIds = parsedState.gameState.players.map((p) => p.id);
       const loadedPlayerTypes = parsedState.gameState.players.map((p) => p.type);
       const loadedPlayerPersonas = parsedState.gameState.players.map((p) => (p.type === PLAYER_TYPES.AI ? p.persona : null));
 
@@ -140,6 +141,17 @@ export class Game {
       this.gameState.playerHands = [...this.gameState.playerHands].map((h) => Card.objectsToList(h));
       this.gameState.playPile = Card.objectsToList([...this.gameState.playPile]);
       this.gameState.selectedCards = Card.objectsToList([...this.gameState.selectedCards]);
+      // Re-hydrate players
+      this.gameState.players = parsedState.gameState.players.map((p, i) =>
+        createPlayer({
+          id: loadedPlayerIds[i],
+          game: this,
+          type: loadedPlayerTypes[i],
+          number: i,
+          ui: ui,
+          persona: loadedPlayerPersonas[i],
+        })
+      );
       // Assign the stored playerTypes back to gameState
       this.gameState.playerTypes = loadedPlayerTypes;
       this.gameState.playerPersonas = loadedPlayerPersonas;
@@ -281,6 +293,7 @@ export class Game {
       this.deal();
       this.gameState.currentPlayer = this.findStartingPlayer(this.gameState.playerHands);
       this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
+      this.save();
     }
   }
 

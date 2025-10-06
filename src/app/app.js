@@ -22,8 +22,9 @@ export class App {
 
     this.ui.init(this.game);
     this.attachHandlers(); // attach handlers once after UI is initialized
-    this.selectedAI = "random"; // Default AI persona
+
     this.humanPlayer = createPlayer({ game: this.game, type: PLAYER_TYPES.HUMAN, number: 0, ui: this.ui });
+    this.selectedAI = "random"; // Default AI persona
     this.aiPlayers = {};
     // Populate aiPlayers
     for (const personaKey in AI_PERSONAS) {
@@ -68,7 +69,6 @@ export class App {
     this.selectedAI = this.ui.aiDropdown.value;
     this.game.gameState.playerPersonas[1] = this.selectedAI;
     this.game.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
-    this.game.save();
   }
 
   handleAITurn() {
@@ -145,7 +145,6 @@ export class App {
     this.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
     this.game.gameState.playerPersonas = [null, this.selectedAI];
     this.game.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
-    this.game.save();
 
     // Render initial UI with dealt hands and start button
     this.ui.render();
