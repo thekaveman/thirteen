@@ -69,6 +69,7 @@ export class App {
     this.selectedAI = this.ui.aiDropdown.value;
     this.game.gameState.playerPersonas[1] = this.selectedAI;
     this.game.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
+    this.ui.render();
   }
 
   handleAITurn() {
