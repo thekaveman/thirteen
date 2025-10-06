@@ -89,6 +89,12 @@ describe("AI", () => {
       ]);
     });
 
+    it("generateCombinations() should not create a straight with a gap", () => {
+      const hand = [new Card("3", "♠"), new Card("4", "♦"), new Card("6", "♣")];
+      const straights = ai.generateCombinations(hand, COMBINATION_TYPES.STRAIGHT);
+      expect(straights).to.have.lengthOf(0);
+    });
+
     it("generateCombinations() should return no straights for small hands", () => {
       const hand = [new Card("3", "♠"), new Card("4", "♦"), new Card("2", "♣")];
       const straights = ai.generateCombinations(hand, COMBINATION_TYPES.STRAIGHT);
@@ -129,6 +135,25 @@ describe("AI", () => {
       expect(consecutivePairs).to.have.lengthOf(5);
       const hasInvalidLength = consecutivePairs.some((comb) => comb.length > 8);
       expect(hasInvalidLength).to.be.false;
+    });
+
+    it("generateCombinations() for consecutive pairs should handle breaks in sequence", () => {
+      const hand = [
+        new Card("3", "♠"),
+        new Card("3", "♦"),
+        new Card("4", "♣"),
+        new Card("4", "♥"),
+        new Card("7", "♠"),
+        new Card("7", "♦"),
+        new Card("8", "♣"),
+        new Card("8", "♥"),
+        new Card("9", "♠"),
+        new Card("9", "♦"),
+      ];
+      const consecutivePairs = ai.generateCombinations(hand, COMBINATION_TYPES.CONSECUTIVE_PAIRS);
+      // Should find 7-8-9, but not a single sequence combining them with 3-4.
+      expect(consecutivePairs).to.have.lengthOf(1);
+      expect(consecutivePairs[0].map((c) => c.rank)).to.deep.equal(["7", "7", "8", "8", "9", "9"]);
     });
 
     it("generateCombinations() for consecutive pairs should handle small hands correctly", () => {

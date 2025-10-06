@@ -95,4 +95,16 @@ describe("LowestValueAI", () => {
     expect(move[0].rank).to.equal("3");
     expect(move[0].suit).to.equal("♠");
   });
+
+  it("takeTurn() should choose the lowest value move even if it is not the first valid move", () => {
+    const hand = [new Card("A", "♠"), new Card("3", "♠"), new Card("3", "♦")];
+    const playPile = [];
+    const moves = [[new Card("A", "♠")], [new Card("3", "♠"), new Card("3", "♦")]];
+    sinon.stub(lowestValueAI, "findAllValidMoves").returns(moves);
+
+    const move = lowestValueAI.takeTurn(hand, playPile, 1, [hand]);
+
+    expect(move).to.have.lengthOf(2);
+    expect(move[0].rank).to.equal("3");
+  });
 });

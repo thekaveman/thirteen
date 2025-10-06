@@ -49,7 +49,9 @@ describe("Rules", () => {
 
     it("isFourOfAKind() should correctly identify a four-of-a-kind", () => {
       expect(rules.isFourOfAKind([new Card("A", "♠"), new Card("A", "♦"), new Card("A", "♣"), new Card("A", "♥")])).to.be.true;
-      expect(rules.isFourOfAKind([new Card("A", "♠"), new Card("K", "♠"), new Card("Q", "♠"), new Card("J", "♠")])).to.be.false;
+      expect(
+        rules.isFourOfAKind([new Card("A", "♠"), new Card("K", "♠"), new Card("Q", "♠"), new Card("J", "♠")])
+      ).to.be.false;
     });
 
     it("isStraight() should correctly identify straights", () => {

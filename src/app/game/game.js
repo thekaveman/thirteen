@@ -74,7 +74,7 @@ export class Game {
       const lowestCardValue = lowestCard.value;
 
       for (let i = 0; i < hands.length; i++) {
-        if (hands[i][0].value == lowestCardValue) {
+        if (hands[i] && hands[i].length > 0 && hands[i][0].value == lowestCardValue) {
           startingPlayer = i;
         }
       }

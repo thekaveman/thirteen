@@ -66,6 +66,12 @@ describe("Game", () => {
       expect(startingPlayer).to.equal(1);
     });
 
+    it("findStartingPlayer() should handle empty hands", () => {
+      const hands = [[], []];
+      const startingPlayer = game.findStartingPlayer(hands);
+      expect(startingPlayer).to.equal(0); // Defaults to 0
+    });
+
     it("init() should reset the game state for a new round", () => {
       const originalGameId = game.id;
       const originalGamesWon = [1, 1];
@@ -241,13 +247,18 @@ describe("Game", () => {
 
     it("load() should fail for invalid saved JSON", () => {
       localStorage.setItem(game.stateKey, "invalid json");
-      let loaded = false;
-      try {
-        loaded = game.load(new MockUI(game));
-      } catch (e) {
-        expect(e).to.be.an.instanceOf(SyntaxError);
-      }
-      expect(loaded).to.be.false;
+      expect(() => game.load(new MockUI(game))).to.throw(SyntaxError);
+    });
+
+    it("load() should not load if no saved state exists", () => {
+      const loaded = game.load(new MockUI(game));
+      expect(loaded.loaded).to.be.false;
+    });
+
+    it("load() should not load if no ui is provided", () => {
+      game.save();
+      const loaded = game.load(null);
+      expect(loaded.loaded).to.be.false;
     });
 
     it("load() should correctly rehydrate game data", () => {

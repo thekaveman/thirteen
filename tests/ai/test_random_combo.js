@@ -64,4 +64,10 @@ describe("RandomComboAI", () => {
 
     selectStub.restore();
   });
+
+  it("select() should return null if there are no strategies", () => {
+    const emptyAI = new RandomComboAI(game, []);
+    const selectedStrategy = emptyAI.select([], [], 1, []);
+    expect(selectedStrategy).to.be.null;
+  });
 });
