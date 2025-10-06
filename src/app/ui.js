@@ -248,14 +248,16 @@ export class UI {
 
     if (player.type === PLAYER_TYPES.AI) {
       const persona = player.ai.persona;
-      text += persona ? ` (${AI_PERSONAS[persona].icon} ${AI_PERSONAS[persona].friendly_name})` : " (AI)";
+      text += persona ? `: ${AI_PERSONAS[persona].icon} ${AI_PERSONAS[persona].friendly_name} AI` : " (AI)";
+    } else if (player.type === PLAYER_TYPES.HUMAN) {
+      text += ": 🎮 You";
     }
 
     if (this.game.gameState.gameOver && this.game.gameState.playerHands[playerIndex].length === 0) {
-      this.displayMessage(`${text} wins in ${this.game.gameState.roundNumber} rounds`, "info");
+      this.displayMessage(`${text} - wins in ${this.game.gameState.roundNumber} rounds!`, "info");
       text += " (Winner!)";
     } else if (this.game.gameState.currentPlayer === playerIndex) {
-      text += " (Your Turn)";
+      text = `👉 ${text}`;
     }
     if (handDiv) {
       let h2 = handDiv.querySelector("h2");

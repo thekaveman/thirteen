@@ -84,7 +84,7 @@ describe("UI", () => {
 
     expect(ui.gameContent.innerHTML).to.include("Round 5");
     const player1HandDiv = document.getElementById("player-hand-0");
-    expect(player1HandDiv.querySelector("h2").textContent).to.include("Player 1 (Your Turn)");
+    expect(player1HandDiv.querySelector("h2").textContent).to.include("👉 Player 1");
     expect(player1HandDiv.classList.contains("current")).to.be.true;
     expect(player1HandDiv.querySelector(".rounds-won").textContent).to.equal("Rounds won: 2");
     expect(player1HandDiv.querySelector(".games-won").textContent).to.equal("Games won: 1");
@@ -107,6 +107,8 @@ describe("UI", () => {
 
     ui.renderPlayerHand(0, playerHandDiv);
 
+    expect(playerHandDiv.textContent).to.include("👉 Player 1: 🎮 You");
+
     const cardElements = playerHandDiv.querySelectorAll(".card");
     expect(cardElements).to.have.lengthOf(2);
     expect(cardElements[0].textContent).to.equal("A♠");
@@ -125,7 +127,7 @@ describe("UI", () => {
 
     const cardElements = playerHandDiv.querySelectorAll(".card");
     expect(cardElements).to.have.lengthOf(2);
-    expect(playerHandDiv.textContent).to.include("Player 2 (AI) (Your Turn)");
+    expect(playerHandDiv.textContent).to.include("👉 Player 2 (AI)");
   });
 
   it("renderPlayerHand() should display winner message", () => {
