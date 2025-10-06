@@ -517,6 +517,25 @@ button:disabled,
   overflow-x: visible;
 }
 
+#ai-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-m);
+  margin-top: var(--spacing-m);
+}
+
+.ai {
+  background-color: var(--color-light-gray);
+  padding: var(--spacing-m);
+  border-radius: var(--border-radius-m);
+}
+
+.ai strong {
+  font-size: var(--font-size-m);
+  display: block;
+  margin-bottom: var(--spacing-xs);
+}
+
 @media (min-width: 576px) {
   .player-hand {
     height: 340px;

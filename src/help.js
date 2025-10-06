@@ -1,4 +1,5 @@
 import { AI } from "./app/ai/index.js";
+import { AI_PERSONAS } from "./app/ai/personas.js";
 import { Card, Deck, Game, COMBINATION_TYPES, RANKS, SUITS } from "./app/game/index.js";
 import { UI } from "./app/ui.js";
 
@@ -24,6 +25,7 @@ class Help {
     this.setupRanking();
     this.setupCombos();
     this.setupTryIt();
+    this.setupAI();
   }
 
   getTryItHand() {
@@ -144,6 +146,23 @@ class Help {
         }
       }
     });
+  }
+
+  setupAI() {
+    const aiContainer = document.getElementById("ai-container");
+    if (aiContainer) {
+      for (const persona of Object.values(AI_PERSONAS)) {
+        const aiDiv = document.createElement("div");
+        aiDiv.classList.add("ai");
+        const name = document.createElement("strong");
+        name.textContent = `${persona.icon} ${persona.friendly_name}`;
+        const description = document.createElement("p");
+        description.textContent = persona.description;
+        aiDiv.appendChild(name);
+        aiDiv.appendChild(description);
+        aiContainer.appendChild(aiDiv);
+      }
+    }
   }
 
   setupTryIt() {
