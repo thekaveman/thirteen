@@ -80,14 +80,15 @@ export class Analytics {
    * @param {Game} game The game instance sending this event.
    */
   gameStarted(game) {
-    const player = game.currentPlayer();
+    const humanPlayer = game.firstHumanPlayer();
+    const aiPlayer = game.firstAIPlayer();
+    const startingPlayer = game.currentPlayer();
+
     this.#send("game_started", game, {
       event: {
-        player: player.id,
-        type: player.type,
-        player_data: player.data(),
-        persona: player.type === PLAYER_TYPES.AI ? player.ai.persona : null,
-        ai_data: player.type === PLAYER_TYPES.AI ? player.ai.data() : null,
+        human_player: humanPlayer.data(),
+        ai_player: aiPlayer.data(),
+        starting_player: startingPlayer.data(),
       },
     });
     this.#idPlayer(game);
@@ -98,19 +99,20 @@ export class Analytics {
    * @param {Game} game The game instance sending this event.
    */
   gameWon(game) {
-    const player = game.currentPlayer();
+    const humanPlayer = game.firstHumanPlayer();
+    const aiPlayer = game.firstAIPlayer();
+    const winner = game.currentPlayer();
+
     this.#send("game_won", game, {
       event: {
-        player: player.id,
-        type: player.type,
-        player_data: player.data(),
-        persona: player.type === PLAYER_TYPES.AI ? player.ai.persona : null,
-        ai_data: player.type === PLAYER_TYPES.AI ? player.ai.data() : null,
-        rounds: game.gameState.roundNumber,
-        rounds_won: game.gameState.roundsWon[game.gameState.currentPlayer],
+        human_player: humanPlayer.data(),
+        ai_player: aiPlayer.data(),
+        winning_player: winner.data(),
+        game_rounds: game.gameState.roundNumber,
+        game_turns: game.gameState.currentTurn,
+        player_rounds_won: game.gameState.roundsWon[game.gameState.currentPlayer],
         player_turns: game.gameState.playerTurns[game.gameState.currentPlayer],
-        total_turns: game.gameState.currentTurn,
-        games_won: game.gameState.gamesWon[game.gameState.currentPlayer],
+        player_games_won: game.gameState.gamesWon[game.gameState.currentPlayer],
       },
     });
   }
@@ -123,7 +125,7 @@ export class Analytics {
     this.#send("round_played", game, {
       event: {
         rounds: game.gameState.roundNumber,
-        rounds_won: game.gameState.roundsWon[game.gameState.currentPlayer],
+        rounds_won: game.gameState.roundsWon,
       },
     });
   }
@@ -136,11 +138,7 @@ export class Analytics {
     const player = game.currentPlayer();
     this.#send("player_moved", game, {
       event: {
-        player: player.id,
-        type: player.type,
-        player_data: player.data(),
-        persona: player.type === PLAYER_TYPES.AI ? player.ai.persona : null,
-        ai_data: player.type === PLAYER_TYPES.AI ? player.ai.data() : null,
+        player: player.data(),
         combination: game.rules.getCombinationType(game.gameState.playPile),
         move: game.gameState.selectedCards,
         pile: game.gameState.playPile,
@@ -157,13 +155,9 @@ export class Analytics {
     const player = game.currentPlayer();
     this.#send("player_passed", game, {
       event: {
-        player: player.id,
-        type: player.type,
-        player_data: player.data(),
-        persona: player.type === PLAYER_TYPES.AI ? player.ai.persona : null,
-        ai_data: player.type === PLAYER_TYPES.AI ? player.ai.data() : null,
+        player: player.data(),
         combination: game.rules.getCombinationType(game.gameState.playPile),
-        passes: game.gameState.consecutivePasses,
+        consecutive_passes: game.gameState.consecutivePasses,
         pile: game.gameState.playPile,
         round: game.gameState.roundNumber,
       },
