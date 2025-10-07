@@ -47,6 +47,34 @@ describe("Game", () => {
     });
   });
 
+  describe("Player Finders", () => {
+    it("firstAIPlayer() should return the first AI player", () => {
+      const players = [
+        new HumanPlayer(game, 0, new MockUI(game)),
+        new AIPlayer(game, 1, new MockAI(game, [], "mock")),
+        new AIPlayer(game, 2, new MockAI(game, [], "mock2")),
+      ];
+      game.setPlayers(players);
+      const aiPlayer = game.firstAIPlayer();
+      expect(aiPlayer).to.exist;
+      expect(aiPlayer.type).to.equal(PLAYER_TYPES.AI);
+      expect(aiPlayer.number).to.equal(1);
+    });
+
+    it("firstHumanPlayer() should return the first human player", () => {
+      const players = [
+        new AIPlayer(game, 0, new MockAI(game, [], "mock")),
+        new HumanPlayer(game, 1, new MockUI(game)),
+        new HumanPlayer(game, 2, new MockUI(game)),
+      ];
+      game.setPlayers(players);
+      const humanPlayer = game.firstHumanPlayer();
+      expect(humanPlayer).to.exist;
+      expect(humanPlayer.type).to.equal(PLAYER_TYPES.HUMAN);
+      expect(humanPlayer.number).to.equal(1);
+    });
+  });
+
   describe("Game Setup", () => {
     it("findStartingPlayer() should find the player with the lowest card", () => {
       const hands = [
