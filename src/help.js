@@ -1,16 +1,17 @@
 import { AI } from "./app/ai/index.js";
 import { AI_PERSONAS } from "./app/ai/personas.js";
-import { Card, Deck, Game, COMBINATION_TYPES, RANKS, SUITS } from "./app/game/index.js";
+import { Card, Deck, Game, COMBINATION_TYPES, RANKS, SUITS, GameClient } from "./app/game/index.js";
 import { UI } from "./app/ui.js";
 
 class Help {
   constructor() {
     this.deck = new Deck();
     this.game = new Game(this.deck, Game.STATE_KEY + "-help");
-    this.ai = new AI(this.game);
+    this.gameClient = new GameClient(this.game);
+    this.ai = new AI(this.gameClient);
 
-    this.ui = new UI(this.game);
-    this.ui.init(this.game);
+    this.ui = new UI(this.gameClient);
+    this.ui.init();
 
     const mainContainer = document.getElementById("help-container");
     if (mainContainer) {
@@ -41,13 +42,13 @@ class Help {
     let hands = [];
     let playPile = [];
     while (playPile.length === 0) {
-      hands = this.game.deck.deal(2);
+      hands = this.deck.deal(2);
       const combinations = this.ai.generateCombinations(hands[0], randomType);
       if (combinations.length > 0) {
         playPile = combinations[Math.floor(Math.random() * combinations.length)];
       }
     }
-    this.game.gameState.playPile = playPile;
+    this.gameClient.setPlayPile(playPile);
 
     // 2. Generate a hand that can beat the playPile
     const validMoves = this.ai.findAllValidMoves(hands[1], playPile, 1, [hands[1]]);
@@ -59,16 +60,16 @@ class Help {
         .slice(0, 13 - winningMove.length);
       const userHand = [...winningMove, ...otherCards];
       Card.sort(userHand);
-      this.game.gameState.playerHands[0] = userHand;
+      this.gameClient.setPlayerHand(0, userHand);
 
       // 3. Render the playPile and hand
       const playAreaContent = document.getElementById("game-content");
       playAreaContent.innerHTML = ""; // Clear previous content
-      this.ui.renderCardsContainer(this.game.gameState.playPile, playAreaContent);
+      this.ui.renderCardsContainer(this.gameClient.getPlayPile(), playAreaContent);
 
       const playerHandContainer = document.getElementById("player-hand");
       playerHandContainer.innerHTML = ""; // Clear previous content
-      this.ui.renderCardsContainer(this.game.gameState.playerHands[0], playerHandContainer);
+      this.ui.renderCardsContainer(this.gameClient.getPlayerHand(0), playerHandContainer);
 
       return userHand;
     } else {
@@ -188,8 +189,8 @@ class Help {
           Card.sort(selectedCards);
 
           if (selectedCards.length > 0) {
-            const isValid = this.game.rules.isValidPlay(selectedCards, this.game.gameState.playPile, hand, 1, [hand]);
-            const icon = isValid ? this.ui.getCombinationTypeIndicator(this.game.rules.getCombinationType(selectedCards)) : "❌";
+            const isValid = this.gameClient.isValidPlay(selectedCards, this.gameClient.getPlayPile(), hand, 1, [hand]);
+            const icon = isValid ? this.ui.getCombinationTypeIndicator(this.gameClient.getCombinationType(selectedCards)) : "❌";
             messageContainer.innerHTML = `<p>${isValid ? "Valid" : "Invalid"} combination ${icon}</p>`;
           } else {
             messageContainer.innerHTML = initMessageHtml;
