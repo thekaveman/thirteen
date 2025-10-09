@@ -1,3 +1,4 @@
+import { GameClient } from "./client.js";
 import { Card, Deck } from "./deck.js";
 import { PLAYER_TYPES, createPlayer } from "../player/index.js";
 import { Rules } from "./rules.js";
@@ -100,7 +101,7 @@ export class Game {
       this.gameState.players = parsedState.gameState.players.map((p, i) =>
         createPlayer({
           id: loadedPlayerIds[i],
-          game: this,
+          gameClient: new GameClient(this),
           type: loadedPlayerTypes[i],
           number: i,
           ui: ui,

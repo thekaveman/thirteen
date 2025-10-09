@@ -293,18 +293,18 @@ export class MockLocalStorage {
 }
 
 export class MockPlayer extends Player {
-  constructor(name, hand, isHuman = false, persona = null) {
-    super(name, hand, isHuman);
-    this.persona = isHuman ? null : persona; // Set persona to null if it's a human player
+  constructor(type, gameClient, number, persona = null) {
+    super(type, gameClient, number);
+    this.persona = persona; // Set persona to null if it's a human player
   }
 
   data() {
     return {
       id: this.id,
       type: this.type,
-      name: this.name,
-      isHuman: this.isHuman,
+      number: this.number,
       persona: this.persona,
+      game: this.gameClient.getId(),
     };
   }
 

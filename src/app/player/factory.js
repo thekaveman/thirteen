@@ -1,5 +1,5 @@
 import { AI_PERSONAS } from "../ai/personas.js";
-import { Game } from "../game/index.js";
+import { GameClient } from "../game/index.js";
 import { UI } from "../ui.js";
 import { AIPlayer } from "./ai.js";
 import { Player } from "./base.js";
@@ -10,7 +10,7 @@ import { PLAYER_TYPES } from "./index.js";
  * Creates a player instance based on the provided configuration.
  * @param {object} config The player configuration.
  * @param {string} config.id Set the id of the player.
- * @param {Game} config.game The game instance.
+ * @param {GameClient} config.gameClient The game client instance.
  * @param {string} config.type The type of player ('human' or 'ai').
  * @param {number} config.number The player number.
  * @param {UI} [config.ui] The UI instance (for human players).
@@ -18,11 +18,11 @@ import { PLAYER_TYPES } from "./index.js";
  * @returns {Player} The created player instance.
  */
 export function createPlayer(config) {
-  const { id, game, type, number, ui, persona } = config;
+  const { id, gameClient, type, number, ui, persona } = config;
   let player;
 
   if (type === PLAYER_TYPES.HUMAN) {
-    player = new HumanPlayer(game, number, ui);
+    player = new HumanPlayer(gameClient, number, ui);
   }
 
   if (type === PLAYER_TYPES.AI) {
@@ -30,8 +30,8 @@ export function createPlayer(config) {
     if (!aiPersona) {
       throw new Error(`Unknown AI persona: ${persona}`);
     }
-    const ai = aiPersona.create(game);
-    player = new AIPlayer(game, number, ai);
+    const ai = aiPersona.create(gameClient);
+    player = new AIPlayer(gameClient, number, ai);
   }
 
   if (player) {

@@ -1,11 +1,18 @@
-import { Card } from "../game/index.js";
+import { Card, GameClient } from "../game/index.js";
+import { UI } from "../ui.js";
 import { log } from "../utils.js";
 import { Player } from "./base.js";
 import { PLAYER_TYPES } from "./index.js";
 
 export class HumanPlayer extends Player {
-  constructor(game, number, ui) {
-    super(PLAYER_TYPES.HUMAN, game, number);
+  /**
+   * Create a new HumanPlayer instance.
+   * @param {GameClient} gameClient The game client instance this player uses.
+   * @param {number} number The player number in the underlying game.
+   * @param {UI} ui The UI class to wire this player into.
+   */
+  constructor(gameClient, number, ui) {
+    super(PLAYER_TYPES.HUMAN, gameClient, number);
     this.ui = ui;
   }
 
@@ -18,26 +25,19 @@ export class HumanPlayer extends Player {
     const card = Card.parse(event.target.dataset.card);
 
     // Check if the clicked card belongs to the current player's hand
-    const currentPlayerHand = this.game.gameState.playerHands[this.game.gameState.currentPlayer];
+    const currentPlayerHand = this.gameClient.getPlayerHands(this.gameClient.getCurrentPlayerIndex());
     if (!currentPlayerHand.some((c) => c.rank === card.rank && c.suit === card.suit)) {
       // If the card does not belong to the current player, do nothing
       return;
     }
 
-    const cardIndex = this.game.gameState.selectedCards.findIndex((c) => c.value === card.value);
-
-    if (cardIndex > -1) {
-      this.game.gameState.selectedCards.splice(cardIndex, 1);
-    } else {
-      this.game.gameState.selectedCards.push(card);
-    }
-    Card.sort(this.game.gameState.selectedCards);
+    this.gameClient.toggleCardSelection(card);
     this.ui.renderSelectedCards();
   }
 
   handlePassButtonClick() {
     this.ui.clearMessage();
-    const passSuccessful = this.game.passTurn();
+    const passSuccessful = this.gameClient.pass();
     if (!passSuccessful) {
       this.ui.displayMessage("You cannot pass on the first play of a round.", "error");
     }
@@ -46,18 +46,15 @@ export class HumanPlayer extends Player {
 
   handlePlayButtonClick() {
     this.ui.clearMessage();
-    if (
-      this.game.rules.isValidPlay(
-        this.game.gameState.selectedCards,
-        this.game.gameState.playPile,
-        this.game.gameState.playerHands[this.game.gameState.currentPlayer],
-        this.game.gameState.currentTurn,
-        this.game.gameState.playerHands
-      )
-    ) {
-      this.game.playCards();
+    const selectedCards = this.gameClient.getSelectedCards();
+    const playerHand = this.gameClient.getPlayerHands(this.gameClient.getCurrentPlayerIndex());
+    const playPile = this.gameClient.getPlayPile();
+    const currentTurn = this.gameClient.getCurrentTurn();
+    const allPlayerHands = this.gameClient.getPlayerHands();
+    if (this.gameClient.isValidPlay(selectedCards, playPile, playerHand, currentTurn, allPlayerHands)) {
+      this.gameClient.play(selectedCards);
     } else {
-      log("Invalid play", this.game.gameState.selectedCards);
+      log("Invalid play", selectedCards);
       this.ui.displayMessage("Invalid play", "error");
     }
     this.ui.render();

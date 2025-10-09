@@ -1,18 +1,19 @@
-import { Deck, Game } from "../../src/app/game/index.js";
+import { Deck, Game, GameClient } from "../../src/app/game/index.js";
 import { createPlayer, HumanPlayer, AIPlayer, PLAYER_TYPES } from "../../src/app/player/index.js";
 
 describe("Player Factory", () => {
-  let game;
+  let game, gameClient;
 
   beforeEach(() => {
     const deck = new Deck();
     game = new Game(deck);
+    gameClient = new GameClient(game);
   });
 
   it("should create a HumanPlayer", () => {
     const player = createPlayer({
       type: PLAYER_TYPES.HUMAN,
-      game: game,
+      gameClient: gameClient,
       number: 0,
       ui: {},
     });
@@ -25,7 +26,7 @@ describe("Player Factory", () => {
     const player = createPlayer({
       type: PLAYER_TYPES.AI,
       persona: "random",
-      game: game,
+      gameClient: gameClient,
       number: 1,
     });
     expect(player).to.be.an.instanceOf(AIPlayer);
@@ -39,7 +40,7 @@ describe("Player Factory", () => {
       createPlayer({
         type: PLAYER_TYPES.AI,
         persona: "unknown-persona",
-        game: game,
+        gameClient: gameClient,
         number: 1,
       })
     ).to.throw("Unknown AI persona: unknown-persona");
@@ -49,7 +50,7 @@ describe("Player Factory", () => {
     expect(() =>
       createPlayer({
         type: "unknown-type",
-        game: game,
+        gameClient: gameClient,
         number: 1,
       })
     ).to.throw("Unknown player type: unknown-type");
