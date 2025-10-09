@@ -263,6 +263,64 @@ describe("Game", () => {
     });
   });
 
+  describe("State Manipulation", () => {
+    it("clearSelectedCards() should empty the selectedCards array", () => {
+      game.gameState.selectedCards = [new Card("A", "♠")];
+      game.clearSelectedCards();
+      expect(game.gameState.selectedCards).to.be.an("array").that.is.empty;
+    });
+
+    it("setAIPersona() should update the persona for an AI player", () => {
+      const players = [new HumanPlayer(game, 0, new MockUI(game)), new AIPlayer(game, 1, new MockAI(game, [], "mock"))];
+      game.setPlayers(players);
+      game.setAIPersona(1, "new_persona");
+      expect(game.gameState.playerPersonas[1]).to.equal("new_persona");
+    });
+
+    it("setAIPersona() should not update the persona for a human player", () => {
+      const players = [new HumanPlayer(game, 0, new MockUI(game)), new AIPlayer(game, 1, new MockAI(game, [], "mock"))];
+      game.setPlayers(players);
+      game.setAIPersona(0, "new_persona");
+      expect(game.gameState.playerPersonas[0]).to.not.equal("new_persona");
+    });
+
+    it("setPlayerHand() should replace a player's hand", () => {
+      const players = [new HumanPlayer(game, 0, new MockUI(game))];
+      game.setPlayers(players);
+      const newHand = [new Card("A", "♠"), new Card("K", "♣")];
+      game.setPlayerHand(0, newHand);
+      expect(game.gameState.playerHands[0]).to.deep.equal(newHand);
+    });
+
+    it("setPlayPile() should replace the play pile", () => {
+      const newPlayPile = [new Card("A", "♠"), new Card("K", "♣")];
+      game.setPlayPile(newPlayPile);
+      expect(game.gameState.playPile).to.deep.equal(newPlayPile);
+    });
+
+    it("toggleCardSelection() should add a card to selectedCards", () => {
+      const card = new Card("A", "♠");
+      game.toggleCardSelection(card);
+      expect(game.gameState.selectedCards).to.deep.include(card);
+    });
+
+    it("toggleCardSelection() should remove a card from selectedCards", () => {
+      const card = new Card("A", "♠");
+      game.gameState.selectedCards = [card];
+      game.toggleCardSelection(card);
+      expect(game.gameState.selectedCards).to.not.deep.include(card);
+    });
+
+    it("toggleCardSelection() should sort the cards after adding one", () => {
+      const card1 = new Card("A", "♠");
+      const card2 = new Card("3", "♦");
+      game.gameState.selectedCards = [card1];
+      game.toggleCardSelection(card2);
+      expect(game.gameState.selectedCards[0].value).to.equal(card2.value);
+      expect(game.gameState.selectedCards[1].value).to.equal(card1.value);
+    });
+  });
+
   describe("Save and Load", () => {
     it("save() should save the game state to localStorage", () => {
       game.save();
