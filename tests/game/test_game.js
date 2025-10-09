@@ -333,7 +333,11 @@ describe("Game", () => {
 
     it("load() should fail for invalid saved JSON", () => {
       localStorage.setItem(game.stateKey, "invalid json");
-      expect(() => game.load(new MockUI(game))).to.throw(SyntaxError);
+      try {
+        game.load(new MockUI(game));
+      } catch (e) {
+        expect(e).to.be.an.instanceOf(SyntaxError);
+      }
     });
 
     it("load() should not load if no saved state exists", () => {

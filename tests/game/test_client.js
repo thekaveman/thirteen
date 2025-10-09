@@ -153,28 +153,28 @@ describe("GameClient", () => {
     it("init() should call game.init", () => {
       const spy = sinon.spy(game, "init");
       gameClient.init();
-      expect(spy).to.have.been.calledOnce;
+      sinon.assert.calledOnce(spy);
     });
 
     it("isValidPlay() should call game.rules.isValidPlay", () => {
       const spy = sinon.spy(game.rules, "isValidPlay");
       const cards = [new Card("A", "♠")];
       gameClient.isValidPlay(cards);
-      expect(spy).to.have.been.calledOnce;
+      sinon.assert.calledOnce(spy);
     });
 
     it("load() should call game.load", () => {
       const spy = sinon.spy(game, "load");
       const ui = new MockUI(game);
       gameClient.load(ui);
-      expect(spy).to.have.been.calledWith(ui);
+      sinon.assert.calledWith(spy, ui);
     });
 
     it("pass() should call game.passTurn", () => {
       const spy = sinon.spy(game, "passTurn");
       game.gameState.playPile = [new Card("3", "♠")];
       gameClient.pass();
-      expect(spy).to.have.been.calledOnce;
+      sinon.assert.calledOnce(spy);
     });
 
     it("play() should call game.playCards", () => {
@@ -187,7 +187,7 @@ describe("GameClient", () => {
     it("reset() should call game.reset", () => {
       const spy = sinon.spy(game, "reset");
       gameClient.reset();
-      expect(spy).to.have.been.calledOnce;
+      sinon.assert.calledOnce(spy);
     });
 
     it("setAIPersona() should update the persona for an AI player", () => {
@@ -228,13 +228,13 @@ describe("GameClient", () => {
       const spy = sinon.spy(game, "setPlayers");
       const players = [new HumanPlayer(game, 0, new MockUI(game))];
       gameClient.setPlayers(players);
-      expect(spy).to.have.been.calledWith(players);
+      sinon.assert.calledWith(spy, players);
     });
 
     it("start() should call game.start", () => {
       const spy = sinon.spy(game, "start");
       gameClient.start();
-      expect(spy).to.have.been.calledOnce;
+      sinon.assert.calledOnce(spy);
     });
 
     it("toggleCardSelection() should add a card to selectedCards", () => {
