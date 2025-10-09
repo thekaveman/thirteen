@@ -1,6 +1,6 @@
 import { Card, Game } from "../../src/app/game/index.js";
 import { HumanPlayer, AIPlayer, PLAYER_TYPES } from "../../src/app/player/index.js";
-import { MockAI, MockDeck, MockPlayer, MockUI } from "../mocks.js";
+import { MockAI, MockDeck, MockUI, MockGameClient } from "../mocks.js";
 
 describe("Game", () => {
   let game;
@@ -64,7 +64,10 @@ describe("Game", () => {
     });
 
     it("start() should initialize the game state for starting", () => {
-      const players = [new MockPlayer("Human 1", [], true), new MockPlayer("AI 1", [], false)];
+      const players = [
+        new HumanPlayer(new MockGameClient(game), 0, new MockUI(new MockGameClient(game))),
+        new AIPlayer(new MockGameClient(game), 1, new MockAI(new MockGameClient(game), [], "mock")),
+      ];
       game.setPlayers(players);
       game.start();
 
@@ -225,14 +228,14 @@ describe("Game", () => {
     it("load() should fail for invalid saved JSON", () => {
       localStorage.setItem(game.stateKey, "invalid json");
       try {
-        game.load(new MockUI(game));
+        game.load(new MockUI(new MockGameClient(game)));
       } catch (e) {
         expect(e).to.be.an.instanceOf(SyntaxError);
       }
     });
 
     it("load() should not load if no saved state exists", () => {
-      const loaded = game.load(new MockUI(game));
+      const loaded = game.load(new MockUI(new MockGameClient(game)));
       expect(loaded.loaded).to.be.false;
     });
 
@@ -243,9 +246,12 @@ describe("Game", () => {
     });
 
     it("load() should correctly rehydrate game data", () => {
-      const mockUI = new MockUI(game);
-      const mockAI = new MockAI(game, [new Card("3", "♠")], "random");
-      const mockPlayers = [new AIPlayer(game, 0, mockAI), new HumanPlayer(game, 1, mockUI)];
+      const mockUI = new MockUI(new MockGameClient(game));
+      const mockAI = new MockAI(new MockGameClient(game), [new Card("3", "♠")], "random");
+      const mockPlayers = [
+        new AIPlayer(new MockGameClient(game), 0, mockAI),
+        new HumanPlayer(new MockGameClient(game), 1, mockUI),
+      ];
 
       game.setPlayers(mockPlayers);
       game.gameState.gameStarted = true;

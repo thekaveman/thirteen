@@ -1,12 +1,9 @@
-import { Game } from "../../src/app/game/game.js";
-import { GameClient } from "../../src/app/game/client.js";
-import { Deck, Card } from "../../src/app/game/deck.js";
-import { HumanPlayer, AIPlayer } from "../../src/app/player/index.js";
+import { Deck, Card, Game, GameClient } from "../../src/app/game/index.js";
+import { HumanPlayer, AIPlayer, PLAYER_TYPES } from "../../src/app/player/index.js";
 import { MockAI, MockUI } from "../mocks.js";
 
 describe("GameClient", () => {
-  let game;
-  let gameClient;
+  let game, gameClient;
 
   beforeEach(() => {
     game = new Game(new Deck());
@@ -30,7 +27,7 @@ describe("GameClient", () => {
         new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random")),
       ];
       gameClient.setPlayers(players);
-      gameClient.game.gameState.gameOver = true;
+      game.gameState.gameOver = true;
       const data = gameClient.getAnalyticsData();
       expect(data).to.have.property("id");
       expect(data).to.have.property("ended");
@@ -53,8 +50,8 @@ describe("GameClient", () => {
     });
 
     it("getCurrentPlayer() should return the current player", () => {
-      const players = [new HumanPlayer(game, 0, new MockUI(game))];
-      game.setPlayers(players);
+      const players = [new HumanPlayer(gameClient, 0, new MockUI(gameClient))];
+      gameClient.setPlayers(players);
       expect(gameClient.getCurrentPlayer()).to.equal(players[0]);
     });
 
@@ -109,11 +106,11 @@ describe("GameClient", () => {
     it("getPlayerHand() should return the hand of a specific player", () => {
       const hands = [[new Card("A", "♠")], [new Card("K", "♠")]];
       game.gameState.playerHands = hands;
-      expect(gameClient.getPlayerHand(1)).to.equal(hands[1]);
+      expect(gameClient.getPlayerHands(1)).to.equal(hands[1]);
     });
 
     it("getPlayers() should return the list of players", () => {
-      const players = [new HumanPlayer(game, 0, new MockUI(game))];
+      const players = [new HumanPlayer(gameClient, 0, new MockUI(gameClient))];
       game.gameState.players = players;
       expect(gameClient.getPlayers()).to.equal(players);
     });
@@ -145,9 +142,9 @@ describe("GameClient", () => {
     });
 
     it("clearSelectedCards() should empty the selectedCards array", () => {
-      gameClient.game.gameState.selectedCards = [new Card("A", "♠")];
+      game.gameState.selectedCards = [new Card("A", "♠")];
       gameClient.clearSelectedCards();
-      expect(gameClient.game.gameState.selectedCards).to.be.an("array").that.is.empty;
+      expect(game.gameState.selectedCards).to.be.an("array").that.is.empty;
     });
 
     it("init() should call game.init", () => {
@@ -165,7 +162,7 @@ describe("GameClient", () => {
 
     it("load() should call game.load", () => {
       const spy = sinon.spy(game, "load");
-      const ui = new MockUI(game);
+      const ui = new MockUI(gameClient);
       gameClient.load(ui);
       sinon.assert.calledWith(spy, ui);
     });
@@ -178,7 +175,7 @@ describe("GameClient", () => {
     });
 
     it("play() should call game.playCards", () => {
-      const spy = sinon.spy(gameClient.game, "playCards");
+      const spy = sinon.spy(game, "playCards");
       const move = [new Card("3", "♠")];
       gameClient.play(move);
       sinon.assert.calledOnce(spy);
@@ -197,7 +194,7 @@ describe("GameClient", () => {
       ];
       gameClient.setPlayers(players);
       gameClient.setAIPersona(1, "new_persona");
-      expect(gameClient.game.gameState.playerPersonas[1]).to.equal("new_persona");
+      expect(game.gameState.playerPersonas[1]).to.equal("new_persona");
     });
 
     it("setAIPersona() should not update the persona for a human player", () => {
@@ -207,7 +204,7 @@ describe("GameClient", () => {
       ];
       gameClient.setPlayers(players);
       gameClient.setAIPersona(0, "new_persona");
-      expect(gameClient.game.gameState.playerPersonas[0]).to.not.equal("new_persona");
+      expect(game.gameState.playerPersonas[0]).to.not.equal("new_persona");
     });
 
     it("setPlayerHand() should replace a player's hand", () => {
@@ -215,18 +212,18 @@ describe("GameClient", () => {
       gameClient.setPlayers(players);
       const newHand = [new Card("A", "♠"), new Card("K", "♣")];
       gameClient.setPlayerHand(0, newHand);
-      expect(gameClient.game.gameState.playerHands[0]).to.deep.equal(newHand);
+      expect(game.gameState.playerHands[0]).to.deep.equal(newHand);
     });
 
     it("setPlayPile() should replace the play pile", () => {
       const newPlayPile = [new Card("A", "♠"), new Card("K", "♣")];
       gameClient.setPlayPile(newPlayPile);
-      expect(gameClient.game.gameState.playPile).to.deep.equal(newPlayPile);
+      expect(game.gameState.playPile).to.deep.equal(newPlayPile);
     });
 
     it("setPlayers() should call game.setPlayers", () => {
       const spy = sinon.spy(game, "setPlayers");
-      const players = [new HumanPlayer(game, 0, new MockUI(game))];
+      const players = [new HumanPlayer(gameClient, 0, new MockUI(gameClient))];
       gameClient.setPlayers(players);
       sinon.assert.calledWith(spy, players);
     });
@@ -240,23 +237,23 @@ describe("GameClient", () => {
     it("toggleCardSelection() should add a card to selectedCards", () => {
       const card = new Card("A", "♠");
       gameClient.toggleCardSelection(card);
-      expect(gameClient.game.gameState.selectedCards).to.deep.include(card);
+      expect(game.gameState.selectedCards).to.deep.include(card);
     });
 
     it("toggleCardSelection() should remove a card from selectedCards", () => {
       const card = new Card("A", "♠");
-      gameClient.game.gameState.selectedCards = [card];
+      game.gameState.selectedCards = [card];
       gameClient.toggleCardSelection(card);
-      expect(gameClient.game.gameState.selectedCards).to.not.deep.include(card);
+      expect(game.gameState.selectedCards).to.not.deep.include(card);
     });
 
     it("toggleCardSelection() should sort the cards after adding one", () => {
       const card1 = new Card("A", "♠");
       const card2 = new Card("3", "♦");
-      gameClient.game.gameState.selectedCards = [card1];
+      game.gameState.selectedCards = [card1];
       gameClient.toggleCardSelection(card2);
-      expect(gameClient.game.gameState.selectedCards[0].value).to.equal(card2.value);
-      expect(gameClient.game.gameState.selectedCards[1].value).to.equal(card1.value);
+      expect(game.gameState.selectedCards[0].value).to.equal(card2.value);
+      expect(game.gameState.selectedCards[1].value).to.equal(card1.value);
     });
   });
 });

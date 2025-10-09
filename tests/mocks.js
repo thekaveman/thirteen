@@ -1,6 +1,6 @@
 import { AI } from "../src/app/ai/index.js";
 import { Card, Game, GameClient } from "../src/app/game/index.js";
-import { Player } from "../src/app/player/index.js";
+import { Player, PLAYER_TYPES, createPlayer } from "../src/app/player/index.js";
 import { UI } from "../src/app/ui.js";
 
 export class MockAmplitude {
@@ -243,6 +243,20 @@ export class MockGame extends Game {
     this.loadCalled = true;
     if (this.loadWillSucceed) {
       this.gameState.gameOver = this.gameOverOnLoad;
+      const loadedPlayerIds = this.gameState.players.map((p) => p.id);
+      const loadedPlayerTypes = this.gameState.players.map((p) => p.type);
+      const loadedPlayerPersonas = this.gameState.players.map((p) => (p.type === PLAYER_TYPES.AI ? p.persona : null));
+
+      this.gameState.players = this.gameState.players.map((p, i) =>
+        createPlayer({
+          id: loadedPlayerIds[i],
+          gameClient: new MockGameClient(this),
+          type: loadedPlayerTypes[i],
+          number: i,
+          ui: ui,
+          persona: loadedPlayerPersonas[i],
+        })
+      );
       return { loaded: true, gameOver: this.gameOverOnLoad, loadedPlayerPersonas: [null, "random"] };
     }
     return { loaded: false };

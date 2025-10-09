@@ -1,5 +1,6 @@
 import { Card } from "./deck.js";
 import { Game } from "./game.js";
+import { PLAYER_TYPES } from "../player/index.js";
 
 export class GameClient {
   /**
