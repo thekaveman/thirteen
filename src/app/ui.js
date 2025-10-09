@@ -1,15 +1,15 @@
 import { AI_PERSONAS } from "./ai/personas.js";
-import { Card, Game, COMBINATION_TYPES } from "./game/index.js";
+import { Card, COMBINATION_TYPES } from "./game/index.js";
 import { PLAYER_TYPES } from "./player/index.js";
 import { log } from "./utils.js";
 
 export class UI {
   /**
    * Initialize a new UI instance.
-   * @param {Game} game The Game instance for this UI.
+   * @param {GameClient} gameClient The GameClient instance for this UI.
    */
-  constructor(game) {
-    this.game = game;
+  constructor(gameClient) {
+    this.gameClient = gameClient;
     this.id = {
       gameMessages: "game-messages",
       playersHands: "players-hands",
@@ -43,10 +43,8 @@ export class UI {
 
   /**
    * Initializes elements in the ui object.
-   * @param {Game} game The game instance.
    */
-  init(game) {
-    this.game = game;
+  init() {
     if (typeof document !== "undefined") {
       this.gameMessages = document.getElementById(this.id.gameMessages);
       this.playersHands = document.getElementById(this.id.playersHands);
@@ -177,10 +175,7 @@ export class UI {
     // Add event listener for changes
     this.aiDropdown.onchange = (event) => {
       const selectedPersonaKey = event.target.value;
-      this.game.gameState.playerPersonas[1] = selectedPersonaKey;
-      if (this.game.players && this.game.players[1]) {
-        this.game.players[1].ai.persona = selectedPersonaKey;
-      }
+      this.gameClient.setAIPersona(1, selectedPersonaKey);
       this.updateAIDescription(selectedPersonaKey);
       this.renderPlayerHand(1, parentElement);
     };
@@ -190,7 +185,7 @@ export class UI {
     parentElement.appendChild(this.aiSelection);
 
     // Set initial selection based on game state
-    const currentAIPersona = this.game.gameState.playerPersonas[1];
+    const currentAIPersona = this.gameClient.getPlayerPersonas(1);
     if (currentAIPersona) {
       this.aiDropdown.value = currentAIPersona;
       this.updateAIDescription(currentAIPersona);
@@ -230,10 +225,10 @@ export class UI {
    */
   renderPlayArea() {
     if (this.gameContent) {
-      const combinationType = this.game.rules.getCombinationType(this.game.gameState.playPile);
+      const combinationType = this.gameClient.getPlayPileCombinationType();
       const indicator = this.getCombinationTypeIndicator(combinationType);
-      this.gameContent.innerHTML = `<h2>Play Area (Round ${this.game.gameState.roundNumber}) <span class="combination-type">${indicator}</span></h2>`;
-      this.renderCardsContainer(this.game.gameState.playPile, this.gameContent);
+      this.gameContent.innerHTML = `<h2>Play Area (Round ${this.gameClient.getRoundNumber()}) <span class="combination-type">${indicator}</span></h2>`;
+      this.renderCardsContainer(this.gameClient.getPlayPile(), this.gameContent);
     }
   }
 
@@ -243,7 +238,7 @@ export class UI {
    * @param {HTMLElement} handDiv The div element to render the hand in.
    */
   renderPlayerHand(playerIndex, handDiv) {
-    const player = this.game.gameState.players[playerIndex];
+    const player = this.gameClient.getPlayers(playerIndex);
     let text = `Player ${playerIndex + 1}`;
 
     if (player.type === PLAYER_TYPES.AI) {
@@ -253,10 +248,10 @@ export class UI {
       text += ": 🎮 You";
     }
 
-    if (this.game.gameState.gameOver && this.game.gameState.playerHands[playerIndex].length === 0) {
-      this.displayMessage(`${text} - wins in ${this.game.gameState.roundNumber} rounds!`, "info");
+    if (this.gameClient.isGameOver() && this.gameClient.getPlayerHands(playerIndex).length === 0) {
+      this.displayMessage(`${text} - wins in ${this.gameClient.getRoundNumber()} rounds!`, "info");
       text += " (Winner!)";
-    } else if (this.game.gameState.currentPlayer === playerIndex) {
+    } else if (this.gameClient.getCurrentPlayerIndex() === playerIndex) {
       text = `👉 ${text}`;
     }
     if (handDiv) {
@@ -273,7 +268,7 @@ export class UI {
         gamesWonEl.classList.add("games-won");
         handDiv.appendChild(gamesWonEl);
       }
-      gamesWonEl.textContent = `Games won: ${this.game.gameState.gamesWon[playerIndex]}`;
+      gamesWonEl.textContent = `Games won: ${this.gameClient.getGamesWon(playerIndex)}`;
 
       let roundsWonEl = handDiv.querySelector(".rounds-won");
       if (!roundsWonEl) {
@@ -281,7 +276,7 @@ export class UI {
         roundsWonEl.classList.add("rounds-won");
         handDiv.appendChild(roundsWonEl);
       }
-      roundsWonEl.textContent = `Rounds won: ${this.game.gameState.roundsWon[playerIndex]}`;
+      roundsWonEl.textContent = `Rounds won: ${this.gameClient.getRoundsWon(playerIndex)}`;
 
       // Clear the cards container before rendering new cards
       let cardsContainer = handDiv.querySelector(".cards-container");
@@ -294,17 +289,17 @@ export class UI {
       }
 
       const preRender = (cardSpan, card) => {
-        const currentPlayer = this.game.gameState.players[playerIndex];
-        if (playerIndex === this.game.gameState.currentPlayer && currentPlayer.type === PLAYER_TYPES.HUMAN) {
+        const currentPlayer = this.gameClient.getPlayers(playerIndex);
+        if (playerIndex === this.gameClient.getCurrentPlayerIndex() && currentPlayer.type === PLAYER_TYPES.HUMAN) {
           if (cardSpan && cardSpan.addEventListener) {
             cardSpan.addEventListener("click", currentPlayer.handleCardClick.bind(currentPlayer));
           }
         }
-        if (this.game.gameState.selectedCards.some((selectedCard) => selectedCard.value === card.value)) {
+        if (this.gameClient.isCardSelected(card)) {
           if (cardSpan) cardSpan.classList.add("selected");
         }
       };
-      const playerHand = this.game.gameState.playerHands[playerIndex];
+      const playerHand = this.gameClient.getPlayerHands(playerIndex);
       this.renderCardsContainer(playerHand, cardsContainer, preRender);
 
       const cardCountEl = handDiv.querySelector(".card-count");
@@ -325,7 +320,7 @@ export class UI {
   renderPlayerHands() {
     if (this.playersHands) {
       this.playersHands.innerHTML = ""; // Clear the entire container once
-      this.game.gameState.playerHands.forEach((hand, i) => {
+      this.gameClient.getPlayerHands().forEach((hand, i) => {
         if (typeof document !== "undefined") {
           let playerHandDiv = document.getElementById(`player-hand-${i}`);
           if (!playerHandDiv) {
@@ -335,8 +330,8 @@ export class UI {
             this.playersHands.appendChild(playerHandDiv);
           }
 
-          playerHandDiv.classList.add(this.game.gameState.players[i].type);
-          if (i === this.game.gameState.currentPlayer) {
+          playerHandDiv.classList.add(this.gameClient.getPlayers(i).type);
+          if (i === this.gameClient.getCurrentPlayerIndex()) {
             playerHandDiv.classList.add("current");
           } else {
             playerHandDiv.classList.remove("current");
@@ -345,9 +340,9 @@ export class UI {
 
           // If it's an AI player and game hasn't started or ended, render persona selection
           if (
-            this.game.gameState.players[i].type === PLAYER_TYPES.AI &&
-            !this.game.gameState.gameStarted &&
-            !this.game.gameState.gameOver
+            this.gameClient.getPlayers(i).type === PLAYER_TYPES.AI &&
+            !this.gameClient.isGameStarted() &&
+            !this.gameClient.isGameOver()
           ) {
             this.renderAISelection(playerHandDiv);
           }
@@ -370,9 +365,9 @@ export class UI {
    * Updates the state of the play, pass, and new game buttons.
    */
   updateButtonStates() {
-    const isHumanPlayerTurn = this.game.gameState.players[this.game.gameState.currentPlayer]?.type === PLAYER_TYPES.HUMAN;
+    const isHumanPlayerTurn = this.gameClient.getCurrentPlayer()?.type === PLAYER_TYPES.HUMAN;
 
-    if (this.game.gameState.gameOver) {
+    if (this.gameClient.isGameOver()) {
       if (this.playButton) this.playButton.style.display = "none";
       if (this.passButton) this.passButton.style.display = "none";
       if (this.newGameButton) this.newGameButton.style.display = "block";
@@ -381,7 +376,7 @@ export class UI {
         this.resetButton.style.display = "block";
         this.resetButton.disabled = false;
       }
-    } else if (!this.game.gameState.gameStarted) {
+    } else if (!this.gameClient.isGameStarted()) {
       // Game has not started yet, show start button
       if (this.playButton) this.playButton.style.display = "none";
       if (this.passButton) this.passButton.style.display = "none";
@@ -418,7 +413,7 @@ export class UI {
     if (typeof document === "undefined") {
       return;
     }
-    const currentPlayerHandDiv = document.getElementById(`player-hand-${this.game.gameState.currentPlayer}`);
+    const currentPlayerHandDiv = document.getElementById(`player-hand-${this.gameClient.getCurrentPlayerIndex()}`);
     if (!currentPlayerHandDiv) {
       return;
     }
@@ -426,10 +421,7 @@ export class UI {
     const cardElements = currentPlayerHandDiv.querySelectorAll(".card");
     cardElements.forEach((cardEl) => {
       const card = Card.parse(cardEl.dataset.card);
-      const isSelected = this.game.gameState.selectedCards.some(
-        (selectedCard) => selectedCard.rank === card.rank && selectedCard.suit === card.suit
-      );
-
+      const isSelected = this.gameClient.isCardSelected(card);
       if (isSelected) {
         cardEl.classList.add("selected");
       } else {

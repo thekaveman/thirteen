@@ -312,9 +312,9 @@ export class MockPlayer extends Player {
 }
 
 export class MockUI {
-  constructor(game) {
-    this.game = game;
-    this.id = new UI(game).id;
+  constructor(gameClient) {
+    this.gameClient = gameClient;
+    this.id = new UI(gameClient).id;
     this.initCalled = false;
     this.renderCalled = false;
     this.playButton = {
@@ -358,8 +358,7 @@ export class MockUI {
     this.playArea = { innerHTML: "", appendChild: () => {} };
     this.gameContent = { innerHTML: "", appendChild: () => {} };
   }
-  init(game) {
-    this.game = game;
+  init() {
     this.initCalled = true;
   }
   render() {
