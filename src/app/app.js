@@ -1,5 +1,5 @@
 import { Analytics } from "./analytics.js";
-import { Deck, Game } from "./game/index.js";
+import { Deck, Game, GameClient } from "./game/index.js";
 import { createPlayer, PLAYER_TYPES } from "./player/index.js";
 import { UI } from "./ui.js";
 import { AI_PERSONAS } from "./ai/personas.js";
@@ -8,28 +8,28 @@ import { log } from "./utils.js";
 export class App {
   /**
    * Creates a new app instance with dependencies.
-   * @param {Game} game
+   * @param {GameClient} gameClient
    * @param {UI} ui
    * @param {Analytics} analytics
    */
-  constructor(game, ui, analytics = new Analytics()) {
+  constructor(gameClient, ui, analytics = new Analytics()) {
     this.analytics = analytics;
-    this.game = game;
+    this.gameClient = gameClient;
     this.attachHooks(); // attach analytics hooks
 
     this.ui = ui;
     this.setTimeout = typeof window !== "undefined" ? setTimeout.bind(window) : setTimeout;
 
-    this.ui.init(this.game);
+    this.ui.init();
     this.attachHandlers(); // attach handlers once after UI is initialized
 
-    this.humanPlayer = createPlayer({ game: this.game, type: PLAYER_TYPES.HUMAN, number: 0, ui: this.ui });
+    this.humanPlayer = createPlayer({ gameClient: this.gameClient, type: PLAYER_TYPES.HUMAN, number: 0, ui: this.ui });
     this.selectedAI = "random"; // Default AI persona
     this.aiPlayers = {};
     // Populate aiPlayers
     for (const personaKey in AI_PERSONAS) {
       this.aiPlayers[personaKey] = createPlayer({
-        game: this.game,
+        gameClient: this.gameClient,
         type: PLAYER_TYPES.AI,
         number: 1, // Assuming AI is always player 1
         persona: personaKey,
@@ -47,15 +47,7 @@ export class App {
   }
 
   attachHooks() {
-    this.game.hooks = {
-      onGameInit: (game) => this.analytics.gameInit(game),
-      onGameReset: (game) => this.analytics.gameReset(game),
-      onGameStarted: (game) => this.analytics.gameStarted(game),
-      onGameWon: (game) => this.analytics.gameWon(game),
-      onPlayerMoved: (game) => this.analytics.playerMoved(game),
-      onPlayerPassed: (game) => this.analytics.playerPassed(game),
-      onRoundPlayed: (game) => this.analytics.roundPlayed(game),
-    };
+    this.gameClient.attachHooks(this.analytics);
   }
 
   /**
@@ -67,13 +59,13 @@ export class App {
 
   handleAISelection() {
     this.selectedAI = this.ui.aiDropdown.value;
-    this.game.gameState.playerPersonas[1] = this.selectedAI;
-    this.game.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
+    this.gameClient.setAIPersona(1, this.selectedAI);
+    this.gameClient.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
     this.ui.render();
   }
 
   handleAITurn() {
-    const aiPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
+    const aiPlayer = this.gameClient.getCurrentPlayer();
     if (aiPlayer.type !== PLAYER_TYPES.AI) {
       return;
     }
@@ -84,11 +76,10 @@ export class App {
 
     if (move && move.length > 0) {
       log(`handleAITurn: ${aiPlayer.ai.persona} is playing cards.`);
-      this.game.gameState.selectedCards = move;
-      this.game.playCards();
+      this.gameClient.play(move);
     } else {
       log(`handleAITurn: ${aiPlayer.ai.persona} is passing turn.`);
-      this.game.passTurn();
+      this.gameClient.pass();
     }
 
     this.ui.render();
@@ -103,49 +94,47 @@ export class App {
   handleResetButtonClick() {
     log(`Game reset`);
     this.clearStorage();
-    this.game.reset();
+    this.gameClient.reset();
     this.init();
   }
 
   handleStartGameClick() {
     log(`Game started`);
-    this.game.start();
+    this.gameClient.start();
     this.ui.render();
     this.nextTurn();
   }
 
   handleHumanPlay() {
-    const humanPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
+    const humanPlayer = this.gameClient.getCurrentPlayer();
     humanPlayer.handlePlayButtonClick();
     this.nextTurn();
   }
 
   handleHumanPass() {
-    const humanPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
+    const humanPlayer = this.gameClient.getCurrentPlayer();
     humanPlayer.handlePassButtonClick();
     this.nextTurn();
   }
 
   init() {
     // Attempt to load game state
-    const loadedGameState = this.game.load(this.ui);
+    const loadedGameState = this.gameClient.load(this.ui);
     if (loadedGameState.loaded && !loadedGameState.gameOver) {
       // If game loaded, update selectedAI from loaded state
       if (loadedGameState.loadedPlayerPersonas && loadedGameState.loadedPlayerPersonas[1]) {
         this.selectedAI = loadedGameState.loadedPlayerPersonas[1];
       }
-      this.game.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
+      this.gameClient.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
       this.ui.render();
       return;
     }
 
     // If no game loaded, or game was over, start a new one.
-    this.game.init();
+    this.gameClient.init();
 
     // Initial game setup for display (hands dealt, starting player determined)
-    this.game.gameState.playerTypes = [PLAYER_TYPES.HUMAN, PLAYER_TYPES.AI];
-    this.game.gameState.playerPersonas = [null, this.selectedAI];
-    this.game.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
+    this.gameClient.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
 
     // Render initial UI with dealt hands and start button
     this.ui.render();
@@ -153,14 +142,14 @@ export class App {
 
   nextTurn() {
     log(
-      `nextTurn called. Current player: ${this.game.gameState.currentPlayer}, type: ${
-        this.game.gameState.players[this.game.gameState.currentPlayer]?.type
+      `nextTurn called. Current player: ${this.gameClient.getCurrentPlayerIndex()}, type: ${
+        this.gameClient.getCurrentPlayer()?.type
       }`
     );
-    if (this.game.gameState.gameOver) {
+    if (this.gameClient.isGameOver()) {
       return;
     }
-    const currentPlayer = this.game.gameState.players[this.game.gameState.currentPlayer];
+    const currentPlayer = this.gameClient.getCurrentPlayer();
     if (currentPlayer.type === PLAYER_TYPES.AI) {
       this.setTimeout(() => this.handleAITurn(), 1000);
     } else {
@@ -185,7 +174,8 @@ export class App {
 
     const deck = new DeckClass();
     const game = new GameClass(deck, stateKey);
-    const app = new App(game, new UIClass(game), new AnalyticsClass());
+    const gameClient = new GameClient(game);
+    const app = new App(gameClient, new UIClass(gameClient), new AnalyticsClass());
 
     app.ui.render();
     app.init();
