@@ -1,4 +1,4 @@
-import { Game } from "./game/index.js";
+import { GameClient } from "./game/index.js";
 import { PLAYER_TYPES } from "./player/index.js";
 
 export class Analytics {
@@ -15,18 +15,18 @@ export class Analytics {
 
   /**
    * Private method to initialize player data in the central service.
-   * @param {Game} game The game instance sending this event.
+   * @param {GameClient} gameClient The game instance sending this event.
    */
-  async #idPlayer(game) {
+  async #idPlayer(gameClient) {
     try {
       const id = new this.api.Identify();
-      const player = game.firstHumanPlayer();
+      const player = gameClient.getFirstHumanPlayer();
 
       id.setOnce("player", player.id);
       id.setOnce("type", player.type);
       id.setOnce("persona", player.type === PLAYER_TYPES.AI ? player.persona : null);
       id.setOnce("data", player.data());
-      id.set("game", player.game.id);
+      id.set("game", gameClient.getId());
       id.add("games_played", 1);
 
       this.api.identify(id);
@@ -38,20 +38,21 @@ export class Analytics {
   /**
    * Private method to send analytics data to a central service.
    * @param {string} eventType The type of event (e.g., "game_started", "game_won").
-   * @param {Game} game The game instance sending this event.
+   * @param {GameClient} gameClient The game instance sending this event.
    * @param {object} payload The data associated with the event.
    */
-  async #send(eventType, game, payload = {}) {
+  async #send(eventType, gameClient, payload = {}) {
     try {
+      const data = gameClient.getAnalyticsData();
       const event = { timestamp: new Date().toISOString() };
       event.game = {
-        id: game.id,
-        ended: game.gameState.gameOver,
-        round: game.gameState.roundNumber,
-        started: game.gameState.gameStarted,
-        turn: game.gameState.currentTurn,
-        hands: game.gameState.playerHands,
-        players: game.gameState.players.map((p) => p.data()),
+        id: data.id,
+        ended: data.ended,
+        round: data.round,
+        started: data.started,
+        turn: data.turn,
+        hands: data.hands,
+        players: data.players,
       };
       event.event = payload;
       this.api.track(eventType, event);
@@ -62,96 +63,91 @@ export class Analytics {
 
   /**
    * Tracks a game initialized event.
-   * @param {Game} game The game instance sending this event.
+   * @param {GameClient} gameClient The game instance sending this event.
    */
-  gameInit(game) {
-    this.#send("game_initialized", game);
+  gameInit(gameClient) {
+    this.#send("game_initialized", gameClient);
   }
 
   /**
    * Tracks a game reset event.
-   * @param {Game} game The game instance sending this event.
+   * @param {GameClient} gameClient The game instance sending this event.
    */
-  gameReset(game) {
-    this.#send("game_reset", game);
+  gameReset(gameClient) {
+    this.#send("game_reset", gameClient);
   }
 
   /**
    * Tracks a game start event.
-   * @param {Game} game The game instance sending this event.
+   * @param {GameClient} gameClient The game instance sending this event.
    */
-  gameStarted(game) {
-    const humanPlayer = game.firstHumanPlayer();
-    const aiPlayer = game.firstAIPlayer();
-    const startingPlayer = game.currentPlayer();
-
-    this.#send("game_started", game, {
-      human_player: humanPlayer.data(),
-      ai_player: aiPlayer.data(),
-      starting_player: startingPlayer.data(),
+  gameStarted(gameClient) {
+    const data = gameClient.getAnalyticsData();
+    this.#send("game_started", gameClient, {
+      human_player: data.human_player,
+      ai_player: data.ai_player,
+      current_player: data.current_player,
     });
-    this.#idPlayer(game);
+    this.#idPlayer(gameClient);
   }
 
   /**
    * Tracks a game won event.
-   * @param {Game} game The game instance sending this event.
+   * @param {GameClient} gameClient The game instance sending this event.
    */
-  gameWon(game) {
-    const humanPlayer = game.firstHumanPlayer();
-    const aiPlayer = game.firstAIPlayer();
-    const winner = game.currentPlayer();
-
-    this.#send("game_won", game, {
-      human_player: humanPlayer.data(),
-      ai_player: aiPlayer.data(),
-      winning_player: winner.data(),
-      game_rounds: game.gameState.roundNumber,
-      game_turns: game.gameState.currentTurn,
-      player_rounds_won: game.gameState.roundsWon[game.gameState.currentPlayer],
-      player_turns: game.gameState.playerTurns[game.gameState.currentPlayer],
-      player_games_won: game.gameState.gamesWon[game.gameState.currentPlayer],
+  gameWon(gameClient) {
+    const data = gameClient.getAnalyticsData();
+    this.#send("game_won", gameClient, {
+      human_player: data.human_player,
+      ai_player: data.ai_player,
+      current_player: data.current_player,
+      game_rounds: data.game_rounds,
+      game_turns: data.game_turns,
+      player_rounds_won: data.player_rounds_won,
+      player_turns: data.player_turns,
+      player_games_won: data.player_games_won,
     });
   }
 
   /**
    * Tracks a round played event.
-   * @param {Game} game The game instance sending this event.
+   * @param {GameClient} gameClient The game instance sending this event.
    */
-  roundPlayed(game) {
-    this.#send("round_played", game, {
-      rounds: game.gameState.roundNumber,
-      rounds_won: game.gameState.roundsWon,
+  roundPlayed(gameClient) {
+    const data = gameClient.getAnalyticsData();
+    this.#send("round_played", gameClient, {
+      rounds: data.rounds,
+      rounds_won: data.rounds_won,
     });
   }
 
   /**
    * Tracks when a player makes a move.
-   * @param {Game} game The game instance sending this event.
+   * @param {GameClient} gameClient The game instance sending this event.
    */
-  playerMoved(game) {
-    const player = game.currentPlayer();
-    this.#send("player_moved", game, {
-      player: player.data(),
-      combination: game.rules.getCombinationType(game.gameState.playPile),
-      move: game.gameState.selectedCards,
-      pile: game.gameState.playPile,
-      round: game.gameState.roundNumber,
+  playerMoved(gameClient) {
+    const data = gameClient.getAnalyticsData();
+    this.#send("player_moved", gameClient, {
+      current_player: data.current_player,
+      combination: data.combination,
+      move: data.move,
+      pile: data.pile,
+      round: data.round,
     });
   }
 
   /**
    * Tracks when a player passes their turn.
-   * @param {Game} game The game instance sending this event.
+   * @param {GameClient} gameClient The game instance sending this event.
    */
-  playerPassed(game) {
-    const player = game.currentPlayer();
-    this.#send("player_passed", game, {
-      player: player.data(),
-      combination: game.rules.getCombinationType(game.gameState.playPile),
-      consecutive_passes: game.gameState.consecutivePasses,
-      pile: game.gameState.playPile,
-      round: game.gameState.roundNumber,
+  playerPassed(gameClient) {
+    const data = gameClient.getAnalyticsData();
+    this.#send("player_passed", gameClient, {
+      current_player: data.current_player,
+      combination: data.combination,
+      consecutive_passes: data.consecutive_passes,
+      pile: data.pile,
+      round: data.round,
     });
   }
 }

@@ -46,32 +46,32 @@ export class MockAnalytics {
     this.events = [];
   }
 
-  gameInit(game) {
-    this.events.push({ eventType: "game_initialized", game });
+  gameInit(gameClient) {
+    this.events.push({ eventType: "game_initialized", gameClient });
   }
 
-  gameReset(game) {
-    this.events.push({ eventType: "game_reset", game });
+  gameReset(gameClient) {
+    this.events.push({ eventType: "game_reset", gameClient });
   }
 
-  gameStarted(game) {
-    this.events.push({ eventType: "game_started", game });
+  gameStarted(gameClient) {
+    this.events.push({ eventType: "game_started", gameClient });
   }
 
-  gameWon(game) {
-    this.events.push({ eventType: "game_won", game });
+  gameWon(gameClient) {
+    this.events.push({ eventType: "game_won", gameClient });
   }
 
-  roundPlayed(game) {
-    this.events.push({ eventType: "round_played", game });
+  roundPlayed(gameClient) {
+    this.events.push({ eventType: "round_played", gameClient });
   }
 
-  playerMoved(game) {
-    this.events.push({ eventType: "player_moved", game });
+  playerMoved(gameClient) {
+    this.events.push({ eventType: "player_moved", gameClient });
   }
 
-  playerPassed(game) {
-    this.events.push({ eventType: "player_passed", game });
+  playerPassed(gameClient) {
+    this.events.push({ eventType: "player_passed", gameClient });
   }
 }
 
