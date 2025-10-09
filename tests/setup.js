@@ -1,10 +1,10 @@
 import chai from "chai";
 import sinon from "sinon";
 import { JSDOM } from "jsdom";
-import { MockDeck, MockGame, MockAI, MockUI, MockAnalytics, MockLocalStorage } from "./mocks.js";
+import { MockDeck, MockGame, MockAI, MockUI, MockAnalytics, MockLocalStorage, MockGameClient } from "./mocks.js";
 
 // Import the actual classes
-import { Game } from "../src/app/game/index.js";
+import { Game, GameClient } from "../src/app/game/index.js";
 import { UI } from "../src/app/ui.js";
 import { App } from "../src/app/app.js";
 
@@ -16,13 +16,15 @@ global.MockGame = MockGame;
 global.MockAI = MockAI;
 global.MockUI = MockUI;
 global.MockAnalytics = MockAnalytics;
+global.MockGameClient = MockGameClient;
 
 // Make the actual classes available globally for stubbing
 global.Game = Game;
+global.GameClient = GameClient;
 global.UI = UI;
 global.App = App;
 
-let gameStub, uiStub;
+let gameStub, uiStub, gameClientStub;
 
 export const mochaHooks = {
   beforeEach() {
@@ -53,8 +55,14 @@ export const mochaHooks = {
       return instance;
     });
 
-    uiStub = sinon.stub(global, "UI").callsFake(function (game) {
-      const instance = new MockUI(game);
+    gameClientStub = sinon.stub(global, "GameClient").callsFake(function (game) {
+      const instance = sinon.createStubInstance(MockGameClient, { game: game });
+      instance.game = game;
+      return instance;
+    });
+
+    uiStub = sinon.stub(global, "UI").callsFake(function (gameClient) {
+      const instance = new MockUI(gameClient);
       sinon.spy(instance, "render");
       return instance;
     });
@@ -62,9 +70,11 @@ export const mochaHooks = {
   afterEach() {
     gameStub.restore();
     uiStub.restore();
+    gameClientStub.restore();
     sinon.restore();
   },
 };
 
 export const getGameStub = () => gameStub;
 export const getUiStub = () => uiStub;
+export const getGameClientStub = () => gameClientStub;

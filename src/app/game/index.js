@@ -1,4 +1,5 @@
 export { Card, Deck } from "./deck.js";
+export { GameClient } from "./client.js";
 export { Game } from "./game.js";
 export { Rules } from "./rules.js";
 

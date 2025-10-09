@@ -1,5 +1,5 @@
 import { AI } from "../src/app/ai/index.js";
-import { Card, Game } from "../src/app/game/index.js";
+import { Card, Game, GameClient } from "../src/app/game/index.js";
 import { Player } from "../src/app/player/index.js";
 import { UI } from "../src/app/ui.js";
 
@@ -179,6 +179,12 @@ export class MockDeck {
   }
 
   shuffle() {}
+}
+
+export class MockGameClient extends GameClient {
+  constructor(game) {
+    super(game);
+  }
 }
 
 export class MockGame extends Game {
