@@ -1,12 +1,14 @@
 import { LowestCardAI } from "../../src/app/ai/index.js";
-import { Card, Game } from "../../src/app/game/index.js";
+import { Card, Game, GameClient } from "../../src/app/game/index.js";
+import { MockDeck } from "../mocks.js";
 
 describe("LowestCardAI", () => {
-  let game, lowestCardAI;
+  let game, gameClient, lowestCardAI;
 
   beforeEach(() => {
-    game = new Game();
-    lowestCardAI = new LowestCardAI(game);
+    game = new Game(new MockDeck());
+    gameClient = new GameClient(game);
+    lowestCardAI = new LowestCardAI(gameClient);
   });
 
   it("takeTurn() should return an empty array if no valid move exists", () => {

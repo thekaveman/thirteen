@@ -1,13 +1,14 @@
 import { AI_PERSONAS } from "../../src/app/ai/personas.js";
 import { AI, ComboAI } from "../../src/app/ai/index.js";
-import { Deck, Game } from "../../src/app/game/index.js";
+import { Deck, Game, GameClient } from "../../src/app/game/index.js";
 
 describe("Personas", () => {
-  let game;
+  let game, gameClient;
 
   beforeEach(() => {
     const deck = new Deck();
     game = new Game(deck);
+    gameClient = new GameClient(game);
   });
 
   for (const personaKey in AI_PERSONAS) {
@@ -21,14 +22,14 @@ describe("Personas", () => {
       });
 
       it("should have a create function that returns an AI instance", () => {
-        const ai = persona.create(game);
+        const ai = persona.create(gameClient);
         expect(ai).to.be.an.instanceOf(AI);
-        expect(ai.game).to.equal(game);
+        expect(ai.gameClient.game).to.equal(game);
       });
 
-      if (persona.create(game) instanceof ComboAI) {
+      if (persona.create(gameClient) instanceof ComboAI) {
         it("should be a ComboAI with strategies", () => {
-          const ai = persona.create(game);
+          const ai = persona.create(gameClient);
           expect(ai).to.be.an.instanceOf(ComboAI);
           expect(ai.strategies).to.be.an("array").and.not.be.empty;
           ai.strategies.forEach((strategy) => {

@@ -5,11 +5,11 @@ export class HighestValueAI extends AI {
   /**
    * Creates an instance of HighestValueAI.
    * This AI chooses the valid move with the highest total value of cards in the combination.
-   * @param {Game} game The game instance.
+   * @param {GameClient} gameClient The game client instance.
    * @param {string} [persona=null] The persona of the AI.
    */
-  constructor(game, persona = null) {
-    super(game, AI_TYPES.HIGHEST_VALUE, persona);
+  constructor(gameClient, persona = null) {
+    super(gameClient, AI_TYPES.HIGHEST_VALUE, persona);
   }
 
   /**

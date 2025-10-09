@@ -1,26 +1,28 @@
 import { AI } from "../../src/app/ai/index.js";
-import { Card, Game, COMBINATION_TYPES } from "../../src/app/game/index.js";
+import { Card, Game, COMBINATION_TYPES, GameClient } from "../../src/app/game/index.js";
+import { MockDeck } from "../mocks.js";
 
 describe("AI", () => {
-  let game, ai;
+  let game, gameClient, ai;
 
   beforeEach(() => {
-    game = new Game();
-    ai = new AI(game);
+    game = new Game(new MockDeck());
+    gameClient = new GameClient(game);
+    ai = new AI(gameClient);
   });
 
   describe("Base AI Class", () => {
     it("data() should return correct data", () => {
-      const specificAI = new AI(game, "test-type", "test-persona");
+      const specificAI = new AI(gameClient, "test-type", "test-persona");
       const aiData = specificAI.data();
       expect(aiData.id).to.equal(specificAI.id);
-      expect(aiData.game).to.equal(game.id);
+      expect(aiData.game).to.equal(gameClient.getId());
       expect(aiData.type).to.equal("test-type");
       expect(aiData.persona).to.equal("test-persona");
     });
 
     it("takeTurn() should throw an error for the base class", () => {
-      const baseAI = new AI(game, "base");
+      const baseAI = new AI(gameClient, "base");
       expect(() => baseAI.takeTurn()).to.throw("Subclasses must implement takeTurn");
     });
   });

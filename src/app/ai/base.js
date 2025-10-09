@@ -4,18 +4,18 @@ export class AI {
   /**
    * Creates an instance of AI.
    * This is a base class for all AI strategies.
-   * @param {Game} game The game instance.
+   * @param {GameClient} gameClient The game client instance.
    * @param {string} type The type of AI (e.g., "lowest_card", "random").
    */
-  constructor(game, type, persona = null) {
-    this.game = game;
+  constructor(gameClient, type, persona = null) {
+    this.gameClient = gameClient;
     this.type = type;
     this.persona = persona;
     this.id = crypto.randomUUID();
   }
 
   data() {
-    return { game: this.game.id, id: this.id, persona: this.persona, type: this.type };
+    return { game: this.gameClient.getId(), id: this.id, persona: this.persona, type: this.type };
   }
 
   /**
@@ -76,7 +76,7 @@ export class AI {
     const validMoves = [];
 
     for (const potentialPlay of potentialMoves) {
-      if (this.game.rules.isValidPlay(potentialPlay, playPile, hand, currentTurn, allPlayerHands)) {
+      if (this.gameClient.isValidPlay(potentialPlay, playPile, hand, currentTurn, allPlayerHands)) {
         validMoves.push(potentialPlay);
       }
     }

@@ -1,12 +1,14 @@
 import { HighestValueAI } from "../../src/app/ai/index.js";
-import { Card, Game } from "../../src/app/game/index.js";
+import { Card, Game, GameClient } from "../../src/app/game/index.js";
+import { MockDeck } from "../mocks.js";
 
 describe("HighestValueAI", () => {
-  let game, highestValueAI;
+  let game, gameClient, highestValueAI;
 
   beforeEach(() => {
-    game = new Game();
-    highestValueAI = new HighestValueAI(game);
+    game = new Game(new MockDeck());
+    gameClient = new GameClient(game);
+    highestValueAI = new HighestValueAI(gameClient);
   });
 
   it("takeTurn() should return an empty array if no valid move exists", () => {
@@ -93,5 +95,17 @@ describe("HighestValueAI", () => {
     const move = highestValueAI.takeTurn(hand, [], 1, [hand]);
     expect(move).to.have.lengthOf(4);
     expect(move.map((c) => c.rank)).to.deep.equal(["3", "4", "5", "6"]);
+  });
+
+  it("takeTurn() should choose the highest value move even if it is not the first valid move", () => {
+    const hand = [new Card("A", "♠"), new Card("3", "♠"), new Card("3", "♦")];
+    const playPile = [];
+    const moves = [[new Card("3", "♠"), new Card("3", "♦")], [new Card("A", "♠")]]; // Order shouldn't matter
+    sinon.stub(highestValueAI, "findAllValidMoves").returns(moves);
+
+    const move = highestValueAI.takeTurn(hand, playPile, 1, [hand]);
+
+    expect(move).to.have.lengthOf(1);
+    expect(move[0].rank).to.equal("A");
   });
 });

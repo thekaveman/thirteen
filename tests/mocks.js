@@ -76,8 +76,8 @@ export class MockAnalytics {
 }
 
 export class MockAI extends AI {
-  constructor(game, move, persona = null) {
-    super(game, "mock", persona);
+  constructor(gameClient, move, persona = null) {
+    super(gameClient, "mock", persona);
     this.move = move;
     this.takeTurnCalled = false;
   }
@@ -88,6 +88,7 @@ export class MockAI extends AI {
       type: this.type,
       name: this.name,
       isHuman: this.isHuman,
+      game: this.gameClient.getId(),
     };
   }
 

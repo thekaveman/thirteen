@@ -6,12 +6,12 @@ export class RandomComboAI extends ComboAI {
   /**
    * Creates an instance of RandomComboAI.
    * This AI chooses a random strategy from its available strategies.
-   * @param {Game} game The game instance.
+   * @param {GameClient} gameClient The game client instance.
    * @param {Array<AI>} strategies An array of AI strategy instances.
    * @param {string} [persona=null] The persona of the AI.
    */
-  constructor(game, strategies, persona = null) {
-    super(game, strategies, AI_TYPES.RANDOM_COMBO, persona);
+  constructor(gameClient, strategies, persona = null) {
+    super(gameClient, strategies, AI_TYPES.RANDOM_COMBO, persona);
   }
 
   /**
