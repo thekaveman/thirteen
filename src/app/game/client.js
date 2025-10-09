@@ -9,6 +9,31 @@ export class GameClient {
   constructor(game) {
     this.game = game;
   }
+
+  /**
+   * Attaches analytics hooks to the game instance.
+   * @param {Analytics} analytics The analytics instance to use.
+   */
+  attachHooks(analytics) {
+    const client = this;
+    this.game.hooks = {
+      onGameInit: (gameClient) => analytics.gameInit(client),
+      onGameReset: (gameClient) => analytics.gameReset(client),
+      onGameStarted: (gameClient) => analytics.gameStarted(client),
+      onGameWon: (gameClient) => analytics.gameWon(client),
+      onPlayerMoved: (gameClient) => analytics.playerMoved(client),
+      onPlayerPassed: (gameClient) => analytics.playerPassed(client),
+      onRoundPlayed: (gameClient) => analytics.roundPlayed(client),
+    };
+  }
+
+  /**
+   * Clears the selected cards array.
+   */
+  clearSelectedCards() {
+    this.game.gameState.selectedCards = [];
+  }
+
   /**
    * Returns all data required for analytics events
    * @returns {object}
@@ -210,6 +235,14 @@ export class GameClient {
   getSelectedCards() {
     return this.game.gameState.selectedCards;
   }
+
+  /**
+   * Initializes the game state for a new round or game.
+   */
+  init() {
+    this.game.init();
+  }
+
   /**
    * Checks if a card is currently selected.
    * @param {Card} card The card to check.
@@ -235,4 +268,145 @@ export class GameClient {
     return this.game.gameState.gameStarted;
   }
 
+  /**
+   * Checks if a play is valid.
+   * @param {Array<Card>} cards The cards to check.
+   * @param {Array<Card>} [playPile] The current play pile.
+   * @param {Array<Card>} [hand] The player's hand.
+   * @param {number} [currentTurn] The current turn number.
+   * @param {Array<Array<Card>>} [allPlayerHands] All players' hands.
+   * @returns {boolean}
+   */
+  isValidPlay(cards, playPile, hand, currentTurn, allPlayerHands) {
+    return this.game.rules.isValidPlay(
+      cards,
+      playPile ?? this.getPlayPile(),
+      hand ?? this.getPlayerHands(this.getCurrentPlayerIndex()),
+      currentTurn ?? this.getCurrentTurn(),
+      allPlayerHands ?? this.getPlayerHands()
+    );
+  }
+
+  /**
+   * Loads the game state from localStorage.
+   * @param {UI} ui An instance of the UI class.
+   * @returns {boolean} True if a saved game was loaded, false otherwise.
+   */
+  load(ui) {
+    return this.game.load(ui);
+  }
+
+  /**
+   * Ends the current round and starts the next.
+   */
+  nextRound() {
+    this.game.nextRound();
+  }
+
+  /**
+   * Handles a player passing their turn.
+   * @returns {boolean} True if the pass was successful, false otherwise.
+   */
+  pass() {
+    return this.game.passTurn();
+  }
+
+  /**
+   * Plays a move for the current player.
+   * @param {Array<Card>} move The cards to play.
+   */
+  play(move) {
+    this.game.gameState.selectedCards = move;
+    this.game.playCards();
+  }
+
+  /**
+   * Resets the entire game.
+   */
+  reset() {
+    this.game.reset();
+  }
+
+  /**
+   * Updates the persona of an AI player.
+   * @param {number} playerIndex The index of the player to update.
+   * @param {string} persona The new persona to set.
+   */
+  setAIPersona(playerIndex, persona) {
+    if (this.game.gameState.players[playerIndex]?.type === PLAYER_TYPES.AI) {
+      this.game.gameState.playerPersonas[playerIndex] = persona;
+      this.game.gameState.players[playerIndex].ai.persona = persona;
+    }
+  }
+
+  /**
+   * Sets the current player index.
+   * @param {number} playerIndex The new current player index.
+   */
+  setCurrentPlayer(playerIndex) {
+    this.game.gameState.currentPlayer = playerIndex;
+  }
+
+  /**
+   * Initializes the game's players.
+   * @param {Array<Player>} players The list of players to initialize into the game.
+   */
+  setPlayers(players) {
+    this.game.setPlayers(players);
+  }
+
+  /**
+   * Sets the play pile.
+   * @param {Array<Card>} playPile The play pile to set.
+   */
+  setPlayPile(playPile) {
+    this.game.gameState.playPile = playPile;
+  }
+
+  /**
+   * Sets the hand for a specific player.
+   * @param {number} playerIndex The index of the player.
+   * @param {Array<Card>} hand The hand to set.
+   */
+  setPlayerHand(playerIndex, hand) {
+    this.game.gameState.playerHands[playerIndex] = hand;
+  }
+
+  /**
+   * Sets all player hands.
+   * @param {Array<Array<Card>>} hands All player hands to set.
+   */
+  setPlayerHands(hands) {
+    hands.forEach((hand, index) => {
+      this.setPlayerHand(index, hand);
+    });
+  }
+
+  /**
+   * Marks the game as started.
+   */
+  start() {
+    this.game.start();
+  }
+
+  /**
+   * Toggles the selection of a card.
+   * @param {Card} card The card to toggle.
+   */
+  toggleCardSelection(card) {
+    const cardIndex = this.game.gameState.selectedCards.findIndex((c) => c.value === card.value);
+    if (cardIndex > -1) {
+      this.game.gameState.selectedCards.splice(cardIndex, 1);
+    } else {
+      this.game.gameState.selectedCards.push(card);
+    }
+    Card.sort(this.game.gameState.selectedCards);
+  }
+
+  /**
+   * Marks the game as over and sets the winner
+   */
+  win() {
+    this.game.win();
+  }
 }

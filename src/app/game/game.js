@@ -14,13 +14,13 @@ export class Game {
   constructor(deck, stateKey = Game.STATE_KEY) {
     this.deck = deck;
     this.hooks = {
-      onGameInit: (game) => {},
-      onGameReset: (game) => {},
-      onGameStarted: (game) => {},
-      onGameWon: (game) => {},
-      onPlayerMoved: (game) => {},
-      onPlayerPassed: (game) => {},
-      onRoundPlayed: (game) => {},
+      onGameInit: (gameClient) => {},
+      onGameReset: (gameClient) => {},
+      onGameStarted: (gameClient) => {},
+      onGameWon: (gameClient) => {},
+      onPlayerMoved: (gameClient) => {},
+      onPlayerPassed: (gameClient) => {},
+      onRoundPlayed: (gameClient) => {},
     };
     this.gameState = {
       numPlayers: 0,

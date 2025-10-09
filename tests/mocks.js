@@ -207,26 +207,29 @@ export class MockGame extends Game {
     this.onPlayerPassedCalled = false;
     this.onRoundPlayedCalled = false;
 
+    // Create a GameClient instance for this MockGame
+    this.gameClient = new GameClient(this);
+
     this.hooks = {
-      onGameInit: (game) => {
+      onGameInit: (gameClient) => {
         this.onGameInitCalled = true;
       },
-      onGameReset: (game) => {
+      onGameReset: (gameClient) => {
         this.onGameResetCalled = true;
       },
-      onGameStarted: (game) => {
+      onGameStarted: (gameClient) => {
         this.onGameStartedCalled = true;
       },
-      onGameWon: (game) => {
+      onGameWon: (gameClient) => {
         this.onGameWonCalled = true;
       },
-      onPlayerMoved: (game) => {
+      onPlayerMoved: (gameClient) => {
         this.onPlayerMovedCalled = true;
       },
-      onPlayerPassed: (game) => {
+      onPlayerPassed: (gameClient) => {
         this.onPlayerPassedCalled = true;
       },
-      onRoundPlayed: (game) => {
+      onRoundPlayed: (gameClient) => {
         this.onRoundPlayedCalled = true;
       },
     };

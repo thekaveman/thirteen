@@ -134,4 +134,129 @@ describe("GameClient", () => {
       expect(gameClient.isGameStarted()).to.be.true;
     });
   });
+
+  describe("Actions", () => {
+    beforeEach(() => {
+      const players = [
+        new HumanPlayer(gameClient, 0, new MockUI(gameClient)),
+        new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random")),
+      ];
+      gameClient.setPlayers(players);
+    });
+
+    it("clearSelectedCards() should empty the selectedCards array", () => {
+      gameClient.game.gameState.selectedCards = [new Card("A", "♠")];
+      gameClient.clearSelectedCards();
+      expect(gameClient.game.gameState.selectedCards).to.be.an("array").that.is.empty;
+    });
+
+    it("init() should call game.init", () => {
+      const spy = sinon.spy(game, "init");
+      gameClient.init();
+      expect(spy).to.have.been.calledOnce;
+    });
+
+    it("isValidPlay() should call game.rules.isValidPlay", () => {
+      const spy = sinon.spy(game.rules, "isValidPlay");
+      const cards = [new Card("A", "♠")];
+      gameClient.isValidPlay(cards);
+      expect(spy).to.have.been.calledOnce;
+    });
+
+    it("load() should call game.load", () => {
+      const spy = sinon.spy(game, "load");
+      const ui = new MockUI(game);
+      gameClient.load(ui);
+      expect(spy).to.have.been.calledWith(ui);
+    });
+
+    it("pass() should call game.passTurn", () => {
+      const spy = sinon.spy(game, "passTurn");
+      game.gameState.playPile = [new Card("3", "♠")];
+      gameClient.pass();
+      expect(spy).to.have.been.calledOnce;
+    });
+
+    it("play() should call game.playCards", () => {
+      const spy = sinon.spy(gameClient.game, "playCards");
+      const move = [new Card("3", "♠")];
+      gameClient.play(move);
+      sinon.assert.calledOnce(spy);
+    });
+
+    it("reset() should call game.reset", () => {
+      const spy = sinon.spy(game, "reset");
+      gameClient.reset();
+      expect(spy).to.have.been.calledOnce;
+    });
+
+    it("setAIPersona() should update the persona for an AI player", () => {
+      const players = [
+        new HumanPlayer(gameClient, 0, new MockUI(gameClient)),
+        new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "mock")),
+      ];
+      gameClient.setPlayers(players);
+      gameClient.setAIPersona(1, "new_persona");
+      expect(gameClient.game.gameState.playerPersonas[1]).to.equal("new_persona");
+    });
+
+    it("setAIPersona() should not update the persona for a human player", () => {
+      const players = [
+        new HumanPlayer(gameClient, 0, new MockUI(gameClient)),
+        new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "mock")),
+      ];
+      gameClient.setPlayers(players);
+      gameClient.setAIPersona(0, "new_persona");
+      expect(gameClient.game.gameState.playerPersonas[0]).to.not.equal("new_persona");
+    });
+
+    it("setPlayerHand() should replace a player's hand", () => {
+      const players = [new HumanPlayer(gameClient, 0, new MockUI(gameClient))];
+      gameClient.setPlayers(players);
+      const newHand = [new Card("A", "♠"), new Card("K", "♣")];
+      gameClient.setPlayerHand(0, newHand);
+      expect(gameClient.game.gameState.playerHands[0]).to.deep.equal(newHand);
+    });
+
+    it("setPlayPile() should replace the play pile", () => {
+      const newPlayPile = [new Card("A", "♠"), new Card("K", "♣")];
+      gameClient.setPlayPile(newPlayPile);
+      expect(gameClient.game.gameState.playPile).to.deep.equal(newPlayPile);
+    });
+
+    it("setPlayers() should call game.setPlayers", () => {
+      const spy = sinon.spy(game, "setPlayers");
+      const players = [new HumanPlayer(game, 0, new MockUI(game))];
+      gameClient.setPlayers(players);
+      expect(spy).to.have.been.calledWith(players);
+    });
+
+    it("start() should call game.start", () => {
+      const spy = sinon.spy(game, "start");
+      gameClient.start();
+      expect(spy).to.have.been.calledOnce;
+    });
+
+    it("toggleCardSelection() should add a card to selectedCards", () => {
+      const card = new Card("A", "♠");
+      gameClient.toggleCardSelection(card);
+      expect(gameClient.game.gameState.selectedCards).to.deep.include(card);
+    });
+
+    it("toggleCardSelection() should remove a card from selectedCards", () => {
+      const card = new Card("A", "♠");
+      gameClient.game.gameState.selectedCards = [card];
+      gameClient.toggleCardSelection(card);
+      expect(gameClient.game.gameState.selectedCards).to.not.deep.include(card);
+    });
+
+    it("toggleCardSelection() should sort the cards after adding one", () => {
+      const card1 = new Card("A", "♠");
+      const card2 = new Card("3", "♦");
+      gameClient.game.gameState.selectedCards = [card1];
+      gameClient.toggleCardSelection(card2);
+      expect(gameClient.game.gameState.selectedCards[0].value).to.equal(card2.value);
+      expect(gameClient.game.gameState.selectedCards[1].value).to.equal(card1.value);
+    });
+  });
 });
