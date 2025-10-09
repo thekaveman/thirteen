@@ -47,63 +47,11 @@ export class Game {
   }
 
   /**
-   * Clears the selected cards array.
-   */
-  clearSelectedCards() {
-    this.gameState.selectedCards = [];
-  }
-
-  /**
-   * Gets the current player from the game's state.
-   * @returns {Player} The current player instance.
-   */
-  currentPlayer() {
-    return this.gameState.players[this.gameState.currentPlayer];
-  }
-
-  /**
    * Deals player hands for each player.
    */
   deal() {
     this.gameState.playerHands = this.deck.deal(this.gameState.numPlayers);
     this.gameState.playerHands.forEach(Card.sort);
-  }
-
-  /**
-   * Finds the player who should start the game based on the lowest card.
-   * @param {Array<Array<Card>>} hands An array of sorted player hands.
-   * @returns {number} The index of the player who should start.
-   */
-  findStartingPlayer(hands) {
-    let startingPlayer = 0;
-    const lowestCard = Card.findLowest(hands);
-    if (lowestCard) {
-      const lowestCardValue = lowestCard.value;
-
-      for (let i = 0; i < hands.length; i++) {
-        if (hands[i] && hands[i].length > 0 && hands[i][0].value == lowestCardValue) {
-          startingPlayer = i;
-        }
-      }
-    }
-
-    return startingPlayer;
-  }
-
-  /**
-   * Gets the AI player from the game's state.
-   * @returns {AIPlayer} The current AI player instance.
-   */
-  firstAIPlayer() {
-    return this.gameState.players.find((p) => p.type === PLAYER_TYPES.AI);
-  }
-
-  /**
-   * Gets the human player from the game's state.
-   * @returns {HumanPlayer} The current human player instance.
-   */
-  firstHumanPlayer() {
-    return this.gameState.players.find((p) => p.type === PLAYER_TYPES.HUMAN);
   }
 
   /**
@@ -187,7 +135,7 @@ export class Game {
     this.gameState.currentPlayer =
       this.gameState.lastPlayerToPlay !== -1
         ? this.gameState.lastPlayerToPlay
-        : this.findStartingPlayer(this.gameState.playerHands);
+        : this.rules.findStartingPlayer(this.gameState.playerHands);
     this.gameState.roundNumber++;
     this.hooks.onRoundPlayed(this);
   }
@@ -259,15 +207,6 @@ export class Game {
   }
 
   /**
-   * Plays a move for the current player.
-   * @param {Array<Card>} move The cards to play.
-   */
-  playMove(move) {
-    this.gameState.selectedCards = move;
-    this.playCards();
-  }
-
-  /**
    * Resets the entire game, including generating a new game ID and clearing cumulative wins.
    */
   reset() {
@@ -293,26 +232,6 @@ export class Game {
   }
 
   /**
-   * Updates the persona of an AI player.
-   * @param {number} playerIndex The index of the player to update.
-   * @param {string} persona The new persona to set.
-   */
-  setAIPersona(playerIndex, persona) {
-    if (this.gameState.players[playerIndex]?.type === PLAYER_TYPES.AI) {
-      this.gameState.playerPersonas[playerIndex] = persona;
-    }
-  }
-
-  /**
-   * Sets the hand for a specific player.
-   * @param {number} playerIndex The index of the player.
-   * @param {Array<Card>} hand The hand to set.
-   */
-  setPlayerHand(playerIndex, hand) {
-    this.gameState.playerHands[playerIndex] = hand;
-  }
-
-  /**
    * Initializes the game's players.
    * @param {Array<Player>} players The list of players to initialize into the game.
    */
@@ -327,18 +246,10 @@ export class Game {
         this.gameState.gamesWon = new Array(players.length).fill(0);
       }
       this.deal();
-      this.gameState.currentPlayer = this.findStartingPlayer(this.gameState.playerHands);
+      this.gameState.currentPlayer = this.rules.findStartingPlayer(this.gameState.playerHands);
       this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
       this.save();
     }
-  }
-
-  /**
-   * Sets the play pile.
-   * @param {Array<Card>} playPile The play pile to set.
-   */
-  setPlayPile(playPile) {
-    this.gameState.playPile = playPile;
   }
 
   /**
@@ -348,20 +259,6 @@ export class Game {
     this.gameState.gameStarted = true;
     this.save();
     this.hooks.onGameStarted(this);
-  }
-
-  /**
-   * Toggles the selection of a card.
-   * @param {Card} card The card to toggle.
-   */
-  toggleCardSelection(card) {
-    const cardIndex = this.gameState.selectedCards.findIndex((c) => c.value === card.value);
-    if (cardIndex > -1) {
-      this.gameState.selectedCards.splice(cardIndex, 1);
-    } else {
-      this.gameState.selectedCards.push(card);
-    }
-    Card.sort(this.gameState.selectedCards);
   }
 
   /**

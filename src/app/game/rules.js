@@ -3,6 +3,27 @@ import { Card } from "./deck.js";
 
 export class Rules {
   /**
+   * Finds the player who should start the game based on the lowest card.
+   * @param {Array<Array<Card>>} hands An array of sorted player hands.
+   * @returns {number} The index of the player who should start.
+   */
+  findStartingPlayer(hands) {
+    let startingPlayer = 0;
+    const lowestCard = Card.findLowest(hands);
+    if (lowestCard) {
+      const lowestCardValue = lowestCard.value;
+
+      for (let i = 0; i < hands.length; i++) {
+        if (hands[i] && hands[i].length > 0 && hands[i][0].value == lowestCardValue) {
+          startingPlayer = i;
+        }
+      }
+    }
+
+    return startingPlayer;
+  }
+
+  /**
    * Determines the combination type of a set of cards.
    * @param {Array<Card>} cards The cards to check.
    * @returns {string} The combination type.

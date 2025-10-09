@@ -190,7 +190,6 @@ export class MockGameClient extends GameClient {
 export class MockGame extends Game {
   constructor(deck, stateKey) {
     super(deck, stateKey);
-    this.findStartingPlayerCalled = false;
     this.loadCalled = false;
     this.playCardsCalled = false;
     this.passTurnCalled = false;
@@ -239,11 +238,7 @@ export class MockGame extends Game {
     this.gameOverOnLoad = false;
   }
 
-  findStartingPlayer(hands) {
-    this.findStartingPlayerCalled = true;
-    return super.findStartingPlayer(hands);
-  }
-  load() {
+  load(ui) {
     this.loadCalled = true;
     if (this.loadWillSucceed) {
       this.gameState.gameOver = this.gameOverOnLoad;

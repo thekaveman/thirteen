@@ -14,7 +14,7 @@ describe("Game", () => {
     localStorage.clear();
   });
 
-  describe("Constructor and Initial State", () => {
+  describe("Game Setup", () => {
     it("should initialize with correct default game state", () => {
       expect(game.gameState.numPlayers).to.equal(0);
       expect(game.gameState.playerHands).to.be.an("array").that.is.empty;
@@ -27,77 +27,6 @@ describe("Game", () => {
       expect(game.gameState.roundNumber).to.equal(1);
       expect(game.gameState.roundsWon).to.be.an("array").that.is.empty;
       expect(game.gameState.gameOver).to.be.false;
-    });
-  });
-
-  describe("Player Management", () => {
-    it("setPlayers() should initialize players and associated game state", () => {
-      const players = [new HumanPlayer(game, 0, new MockUI(game)), new AIPlayer(game, 1, new MockAI(game, [], "mock"))];
-      const originalGamesWon = [2, 1];
-      game.gameState.gamesWon = originalGamesWon;
-
-      game.setPlayers(players);
-
-      expect(game.gameState.numPlayers).to.equal(players.length);
-      expect(game.gameState.players).to.have.lengthOf(players.length);
-      expect(game.gameState.playerHands).to.have.lengthOf(players.length);
-      expect(game.gameState.roundsWon).to.have.lengthOf(players.length);
-      expect(game.gameState.roundsWon).to.deep.equal([0, 0]);
-      expect(game.gameState.gamesWon).to.deep.equal(originalGamesWon);
-    });
-  });
-
-  describe("Player Finders", () => {
-    it("firstAIPlayer() should return the first AI player", () => {
-      const players = [
-        new HumanPlayer(game, 0, new MockUI(game)),
-        new AIPlayer(game, 1, new MockAI(game, [], "mock")),
-        new AIPlayer(game, 2, new MockAI(game, [], "mock2")),
-      ];
-      game.setPlayers(players);
-      const aiPlayer = game.firstAIPlayer();
-      expect(aiPlayer).to.exist;
-      expect(aiPlayer.type).to.equal(PLAYER_TYPES.AI);
-      expect(aiPlayer.number).to.equal(1);
-    });
-
-    it("firstHumanPlayer() should return the first human player", () => {
-      const players = [
-        new AIPlayer(game, 0, new MockAI(game, [], "mock")),
-        new HumanPlayer(game, 1, new MockUI(game)),
-        new HumanPlayer(game, 2, new MockUI(game)),
-      ];
-      game.setPlayers(players);
-      const humanPlayer = game.firstHumanPlayer();
-      expect(humanPlayer).to.exist;
-      expect(humanPlayer.type).to.equal(PLAYER_TYPES.HUMAN);
-      expect(humanPlayer.number).to.equal(1);
-    });
-  });
-
-  describe("Game Setup", () => {
-    it("findStartingPlayer() should find the player with the lowest card", () => {
-      const hands = [
-        [new Card("A", "♠"), new Card("K", "♣")],
-        [new Card("3", "♦"), new Card("4", "♠")],
-      ];
-      const startingPlayer = game.findStartingPlayer(hands);
-      expect(startingPlayer).to.equal(1);
-    });
-
-    it("findStartingPlayer() should select the last player if multiple have the same lowest card", () => {
-      const hands = [
-        [new Card("3", "♦"), new Card("K", "♣")],
-        [new Card("3", "♠"), new Card("4", "♠")],
-      ];
-      const startingPlayer = game.findStartingPlayer(hands);
-      expect(startingPlayer).to.equal(1);
-    });
-
-    it("findStartingPlayer() should handle empty hands", () => {
-      const hands = [[], []];
-      const startingPlayer = game.findStartingPlayer(hands);
-      expect(startingPlayer).to.equal(0); // Defaults to 0
     });
 
     it("init() should reset the game state for a new round", () => {
@@ -154,6 +83,26 @@ describe("Game", () => {
       expect(game.id).to.not.equal(originalGameId);
       expect(game.gameState.gamesWon).to.deep.equal([0, 0]);
       expect(game.gameState.roundNumber).to.equal(1); // Check that init() was called
+    });
+  });
+
+  describe("Player Management", () => {
+    it("setPlayers() should initialize players and associated game state", () => {
+      const players = [
+        new HumanPlayer(new MockGameClient(game), 0, new MockUI(new MockGameClient(game))),
+        new AIPlayer(new MockGameClient(game), 1, new MockAI(new MockGameClient(game), [], "mock")),
+      ];
+      const originalGamesWon = [2, 1];
+      game.gameState.gamesWon = originalGamesWon;
+
+      game.setPlayers(players);
+
+      expect(game.gameState.numPlayers).to.equal(players.length);
+      expect(game.gameState.players).to.have.lengthOf(players.length);
+      expect(game.gameState.playerHands).to.have.lengthOf(players.length);
+      expect(game.gameState.roundsWon).to.have.lengthOf(players.length);
+      expect(game.gameState.roundsWon).to.deep.equal([0, 0]);
+      expect(game.gameState.gamesWon).to.deep.equal(originalGamesWon);
     });
   });
 
@@ -260,64 +209,6 @@ describe("Game", () => {
       expect(game.gameState.gamesWon[0]).to.equal(1);
       expect(game.gameState.roundsWon[0]).to.equal(1);
       expect(game.gameState.playPile).to.have.lengthOf(1);
-    });
-  });
-
-  describe("State Manipulation", () => {
-    it("clearSelectedCards() should empty the selectedCards array", () => {
-      game.gameState.selectedCards = [new Card("A", "♠")];
-      game.clearSelectedCards();
-      expect(game.gameState.selectedCards).to.be.an("array").that.is.empty;
-    });
-
-    it("setAIPersona() should update the persona for an AI player", () => {
-      const players = [new HumanPlayer(game, 0, new MockUI(game)), new AIPlayer(game, 1, new MockAI(game, [], "mock"))];
-      game.setPlayers(players);
-      game.setAIPersona(1, "new_persona");
-      expect(game.gameState.playerPersonas[1]).to.equal("new_persona");
-    });
-
-    it("setAIPersona() should not update the persona for a human player", () => {
-      const players = [new HumanPlayer(game, 0, new MockUI(game)), new AIPlayer(game, 1, new MockAI(game, [], "mock"))];
-      game.setPlayers(players);
-      game.setAIPersona(0, "new_persona");
-      expect(game.gameState.playerPersonas[0]).to.not.equal("new_persona");
-    });
-
-    it("setPlayerHand() should replace a player's hand", () => {
-      const players = [new HumanPlayer(game, 0, new MockUI(game))];
-      game.setPlayers(players);
-      const newHand = [new Card("A", "♠"), new Card("K", "♣")];
-      game.setPlayerHand(0, newHand);
-      expect(game.gameState.playerHands[0]).to.deep.equal(newHand);
-    });
-
-    it("setPlayPile() should replace the play pile", () => {
-      const newPlayPile = [new Card("A", "♠"), new Card("K", "♣")];
-      game.setPlayPile(newPlayPile);
-      expect(game.gameState.playPile).to.deep.equal(newPlayPile);
-    });
-
-    it("toggleCardSelection() should add a card to selectedCards", () => {
-      const card = new Card("A", "♠");
-      game.toggleCardSelection(card);
-      expect(game.gameState.selectedCards).to.deep.include(card);
-    });
-
-    it("toggleCardSelection() should remove a card from selectedCards", () => {
-      const card = new Card("A", "♠");
-      game.gameState.selectedCards = [card];
-      game.toggleCardSelection(card);
-      expect(game.gameState.selectedCards).to.not.deep.include(card);
-    });
-
-    it("toggleCardSelection() should sort the cards after adding one", () => {
-      const card1 = new Card("A", "♠");
-      const card2 = new Card("3", "♦");
-      game.gameState.selectedCards = [card1];
-      game.toggleCardSelection(card2);
-      expect(game.gameState.selectedCards[0].value).to.equal(card2.value);
-      expect(game.gameState.selectedCards[1].value).to.equal(card1.value);
     });
   });
 
