@@ -7,6 +7,32 @@ describe("Rules", () => {
     rules = new Rules();
   });
 
+  describe("findStartingPlayer", () => {
+    it("should find the player with the lowest card", () => {
+      const hands = [
+        [new Card("A", "♠"), new Card("K", "♣")],
+        [new Card("3", "♦"), new Card("4", "♠")],
+      ];
+      const startingPlayer = rules.findStartingPlayer(hands);
+      expect(startingPlayer).to.equal(1);
+    });
+
+    it("should select the last player if multiple have the same lowest card", () => {
+      const hands = [
+        [new Card("3", "♦"), new Card("K", "♣")],
+        [new Card("3", "♠"), new Card("4", "♠")],
+      ];
+      const startingPlayer = rules.findStartingPlayer(hands);
+      expect(startingPlayer).to.equal(1);
+    });
+
+    it("should handle empty hands", () => {
+      const hands = [[], []];
+      const startingPlayer = rules.findStartingPlayer(hands);
+      expect(startingPlayer).to.equal(0); // Defaults to 0
+    });
+  });
+
   describe("Card Combination Logic", () => {
     it("getCombinationType() should identify all valid combination types", () => {
       expect(rules.getCombinationType([new Card("A", "♠")])).to.equal(COMBINATION_TYPES.SINGLE);
@@ -49,9 +75,7 @@ describe("Rules", () => {
 
     it("isFourOfAKind() should correctly identify a four-of-a-kind", () => {
       expect(rules.isFourOfAKind([new Card("A", "♠"), new Card("A", "♦"), new Card("A", "♣"), new Card("A", "♥")])).to.be.true;
-      expect(
-        rules.isFourOfAKind([new Card("A", "♠"), new Card("K", "♠"), new Card("Q", "♠"), new Card("J", "♠")])
-      ).to.be.false;
+      expect(rules.isFourOfAKind([new Card("A", "♠"), new Card("K", "♠"), new Card("Q", "♠"), new Card("J", "♠")])).to.be.false;
     });
 
     it("isStraight() should correctly identify straights", () => {

@@ -1,18 +1,19 @@
 export class Player {
   /**
    * @param {string} type The type of player (human or ai).
-   * @param {Game} game The game instance.
+   * @param {GameClient} gameClient The game client instance.
+   * @param {number} number The player number in the underlying game.
    */
-  constructor(type, game, number) {
+  constructor(type, gameClient, number) {
     this.type = type;
-    this.game = game;
+    this.gameClient = gameClient;
     this.number = number;
     this.id = crypto.randomUUID();
     this.persona = null;
   }
 
   data() {
-    return { game: this.game.id, id: this.id, number: this.number, persona: this.persona, type: this.type };
+    return { game: this.gameClient.getId(), id: this.id, number: this.number, persona: this.persona, type: this.type };
   }
 
   takeTurn() {

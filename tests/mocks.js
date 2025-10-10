@@ -1,6 +1,6 @@
 import { AI } from "../src/app/ai/index.js";
-import { Card, Game } from "../src/app/game/index.js";
-import { Player } from "../src/app/player/index.js";
+import { Card, Game, GameClient } from "../src/app/game/index.js";
+import { Player, PLAYER_TYPES, createPlayer } from "../src/app/player/index.js";
 import { UI } from "../src/app/ui.js";
 
 export class MockAmplitude {
@@ -46,38 +46,38 @@ export class MockAnalytics {
     this.events = [];
   }
 
-  gameInit(game) {
-    this.events.push({ eventType: "game_initialized", game });
+  gameInit(gameClient) {
+    this.events.push({ eventType: "game_initialized", gameClient });
   }
 
-  gameReset(game) {
-    this.events.push({ eventType: "game_reset", game });
+  gameReset(gameClient) {
+    this.events.push({ eventType: "game_reset", gameClient });
   }
 
-  gameStarted(game) {
-    this.events.push({ eventType: "game_started", game });
+  gameStarted(gameClient) {
+    this.events.push({ eventType: "game_started", gameClient });
   }
 
-  gameWon(game) {
-    this.events.push({ eventType: "game_won", game });
+  gameWon(gameClient) {
+    this.events.push({ eventType: "game_won", gameClient });
   }
 
-  roundPlayed(game) {
-    this.events.push({ eventType: "round_played", game });
+  roundPlayed(gameClient) {
+    this.events.push({ eventType: "round_played", gameClient });
   }
 
-  playerMoved(game) {
-    this.events.push({ eventType: "player_moved", game });
+  playerMoved(gameClient) {
+    this.events.push({ eventType: "player_moved", gameClient });
   }
 
-  playerPassed(game) {
-    this.events.push({ eventType: "player_passed", game });
+  playerPassed(gameClient) {
+    this.events.push({ eventType: "player_passed", gameClient });
   }
 }
 
 export class MockAI extends AI {
-  constructor(game, move, persona = null) {
-    super(game, "mock", persona);
+  constructor(gameClient, move, persona = null) {
+    super(gameClient, "mock", persona);
     this.move = move;
     this.takeTurnCalled = false;
   }
@@ -88,6 +88,7 @@ export class MockAI extends AI {
       type: this.type,
       name: this.name,
       isHuman: this.isHuman,
+      game: this.gameClient.getId(),
     };
   }
 
@@ -181,10 +182,15 @@ export class MockDeck {
   shuffle() {}
 }
 
+export class MockGameClient extends GameClient {
+  constructor(game) {
+    super(game);
+  }
+}
+
 export class MockGame extends Game {
   constructor(deck, stateKey) {
     super(deck, stateKey);
-    this.findStartingPlayerCalled = false;
     this.loadCalled = false;
     this.playCardsCalled = false;
     this.passTurnCalled = false;
@@ -201,26 +207,29 @@ export class MockGame extends Game {
     this.onPlayerPassedCalled = false;
     this.onRoundPlayedCalled = false;
 
+    // Create a GameClient instance for this MockGame
+    this.gameClient = new GameClient(this);
+
     this.hooks = {
-      onGameInit: (game) => {
+      onGameInit: (gameClient) => {
         this.onGameInitCalled = true;
       },
-      onGameReset: (game) => {
+      onGameReset: (gameClient) => {
         this.onGameResetCalled = true;
       },
-      onGameStarted: (game) => {
+      onGameStarted: (gameClient) => {
         this.onGameStartedCalled = true;
       },
-      onGameWon: (game) => {
+      onGameWon: (gameClient) => {
         this.onGameWonCalled = true;
       },
-      onPlayerMoved: (game) => {
+      onPlayerMoved: (gameClient) => {
         this.onPlayerMovedCalled = true;
       },
-      onPlayerPassed: (game) => {
+      onPlayerPassed: (gameClient) => {
         this.onPlayerPassedCalled = true;
       },
-      onRoundPlayed: (game) => {
+      onRoundPlayed: (gameClient) => {
         this.onRoundPlayedCalled = true;
       },
     };
@@ -230,14 +239,24 @@ export class MockGame extends Game {
     this.gameOverOnLoad = false;
   }
 
-  findStartingPlayer(hands) {
-    this.findStartingPlayerCalled = true;
-    return super.findStartingPlayer(hands);
-  }
-  load() {
+  load(ui) {
     this.loadCalled = true;
     if (this.loadWillSucceed) {
       this.gameState.gameOver = this.gameOverOnLoad;
+      const loadedPlayerIds = this.gameState.players.map((p) => p.id);
+      const loadedPlayerTypes = this.gameState.players.map((p) => p.type);
+      const loadedPlayerPersonas = this.gameState.players.map((p) => (p.type === PLAYER_TYPES.AI ? p.persona : null));
+
+      this.gameState.players = this.gameState.players.map((p, i) =>
+        createPlayer({
+          id: loadedPlayerIds[i],
+          gameClient: new MockGameClient(this),
+          type: loadedPlayerTypes[i],
+          number: i,
+          ui: ui,
+          persona: loadedPlayerPersonas[i],
+        })
+      );
       return { loaded: true, gameOver: this.gameOverOnLoad, loadedPlayerPersonas: [null, "random"] };
     }
     return { loaded: false };
@@ -288,18 +307,18 @@ export class MockLocalStorage {
 }
 
 export class MockPlayer extends Player {
-  constructor(name, hand, isHuman = false, persona = null) {
-    super(name, hand, isHuman);
-    this.persona = isHuman ? null : persona; // Set persona to null if it's a human player
+  constructor(type, gameClient, number, persona = null) {
+    super(type, gameClient, number);
+    this.persona = persona; // Set persona to null if it's a human player
   }
 
   data() {
     return {
       id: this.id,
       type: this.type,
-      name: this.name,
-      isHuman: this.isHuman,
+      number: this.number,
       persona: this.persona,
+      game: this.gameClient.getId(),
     };
   }
 
@@ -307,9 +326,9 @@ export class MockPlayer extends Player {
 }
 
 export class MockUI {
-  constructor(game) {
-    this.game = game;
-    this.id = new UI(game).id;
+  constructor(gameClient) {
+    this.gameClient = gameClient;
+    this.id = new UI(gameClient).id;
     this.initCalled = false;
     this.renderCalled = false;
     this.playButton = {
@@ -353,8 +372,7 @@ export class MockUI {
     this.playArea = { innerHTML: "", appendChild: () => {} };
     this.gameContent = { innerHTML: "", appendChild: () => {} };
   }
-  init(game) {
-    this.game = game;
+  init() {
     this.initCalled = true;
   }
   render() {

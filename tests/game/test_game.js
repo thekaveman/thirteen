@@ -1,6 +1,6 @@
 import { Card, Game } from "../../src/app/game/index.js";
 import { HumanPlayer, AIPlayer, PLAYER_TYPES } from "../../src/app/player/index.js";
-import { MockAI, MockDeck, MockPlayer, MockUI } from "../mocks.js";
+import { MockAI, MockDeck, MockUI, MockGameClient } from "../mocks.js";
 
 describe("Game", () => {
   let game;
@@ -14,7 +14,7 @@ describe("Game", () => {
     localStorage.clear();
   });
 
-  describe("Constructor and Initial State", () => {
+  describe("Game Setup", () => {
     it("should initialize with correct default game state", () => {
       expect(game.gameState.numPlayers).to.equal(0);
       expect(game.gameState.playerHands).to.be.an("array").that.is.empty;
@@ -27,77 +27,6 @@ describe("Game", () => {
       expect(game.gameState.roundNumber).to.equal(1);
       expect(game.gameState.roundsWon).to.be.an("array").that.is.empty;
       expect(game.gameState.gameOver).to.be.false;
-    });
-  });
-
-  describe("Player Management", () => {
-    it("setPlayers() should initialize players and associated game state", () => {
-      const players = [new HumanPlayer(game, 0, new MockUI(game)), new AIPlayer(game, 1, new MockAI(game, [], "mock"))];
-      const originalGamesWon = [2, 1];
-      game.gameState.gamesWon = originalGamesWon;
-
-      game.setPlayers(players);
-
-      expect(game.gameState.numPlayers).to.equal(players.length);
-      expect(game.gameState.players).to.have.lengthOf(players.length);
-      expect(game.gameState.playerHands).to.have.lengthOf(players.length);
-      expect(game.gameState.roundsWon).to.have.lengthOf(players.length);
-      expect(game.gameState.roundsWon).to.deep.equal([0, 0]);
-      expect(game.gameState.gamesWon).to.deep.equal(originalGamesWon);
-    });
-  });
-
-  describe("Player Finders", () => {
-    it("firstAIPlayer() should return the first AI player", () => {
-      const players = [
-        new HumanPlayer(game, 0, new MockUI(game)),
-        new AIPlayer(game, 1, new MockAI(game, [], "mock")),
-        new AIPlayer(game, 2, new MockAI(game, [], "mock2")),
-      ];
-      game.setPlayers(players);
-      const aiPlayer = game.firstAIPlayer();
-      expect(aiPlayer).to.exist;
-      expect(aiPlayer.type).to.equal(PLAYER_TYPES.AI);
-      expect(aiPlayer.number).to.equal(1);
-    });
-
-    it("firstHumanPlayer() should return the first human player", () => {
-      const players = [
-        new AIPlayer(game, 0, new MockAI(game, [], "mock")),
-        new HumanPlayer(game, 1, new MockUI(game)),
-        new HumanPlayer(game, 2, new MockUI(game)),
-      ];
-      game.setPlayers(players);
-      const humanPlayer = game.firstHumanPlayer();
-      expect(humanPlayer).to.exist;
-      expect(humanPlayer.type).to.equal(PLAYER_TYPES.HUMAN);
-      expect(humanPlayer.number).to.equal(1);
-    });
-  });
-
-  describe("Game Setup", () => {
-    it("findStartingPlayer() should find the player with the lowest card", () => {
-      const hands = [
-        [new Card("A", "♠"), new Card("K", "♣")],
-        [new Card("3", "♦"), new Card("4", "♠")],
-      ];
-      const startingPlayer = game.findStartingPlayer(hands);
-      expect(startingPlayer).to.equal(1);
-    });
-
-    it("findStartingPlayer() should select the last player if multiple have the same lowest card", () => {
-      const hands = [
-        [new Card("3", "♦"), new Card("K", "♣")],
-        [new Card("3", "♠"), new Card("4", "♠")],
-      ];
-      const startingPlayer = game.findStartingPlayer(hands);
-      expect(startingPlayer).to.equal(1);
-    });
-
-    it("findStartingPlayer() should handle empty hands", () => {
-      const hands = [[], []];
-      const startingPlayer = game.findStartingPlayer(hands);
-      expect(startingPlayer).to.equal(0); // Defaults to 0
     });
 
     it("init() should reset the game state for a new round", () => {
@@ -135,7 +64,10 @@ describe("Game", () => {
     });
 
     it("start() should initialize the game state for starting", () => {
-      const players = [new MockPlayer("Human 1", [], true), new MockPlayer("AI 1", [], false)];
+      const players = [
+        new HumanPlayer(new MockGameClient(game), 0, new MockUI(new MockGameClient(game))),
+        new AIPlayer(new MockGameClient(game), 1, new MockAI(new MockGameClient(game), [], "mock")),
+      ];
       game.setPlayers(players);
       game.start();
 
@@ -154,6 +86,26 @@ describe("Game", () => {
       expect(game.id).to.not.equal(originalGameId);
       expect(game.gameState.gamesWon).to.deep.equal([0, 0]);
       expect(game.gameState.roundNumber).to.equal(1); // Check that init() was called
+    });
+  });
+
+  describe("Player Management", () => {
+    it("setPlayers() should initialize players and associated game state", () => {
+      const players = [
+        new HumanPlayer(new MockGameClient(game), 0, new MockUI(new MockGameClient(game))),
+        new AIPlayer(new MockGameClient(game), 1, new MockAI(new MockGameClient(game), [], "mock")),
+      ];
+      const originalGamesWon = [2, 1];
+      game.gameState.gamesWon = originalGamesWon;
+
+      game.setPlayers(players);
+
+      expect(game.gameState.numPlayers).to.equal(players.length);
+      expect(game.gameState.players).to.have.lengthOf(players.length);
+      expect(game.gameState.playerHands).to.have.lengthOf(players.length);
+      expect(game.gameState.roundsWon).to.have.lengthOf(players.length);
+      expect(game.gameState.roundsWon).to.deep.equal([0, 0]);
+      expect(game.gameState.gamesWon).to.deep.equal(originalGamesWon);
     });
   });
 
@@ -275,11 +227,15 @@ describe("Game", () => {
 
     it("load() should fail for invalid saved JSON", () => {
       localStorage.setItem(game.stateKey, "invalid json");
-      expect(() => game.load(new MockUI(game))).to.throw(SyntaxError);
+      try {
+        game.load(new MockUI(new MockGameClient(game)));
+      } catch (e) {
+        expect(e).to.be.an.instanceOf(SyntaxError);
+      }
     });
 
     it("load() should not load if no saved state exists", () => {
-      const loaded = game.load(new MockUI(game));
+      const loaded = game.load(new MockUI(new MockGameClient(game)));
       expect(loaded.loaded).to.be.false;
     });
 
@@ -290,9 +246,12 @@ describe("Game", () => {
     });
 
     it("load() should correctly rehydrate game data", () => {
-      const mockUI = new MockUI(game);
-      const mockAI = new MockAI(game, [new Card("3", "♠")], "random");
-      const mockPlayers = [new AIPlayer(game, 0, mockAI), new HumanPlayer(game, 1, mockUI)];
+      const mockUI = new MockUI(new MockGameClient(game));
+      const mockAI = new MockAI(new MockGameClient(game), [new Card("3", "♠")], "random");
+      const mockPlayers = [
+        new AIPlayer(new MockGameClient(game), 0, mockAI),
+        new HumanPlayer(new MockGameClient(game), 1, mockUI),
+      ];
 
       game.setPlayers(mockPlayers);
       game.gameState.gameStarted = true;

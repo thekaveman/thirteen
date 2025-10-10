@@ -1,20 +1,22 @@
-import { Card } from "../../src/app/game/index.js";
+import { Card, GameClient } from "../../src/app/game/index.js";
 import { AIPlayer, PLAYER_TYPES } from "../../src/app/player/index.js";
-import { MockAI, MockGame } from "../mocks.js";
+import { MockAI, MockGame, MockGameClient, MockDeck } from "../mocks.js";
 
 describe("AIPlayer", () => {
   it("Constructor should correctly initialize AIPlayer", () => {
-    const game = new MockGame();
-    const ai = new MockAI();
-    const aiPlayer = new AIPlayer(game, 1, ai);
+    const game = new MockGame(new MockDeck());
+    const gameClient = new MockGameClient(game);
+    const ai = new MockAI(gameClient);
+    const aiPlayer = new AIPlayer(gameClient, 1, ai);
     expect(aiPlayer.type).to.equal(PLAYER_TYPES.AI);
     expect(aiPlayer.ai).to.equal(ai);
   });
 
   it("data() should return correct data", () => {
-    const game = new MockGame();
-    const ai = new MockAI(game);
-    const player = new AIPlayer(game, 1, ai);
+    const game = new MockGame(new MockDeck());
+    const gameClient = new MockGameClient(game);
+    const ai = new MockAI(gameClient);
+    const player = new AIPlayer(gameClient, 1, ai);
     const playerData = player.data();
 
     expect(playerData.id).to.equal(player.id);
@@ -24,12 +26,13 @@ describe("AIPlayer", () => {
   });
 
   it("takeTurn() should return the move from the AI", () => {
-    const game = new MockGame();
-    game.gameState.currentPlayer = 0;
-    game.gameState.playerHands = [[]];
+    const game = new MockGame(new MockDeck());
+    const gameClient = new MockGameClient(game);
+    gameClient.setCurrentPlayer(0);
+    gameClient.setPlayerHands([[]]);
     const move = [new Card("5", "♦")];
-    const ai = new MockAI(game, move);
-    const player = new AIPlayer(game, 0, ai);
+    const ai = new MockAI(gameClient, move);
+    const player = new AIPlayer(gameClient, 0, ai);
     const selectedMove = player.takeTurn();
     expect(selectedMove).to.equal(move);
   });

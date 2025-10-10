@@ -5,11 +5,11 @@ export class LowestValueAI extends AI {
   /**
    * Creates an instance of LowestValueAI.
    * This AI chooses the valid move with the lowest total value of cards in the combination.
-   * @param {Game} game The game instance.
+   * @param {GameClient} gameClient The game client instance.
    * @param {string} [persona=null] The persona of the AI.
    */
-  constructor(game, persona = null) {
-    super(game, AI_TYPES.LOWEST_VALUE, persona);
+  constructor(gameClient, persona = null) {
+    super(gameClient, AI_TYPES.LOWEST_VALUE, persona);
   }
 
   /**

@@ -1,3 +1,4 @@
+import { GameClient } from "./client.js";
 import { Card, Deck } from "./deck.js";
 import { PLAYER_TYPES, createPlayer } from "../player/index.js";
 import { Rules } from "./rules.js";
@@ -14,13 +15,13 @@ export class Game {
   constructor(deck, stateKey = Game.STATE_KEY) {
     this.deck = deck;
     this.hooks = {
-      onGameInit: (game) => {},
-      onGameReset: (game) => {},
-      onGameStarted: (game) => {},
-      onGameWon: (game) => {},
-      onPlayerMoved: (game) => {},
-      onPlayerPassed: (game) => {},
-      onRoundPlayed: (game) => {},
+      onGameInit: (gameClient) => {},
+      onGameReset: (gameClient) => {},
+      onGameStarted: (gameClient) => {},
+      onGameWon: (gameClient) => {},
+      onPlayerMoved: (gameClient) => {},
+      onPlayerPassed: (gameClient) => {},
+      onRoundPlayed: (gameClient) => {},
     };
     this.gameState = {
       numPlayers: 0,
@@ -47,56 +48,11 @@ export class Game {
   }
 
   /**
-   * Gets the current player from the game's state.
-   * @returns {Player} The current player instance.
-   */
-  currentPlayer() {
-    return this.gameState.players[this.gameState.currentPlayer];
-  }
-
-  /**
    * Deals player hands for each player.
    */
   deal() {
     this.gameState.playerHands = this.deck.deal(this.gameState.numPlayers);
     this.gameState.playerHands.forEach(Card.sort);
-  }
-
-  /**
-   * Finds the player who should start the game based on the lowest card.
-   * @param {Array<Array<Card>>} hands An array of sorted player hands.
-   * @returns {number} The index of the player who should start.
-   */
-  findStartingPlayer(hands) {
-    let startingPlayer = 0;
-    const lowestCard = Card.findLowest(hands);
-    if (lowestCard) {
-      const lowestCardValue = lowestCard.value;
-
-      for (let i = 0; i < hands.length; i++) {
-        if (hands[i] && hands[i].length > 0 && hands[i][0].value == lowestCardValue) {
-          startingPlayer = i;
-        }
-      }
-    }
-
-    return startingPlayer;
-  }
-
-  /**
-   * Gets the AI player from the game's state.
-   * @returns {AIPlayer} The current AI player instance.
-   */
-  firstAIPlayer() {
-    return this.gameState.players.find((p) => p.type === PLAYER_TYPES.AI);
-  }
-
-  /**
-   * Gets the human player from the game's state.
-   * @returns {HumanPlayer} The current human player instance.
-   */
-  firstHumanPlayer() {
-    return this.gameState.players.find((p) => p.type === PLAYER_TYPES.HUMAN);
   }
 
   /**
@@ -145,7 +101,7 @@ export class Game {
       this.gameState.players = parsedState.gameState.players.map((p, i) =>
         createPlayer({
           id: loadedPlayerIds[i],
-          game: this,
+          gameClient: new GameClient(this),
           type: loadedPlayerTypes[i],
           number: i,
           ui: ui,
@@ -180,7 +136,7 @@ export class Game {
     this.gameState.currentPlayer =
       this.gameState.lastPlayerToPlay !== -1
         ? this.gameState.lastPlayerToPlay
-        : this.findStartingPlayer(this.gameState.playerHands);
+        : this.rules.findStartingPlayer(this.gameState.playerHands);
     this.gameState.roundNumber++;
     this.hooks.onRoundPlayed(this);
   }
@@ -291,7 +247,7 @@ export class Game {
         this.gameState.gamesWon = new Array(players.length).fill(0);
       }
       this.deal();
-      this.gameState.currentPlayer = this.findStartingPlayer(this.gameState.playerHands);
+      this.gameState.currentPlayer = this.rules.findStartingPlayer(this.gameState.playerHands);
       this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
       this.save();
     }

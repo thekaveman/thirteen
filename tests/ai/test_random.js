@@ -1,12 +1,14 @@
 import { RandomAI } from "../../src/app/ai/index.js";
-import { Card, Game } from "../../src/app/game/index.js";
+import { Card, Game, GameClient } from "../../src/app/game/index.js";
+import { MockDeck } from "../mocks.js";
 
 describe("RandomAI", () => {
-  let game, randomAI;
+  let game, gameClient, randomAI;
 
   beforeEach(() => {
-    game = new Game();
-    randomAI = new RandomAI(game);
+    game = new Game(new MockDeck());
+    gameClient = new GameClient(game);
+    randomAI = new RandomAI(gameClient);
   });
 
   it("takeTurn() should return an empty array if no valid move exists", () => {
@@ -34,7 +36,7 @@ describe("RandomAI", () => {
     const move = randomAI.takeTurn(hand[0], playPile, 1, hand);
 
     expect(move).to.not.be.empty;
-    expect(validMoves).to.deep.include(move); // Ensure the chosen move is one of the valid moves
+    expect(validMoves).to.deep.include(move);
     stub.restore();
   });
 });

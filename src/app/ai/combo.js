@@ -3,11 +3,11 @@ import { AI } from "./base.js";
 export class ComboAI extends AI {
   /**
    * Creates an instance of ComboAI.
-   * @param {Game} game The game instance.
+   * @param {GameClient} gameClient The game client instance.
    * @param {Array<AI>} strategies An array of AI strategy instances.
    */
-  constructor(game, strategies = [], type = "combo", persona = null) {
-    super(game, type, persona);
+  constructor(gameClient, strategies = [], type = "combo", persona = null) {
+    super(gameClient, type, persona);
     this.strategies = strategies;
   }
 

@@ -1,20 +1,21 @@
 import { PrioritizedComboAI } from "../../src/app/ai/index.js";
-import { MockGame, MockAI } from "../mocks.js";
+import { MockGame, MockAI, MockGameClient, MockDeck } from "../mocks.js";
 import { Card } from "../../src/app/game/index.js";
 
 describe("PrioritizedComboAI", () => {
-  let game, mockAI1, mockAI2, mockAI3, prioritizedComboAI;
+  let game, gameClient, mockAI1, mockAI2, mockAI3, prioritizedComboAI;
 
   beforeEach(() => {
-    game = new MockGame();
+    game = new MockGame(new MockDeck());
+    gameClient = new MockGameClient(game);
     // MockAI1 will always return a move
-    mockAI1 = new MockAI(game, [new Card("3", "♠")]);
+    mockAI1 = new MockAI(gameClient, [new Card("3", "♠")]);
     // MockAI2 will return no move initially, then a move
-    mockAI2 = new MockAI(game, []);
+    mockAI2 = new MockAI(gameClient, []);
     // MockAI3 will always return a move
-    mockAI3 = new MockAI(game, [new Card("4", "♦")]);
+    mockAI3 = new MockAI(gameClient, [new Card("4", "♦")]);
 
-    prioritizedComboAI = new PrioritizedComboAI(game, [mockAI1, mockAI2, mockAI3]);
+    prioritizedComboAI = new PrioritizedComboAI(gameClient, [mockAI1, mockAI2, mockAI3]);
   });
 
   it("should be initialized with multiple AI strategies", () => {

@@ -16,42 +16,42 @@ export const AI_PERSONAS = {
     friendly_name: "Random",
     description: "Plays a random valid move.",
     icon: "🎲",
-    create: (game) => new RandomAI(game, "random"),
+    create: (gameClient) => new RandomAI(gameClient, "random"),
   },
   cautious: {
     name: "cautious",
     friendly_name: "Cautious",
     description: "Plays a combination with the lowest card.",
     icon: "🛡️",
-    create: (game) => new LowestCardAI(game, "cautious"),
+    create: (gameClient) => new LowestCardAI(gameClient, "cautious"),
   },
   aggressive: {
     name: "aggressive",
     friendly_name: "Aggressive",
     description: "Plays a combination with the highest card.",
     icon: "⚔️",
-    create: (game) => new HighestCardAI(game, "aggressive"),
+    create: (gameClient) => new HighestCardAI(gameClient, "aggressive"),
   },
   low_stakes: {
     name: "low_stakes",
     friendly_name: "Low Stakes",
     description: "Plays the combination with the lowest total value.",
     icon: "📉",
-    create: (game) => new LowestValueAI(game, "low_stakes"),
+    create: (gameClient) => new LowestValueAI(gameClient, "low_stakes"),
   },
   high_stakes: {
     name: "high_stakes",
     friendly_name: "High Stakes",
     description: "Plays the combination with the highest total value.",
     icon: "📈",
-    create: (game) => new HighestValueAI(game, "high_stakes"),
+    create: (gameClient) => new HighestValueAI(gameClient, "high_stakes"),
   },
   passive: {
     name: "passive",
     friendly_name: "Passive",
     description: "Passes whenever possible. When forced to play, plays the lowest card.",
     icon: "🧘",
-    create: (game) => new PassAI(game, new LowestCardAI(game, "passive"), "passive"),
+    create: (gameClient) => new PassAI(gameClient, new LowestCardAI(gameClient, "passive"), "passive"),
   },
   // Combo Personas
   opportunist: {
@@ -59,10 +59,14 @@ export const AI_PERSONAS = {
     friendly_name: "Opportunist",
     description: "Tries to play high-value combos, otherwise plays low-value cards.",
     icon: "🎯",
-    create: (game) =>
+    create: (gameClient) =>
       new PrioritizedComboAI(
-        game,
-        [new HighestValueAI(game, "opportunist"), new HighestCardAI(game, "opportunist"), new LowestCardAI(game, "opportunist")],
+        gameClient,
+        [
+          new HighestValueAI(gameClient, "opportunist"),
+          new HighestCardAI(gameClient, "opportunist"),
+          new LowestCardAI(gameClient, "opportunist"),
+        ],
         "opportunist"
       ),
   },
@@ -71,15 +75,16 @@ export const AI_PERSONAS = {
     friendly_name: "Unpredictable",
     description: "Randomly chooses between different strategies.",
     icon: "🎭",
-    create: (game) =>
+    create: (gameClient) =>
       new RandomComboAI(
-        game,
+        gameClient,
         [
-          new HighestCardAI(game, "unpredictable"),
-          new HighestValueAI(game, "unpredictable"),
-          new LowestCardAI(game, "unpredictable"),
-          new LowestValueAI(game, "unpredictable"),
-          new RandomAI(game, "unpredictable"),
+          new HighestCardAI(gameClient, "unpredictable"),
+          new HighestValueAI(gameClient, "unpredictable"),
+          new LowestCardAI(gameClient, "unpredictable"),
+          new LowestValueAI(gameClient, "unpredictable"),
+          new PassAI(gameClient, new LowestCardAI(gameClient, "unpredictable"), "unpredictable"),
+          new RandomAI(gameClient, "unpredictable"),
         ],
         "unpredictable"
       ),

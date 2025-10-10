@@ -1,11 +1,13 @@
 import { RandomComboAI } from "../../src/app/ai/index.js";
-import { Card, Game } from "../../src/app/game/index.js";
+import { Card, Game, GameClient } from "../../src/app/game/index.js";
+import { MockDeck } from "../mocks.js";
 
 describe("RandomComboAI", () => {
-  let game, randomComboAI, strategy1, strategy2;
+  let game, gameClient, randomComboAI, strategy1, strategy2;
 
   beforeEach(() => {
-    game = new Game();
+    game = new Game(new MockDeck());
+    gameClient = new GameClient(game);
 
     // Create dummy strategies
     strategy1 = {
@@ -17,7 +19,7 @@ describe("RandomComboAI", () => {
       findAllValidMoves: sinon.stub().returns([[new Card("4", "♦")]]),
     };
 
-    randomComboAI = new RandomComboAI(game, [strategy1, strategy2]);
+    randomComboAI = new RandomComboAI(gameClient, [strategy1, strategy2]);
   });
 
   it("select() should return a random strategy", () => {
@@ -66,7 +68,7 @@ describe("RandomComboAI", () => {
   });
 
   it("select() should return null if there are no strategies", () => {
-    const emptyAI = new RandomComboAI(game, []);
+    const emptyAI = new RandomComboAI(gameClient, []);
     const selectedStrategy = emptyAI.select([], [], 1, []);
     expect(selectedStrategy).to.be.null;
   });

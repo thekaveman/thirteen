@@ -1,12 +1,14 @@
 import { HighestCardAI } from "../../src/app/ai/index.js";
-import { Card, Game } from "../../src/app/game/index.js";
+import { Card, Game, GameClient } from "../../src/app/game/index.js";
+import { MockDeck } from "../mocks.js";
 
 describe("HighestCardAI", () => {
-  let game, highestCardAI;
+  let game, gameClient, highestCardAI;
 
   beforeEach(() => {
-    game = new Game();
-    highestCardAI = new HighestCardAI(game);
+    game = new Game(new MockDeck());
+    gameClient = new GameClient(game);
+    highestCardAI = new HighestCardAI(gameClient);
   });
 
   it("takeTurn() should return an empty array if no valid move exists", () => {

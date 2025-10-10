@@ -5,12 +5,12 @@ export class PrioritizedComboAI extends ComboAI {
   /**
    * Creates an instance of PrioritizedComboAI.
    * This AI iterates through a list of strategies and uses the first one that can make a valid move.
-   * @param {Game} game The game instance.
+   * @param {GameClient} gameClient The game client instance.
    * @param {Array<AI>} strategies An array of AI strategy instances, ordered by priority.
    * @param {string} [persona=null] The persona of the AI.
    */
-  constructor(game, strategies, persona = null) {
-    super(game, strategies, AI_TYPES.PRIORITIZED_COMBO, persona);
+  constructor(gameClient, strategies, persona = null) {
+    super(gameClient, strategies, AI_TYPES.PRIORITIZED_COMBO, persona);
   }
 
   /**

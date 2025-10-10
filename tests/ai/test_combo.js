@@ -1,14 +1,15 @@
 import { ComboAI } from "../../src/app/ai/index.js";
-import { MockGame, MockAI } from "../mocks.js";
+import { MockGame, MockAI, MockGameClient, MockDeck } from "../mocks.js";
 
 describe("ComboAI", () => {
-  let game, mockAI1, mockAI2, comboAI;
+  let game, gameClient, mockAI1, mockAI2, comboAI;
 
   beforeEach(() => {
-    game = new MockGame();
-    mockAI1 = new MockAI(game, ["card1"]);
-    mockAI2 = new MockAI(game, ["card2"]);
-    comboAI = new ComboAI(game, [mockAI1, mockAI2], "test-combo");
+    game = new MockGame(new MockDeck());
+    gameClient = new MockGameClient(game);
+    mockAI1 = new MockAI(gameClient, ["card1"]);
+    mockAI2 = new MockAI(gameClient, ["card2"]);
+    comboAI = new ComboAI(gameClient, [mockAI1, mockAI2], "test-combo");
   });
 
   it("should be initialized with multiple AI strategies", () => {

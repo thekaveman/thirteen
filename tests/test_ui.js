@@ -1,17 +1,18 @@
-import { MockDeck, MockGame, MockAI } from "./mocks.js";
+import { MockDeck, MockGame, MockAI, MockGameClient } from "./mocks.js";
 import { Card, COMBINATION_TYPES } from "../src/app/game/index.js";
 import { HumanPlayer, AIPlayer, PLAYER_TYPES } from "../src/app/player/index.js";
 import { UI } from "../src/app/ui.js";
 import { AI_PERSONAS } from "../src/app/ai/personas.js";
 
 describe("UI", () => {
-  let game, ui, container;
+  let game, gameClient, ui, container;
 
   after(() => {});
 
   beforeEach(() => {
     game = new MockGame(new MockDeck());
-    ui = new UI(game);
+    gameClient = new MockGameClient(game);
+    ui = new UI(gameClient);
 
     container = document.createElement("div");
     container.id = "test-ui";
@@ -23,21 +24,25 @@ describe("UI", () => {
       container.appendChild(el);
     }
 
-    game.reset();
-    const players = [new HumanPlayer(game, 0, ui), new AIPlayer(game, 1, new MockAI(game)), new HumanPlayer(game, 2, ui)];
-    game.setPlayers(players);
-    game.start();
+    gameClient.reset();
+    const players = [
+      new HumanPlayer(gameClient, 0, ui),
+      new AIPlayer(gameClient, 1, new MockAI(gameClient)),
+      new HumanPlayer(gameClient, 2, ui),
+    ];
+    gameClient.setPlayers(players);
+    gameClient.start();
 
-    game.gameState.playerHands = [
+    gameClient.setPlayerHands([
       [new Card("3", "♠"), new Card("4", "♦")],
       [new Card("5", "♣"), new Card("6", "♥")],
       [new Card("7", "♣"), new Card("8", "♥")],
-    ];
+    ]);
     game.gameState.roundsWon = [0, 0, 0];
     game.gameState.gamesWon = [0, 0, 0];
-    game.gameState.currentPlayer = 0;
+    gameClient.setCurrentPlayer(0);
 
-    ui.init(game);
+    ui.init();
   });
 
   afterEach(() => {
@@ -74,11 +79,11 @@ describe("UI", () => {
   });
 
   it("render() should display all game info correctly", () => {
-    ui.game.gameState.roundNumber = 5;
-    ui.game.gameState.roundsWon = [2, 3, 0];
-    ui.game.gameState.gamesWon = [1, 0, 0];
-    ui.game.gameState.playerHands = [[new Card("3", "♠")], [new Card("4", "♦")], [new Card("5", "♣")]];
-    ui.game.gameState.currentPlayer = 0;
+    game.gameState.roundNumber = 5;
+    game.gameState.roundsWon = [2, 3, 0];
+    game.gameState.gamesWon = [1, 0, 0];
+    gameClient.setPlayerHands([[new Card("3", "♠")], [new Card("4", "♦")], [new Card("5", "♣")]]);
+    gameClient.setCurrentPlayer(0);
 
     ui.render();
 
@@ -92,8 +97,8 @@ describe("UI", () => {
   });
 
   it("renderPlayArea() should clear game content before rendering", () => {
-    ui.game.gameState.playPile = [];
-    ui.game.gameState.roundNumber = 1;
+    gameClient.setPlayPile([]);
+    game.gameState.roundNumber = 1;
     ui.renderPlayArea();
     expect(ui.gameContent.innerHTML).to.include('<h2>Play Area (Round 1) <span class="combination-type">🟢</span></h2>');
   });
@@ -101,9 +106,9 @@ describe("UI", () => {
   it("renderPlayerHand() should render cards and attach event listeners for human players", () => {
     const playerHandDiv = document.createElement("div");
     const card = new Card("A", "♠");
-    ui.game.gameState.playerHands[0] = [card, new Card("K", "♦")];
-    ui.game.gameState.currentPlayer = 0;
-    const handleCardClickSpy = sinon.spy(game.gameState.players[0], "handleCardClick");
+    gameClient.setPlayerHand(0, [card, new Card("K", "♦")]);
+    gameClient.setCurrentPlayer(0);
+    const handleCardClickSpy = sinon.spy(gameClient.getPlayers(0), "handleCardClick");
 
     ui.renderPlayerHand(0, playerHandDiv);
 
@@ -121,8 +126,8 @@ describe("UI", () => {
 
   it("renderPlayerHand() should render AI player hands correctly", () => {
     const playerHandDiv = document.createElement("div");
-    ui.game.gameState.playerHands[1] = [new Card("A", "♠"), new Card("K", "♦")];
-    ui.game.gameState.currentPlayer = 1;
+    gameClient.setPlayerHand(1, [new Card("A", "♠"), new Card("K", "♦")]);
+    gameClient.setCurrentPlayer(1);
     ui.renderPlayerHand(1, playerHandDiv);
 
     const cardElements = playerHandDiv.querySelectorAll(".card");
@@ -132,8 +137,8 @@ describe("UI", () => {
 
   it("renderPlayerHand() should display winner message", () => {
     const playerHandDiv = document.createElement("div");
-    ui.game.gameState.playerHands[0] = [];
-    ui.game.gameState.gameOver = true;
+    gameClient.setPlayerHand(0, []);
+    game.gameState.gameOver = true;
     ui.renderPlayerHand(0, playerHandDiv);
     expect(playerHandDiv.textContent).to.include("(Winner!)");
   });
@@ -157,7 +162,7 @@ describe("UI", () => {
   it("renderSelectedCards() should apply 'selected' class to correct cards", () => {
     const card1 = new Card("3", "♠");
     const card2 = new Card("4", "♦");
-    game.gameState.playerHands[0] = [card1, card2];
+    gameClient.setPlayerHand(0, [card1, card2]);
     ui.renderPlayerHands(); // To create the card elements in the DOM
 
     const cardElement1 = document.querySelector(`[data-card='${JSON.stringify(card1)}']`);
@@ -168,13 +173,13 @@ describe("UI", () => {
     expect(cardElement1.classList.contains("selected")).to.be.true;
     expect(cardElement2.classList.contains("selected")).to.be.false;
 
-    game.gameState.selectedCards = [];
+    gameClient.clearSelectedCards();
     ui.renderSelectedCards();
     expect(cardElement1.classList.contains("selected")).to.be.false;
   });
 
   it("renderSelectedCards() should do nothing if player hand is not found", () => {
-    game.gameState.currentPlayer = 99; // Invalid player
+    gameClient.setCurrentPlayer(99); // Invalid player
     ui.renderSelectedCards();
     // No assertion, just checking for absence of errors
   });
@@ -212,7 +217,7 @@ describe("UI", () => {
 
     it("should enable Play/Pass for human player's turn", () => {
       game.gameState.gameStarted = true;
-      game.gameState.currentPlayer = 0; // Human player
+      gameClient.setCurrentPlayer(0); // Human player
       ui.updateButtonStates();
       expect(ui.playButton.disabled).to.be.false;
       expect(ui.passButton.disabled).to.be.false;
@@ -221,7 +226,7 @@ describe("UI", () => {
 
     it("should disable Play/Pass for AI player's turn", () => {
       game.gameState.gameStarted = true;
-      game.gameState.currentPlayer = 1; // AI player
+      gameClient.setCurrentPlayer(1); // AI player
       ui.updateButtonStates();
       expect(ui.playButton.disabled).to.be.true;
       expect(ui.passButton.disabled).to.be.true;
@@ -235,7 +240,7 @@ describe("UI", () => {
     beforeEach(() => {
       playerHandDiv = document.createElement("div");
       game.gameState.gameStarted = false; // Prerequisite for rendering AI selection
-      game.gameState.playerPersonas[1] = "random";
+      gameClient.setAIPersona(1, "random");
     });
 
     it("renderAISelection() should populate dropdown and set initial value", () => {
@@ -255,7 +260,7 @@ describe("UI", () => {
     });
 
     it("renderAISelection() should default to random if no persona is set", () => {
-      game.gameState.playerPersonas[1] = null;
+      gameClient.setAIPersona(1, null);
       ui.renderAISelection(playerHandDiv);
       const dropdown = ui.aiDropdown;
       expect(dropdown.value).to.equal("random");
