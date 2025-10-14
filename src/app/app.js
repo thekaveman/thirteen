@@ -21,9 +21,15 @@ export class App {
     this.setTimeout = typeof window !== "undefined" ? setTimeout.bind(window) : setTimeout;
 
     this.ui.init();
-    this.attachHandlers(); // attach handlers once after UI is initialized
+    this.ui.on("playClicked", () => this.handleHumanPlay());
+    this.ui.on("passClicked", () => this.handleHumanPass());
+    this.ui.on("newGameClicked", () => this.handleNewGameClick());
+    this.ui.on("resetClicked", () => this.handleResetButtonClick());
+    this.ui.on("startClicked", () => this.handleStartGameClick());
+    this.ui.on("aiChanged", (selectedAI) => this.handleAISelection(selectedAI));
+    this.ui.on("cardClicked", (card) => this.handleCardClick(card));
 
-    this.humanPlayer = createPlayer({ gameClient: this.gameClient, type: PLAYER_TYPES.HUMAN, number: 0, ui: this.ui });
+    this.humanPlayer = createPlayer({ gameClient: this.gameClient, type: PLAYER_TYPES.HUMAN, number: 0 });
     this.selectedAI = "random"; // Default AI persona
     this.aiPlayers = {};
     // Populate aiPlayers
@@ -37,14 +43,6 @@ export class App {
     }
   }
 
-  attachHandlers() {
-    this.ui.aiDropdown.addEventListener("change", () => this.handleAISelection());
-    this.ui.playButton.addEventListener("click", () => this.handleHumanPlay());
-    this.ui.passButton.addEventListener("click", () => this.handleHumanPass());
-    this.ui.startGameButton.addEventListener("click", () => this.handleStartGameClick());
-    this.ui.newGameButton.addEventListener("click", () => this.handleNewGameClick());
-    this.ui.resetButton.addEventListener("click", () => this.handleResetButtonClick());
-  }
 
   attachHooks() {
     this.gameClient.attachHooks(this.analytics);
@@ -57,8 +55,8 @@ export class App {
     localStorage.clear();
   }
 
-  handleAISelection() {
-    this.selectedAI = this.ui.aiDropdown.value;
+  handleAISelection(selectedAI) {
+    this.selectedAI = selectedAI;
     this.gameClient.setAIPersona(1, this.selectedAI);
     this.gameClient.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
     this.ui.render();
@@ -86,6 +84,11 @@ export class App {
     this.nextTurn();
   }
 
+  handleCardClick(card) {
+    this.gameClient.toggleCardSelection(card);
+    this.ui.renderSelectedCards();
+  }
+
   handleNewGameClick() {
     log(`Game initialized`);
     this.init();
@@ -106,14 +109,25 @@ export class App {
   }
 
   handleHumanPlay() {
-    const humanPlayer = this.gameClient.getCurrentPlayer();
-    humanPlayer.handlePlayButtonClick();
+    this.ui.clearMessage();
+    const selectedCards = this.gameClient.getSelectedCards();
+    if (this.gameClient.isValidPlay(selectedCards)) {
+      this.gameClient.play(selectedCards);
+    } else {
+      log("Invalid play", selectedCards);
+      this.ui.displayMessage("Invalid play", "error");
+    }
+    this.ui.render();
     this.nextTurn();
   }
 
   handleHumanPass() {
-    const humanPlayer = this.gameClient.getCurrentPlayer();
-    humanPlayer.handlePassButtonClick();
+    this.ui.clearMessage();
+    const passSuccessful = this.gameClient.pass();
+    if (!passSuccessful) {
+      this.ui.displayMessage("You cannot pass on the first play of a round.", "error");
+    }
+    this.ui.render();
     this.nextTurn();
   }
 

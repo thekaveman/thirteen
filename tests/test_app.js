@@ -43,7 +43,6 @@ describe("App", function () {
       app.init();
       expect(game.initCalled).to.be.true;
       expect(ui.initCalled).to.be.true;
-      expect(ui.startGameButton.handler).to.exist;
     });
 
     it("init() should use default setTimeout", function () {
@@ -139,23 +138,6 @@ describe("App", function () {
   });
 
   describe("Event Handlers", function () {
-    it("attachHandlers() should attach event listeners to UI buttons", function () {
-      app.init();
-      const playButtonSpy = this.sandbox.spy(ui.playButton, "addEventListener");
-      const passButtonSpy = this.sandbox.spy(ui.passButton, "addEventListener");
-      const startGameButtonSpy = this.sandbox.spy(ui.startGameButton, "addEventListener");
-      const newGameButtonSpy = this.sandbox.spy(ui.newGameButton, "addEventListener");
-      const resetButtonSpy = this.sandbox.spy(ui.resetButton, "addEventListener");
-
-      app.attachHandlers();
-
-      expect(playButtonSpy.calledWith("click")).to.be.true;
-      expect(passButtonSpy.calledWith("click")).to.be.true;
-      expect(startGameButtonSpy.calledWith("click")).to.be.true;
-      expect(newGameButtonSpy.calledWith("click")).to.be.true;
-      expect(resetButtonSpy.calledWith("click")).to.be.true;
-    });
-
     it("attachHooks() should attach analytics hooks correctly", function () {
       const gameInitSpy = this.sandbox.spy(analytics, "gameInit");
       const gameResetSpy = this.sandbox.spy(analytics, "gameReset");
@@ -174,15 +156,15 @@ describe("App", function () {
       app.init(); // this calls attachHandlers
 
       // Simulate change event
-      ui.aiDropdown.handler();
+      ui.emit("aiChanged", "cautious");
 
-      expect(handleSpy.called).to.be.true;
+      expect(handleSpy.calledWith("cautious")).to.be.true;
     });
 
     it("handleStartGameClick() should start the game and trigger the next turn", function () {
       const nextTurnSpy = this.sandbox.spy(app, "nextTurn");
       app.init();
-      ui.startGameButton.handler(); // Simulate click
+      ui.emit("startClicked"); // Simulate click
       expect(game.startCalled).to.be.true;
       expect(game.saveCalled).to.be.true;
       expect(ui.renderCalled).to.be.true;
@@ -193,7 +175,7 @@ describe("App", function () {
     it("handleNewGameClick() should re-initialize the game", function () {
       const initSpy = this.sandbox.spy(app, "init");
       app.init();
-      ui.newGameButton.handler(); // Simulate click
+      ui.emit("newGameClicked"); // Simulate click
       expect(game.initCalled).to.be.true;
       expect(game.saveCalled).to.be.true;
       expect(initSpy.called).to.be.true;
@@ -205,38 +187,80 @@ describe("App", function () {
       const clearStorageSpy = this.sandbox.spy(app, "clearStorage");
       const appInitSpy = this.sandbox.spy(app, "init");
       const analyticsSpy = this.sandbox.spy(analytics, "gameReset");
-      ui.resetButton.handler(); // Simulate click
+      ui.emit("resetClicked"); // Simulate click
       expect(clearStorageSpy.called).to.be.true;
       expect(game.resetCalled).to.be.true;
       expect(appInitSpy.called).to.be.true;
       expect(analyticsSpy.called).to.be.true;
     });
 
-    it("handleHumanPlay() should call the human player's play handler", function () {
+    it("handleHumanPlay() should call game.playCards on valid play", function () {
       app.init();
       gameClient.setCurrentPlayer(0); // Human
-      const humanPlayer = gameClient.getPlayers(0);
-      const playSpy = this.sandbox.spy(humanPlayer, "handlePlayButtonClick");
+      const playSpy = this.sandbox.spy(game, "playCards");
+      const selectedCards = [new Card("3", "♠")];
+      gameClient.toggleCardSelection(selectedCards[0]);
+      this.sandbox.stub(gameClient, "isValidPlay").returns(true);
+
       app.handleHumanPlay();
+
       expect(playSpy.called).to.be.true;
-      clock.tick(1001); // Advance timers to trigger AI turn if scheduled
     });
 
-    it("handleHumanPass() should call the human player's pass handler", function () {
+    it("handleHumanPlay() should show a message on invalid play", function () {
       app.init();
       gameClient.setCurrentPlayer(0); // Human
-      const humanPlayer = gameClient.getPlayers(0);
-      const passSpy = this.sandbox.spy(humanPlayer, "handlePassButtonClick");
+      const playSpy = this.sandbox.spy(game, "playCards");
+      const displayMessageSpy = this.sandbox.spy(ui, "displayMessage");
+      const selectedCards = [new Card("3", "♠")];
+      gameClient.toggleCardSelection(selectedCards[0]);
+      this.sandbox.stub(gameClient, "isValidPlay").returns(false);
+
+      app.handleHumanPlay();
+
+      expect(playSpy.called).to.be.false;
+      expect(displayMessageSpy.calledWith("Invalid play", "error")).to.be.true;
+    });
+
+    it("handleHumanPass() should call game.passTurn", function () {
+      app.init();
+      gameClient.setCurrentPlayer(0); // Human
+      const passStub = this.sandbox.stub(game, "passTurn").returns(true);
+
       app.handleHumanPass();
-      expect(passSpy.called).to.be.true;
-      clock.tick(1001); // Advance timers to trigger AI turn if scheduled
+
+      expect(passStub.called).to.be.true;
+    });
+
+    it("handleHumanPass() should show a message on invalid pass", function () {
+      app.init();
+      gameClient.setCurrentPlayer(0); // Human
+      const displayMessageSpy = this.sandbox.spy(ui, "displayMessage");
+      const passStub = this.sandbox.stub(game, "passTurn").returns(false);
+
+      app.handleHumanPass();
+
+      expect(passStub.called).to.be.true;
+      expect(displayMessageSpy.calledWith("You cannot pass on the first play of a round.", "error")).to.be.true;
+    });
+
+    it("handleCardClick() should toggle card selection", function () {
+      app.init();
+      const card = new Card("3", "♠");
+      const toggleSpy = this.sandbox.spy(gameClient, "toggleCardSelection");
+      const renderSpy = this.sandbox.spy(ui, "renderSelectedCards");
+
+      app.handleCardClick(card);
+
+      expect(toggleSpy.calledWith(card)).to.be.true;
+      expect(renderSpy.called).to.be.true;
     });
   });
 
   describe("Turn Logic", function () {
     it("nextTurn() should not call handleAITurn for a human player", function () {
       app.init();
-      ui.startGameButton.handler();
+      ui.emit("startClicked");
       gameClient.setCurrentPlayer(0); // Human
       const handleAITurnSpy = this.sandbox.spy(app, "handleAITurn");
       app.nextTurn();
