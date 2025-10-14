@@ -331,47 +331,32 @@ export class MockUI {
     this.id = new UI(gameClient).id;
     this.initCalled = false;
     this.renderCalled = false;
-    this.playButton = {
-      addEventListener: (event, handler) => {
-        this.playButton.handler = handler;
-      },
-      style: { display: "" },
-    };
-    this.passButton = {
-      addEventListener: (event, handler) => {
-        this.passButton.handler = handler;
-      },
-      style: { display: "" },
-    };
-    this.newGameButton = {
-      addEventListener: (event, handler) => {
-        this.newGameButton.handler = handler;
-      },
-      style: { display: "" },
-    };
-    this.startGameButton = {
-      addEventListener: (event, handler) => {
-        this.startGameButton.handler = handler;
-      },
-      style: { display: "" },
-    };
-    this.resetButton = {
-      addEventListener: (event, handler) => {
-        this.resetButton.handler = handler;
-      },
-      style: { display: "" },
-    };
-    this.aiDropdown = {
-      addEventListener: (event, handler) => {
-        this.aiDropdown.handler = handler;
-      },
-      value: "random",
-    };
+    this._listeners = {};
+    this.playButton = { style: { display: "" } };
+    this.passButton = { style: { display: "" } };
+    this.newGameButton = { style: { display: "" } };
+    this.startGameButton = { style: { display: "" } };
+    this.resetButton = { style: { display: "" } };
+    this.aiDropdown = { value: "random" };
     this.gameMessages = { textContent: "", classList: { add: () => {}, remove: () => {} } };
     this.playersHands = { innerHTML: "", appendChild: () => {} };
     this.playArea = { innerHTML: "", appendChild: () => {} };
     this.gameContent = { innerHTML: "", appendChild: () => {} };
   }
+
+  on(eventName, listener) {
+    if (!this._listeners[eventName]) {
+      this._listeners[eventName] = [];
+    }
+    this._listeners[eventName].push(listener);
+  }
+
+  emit(eventName, data) {
+    if (this._listeners[eventName]) {
+      this._listeners[eventName].forEach((listener) => listener(data));
+    }
+  }
+
   init() {
     this.initCalled = true;
   }
