@@ -26,9 +26,9 @@ describe("UI", () => {
 
     gameClient.reset();
     const players = [
-      new HumanPlayer(gameClient, 0, ui),
+      new HumanPlayer(gameClient, 0),
       new AIPlayer(gameClient, 1, new MockAI(gameClient)),
-      new HumanPlayer(gameClient, 2, ui),
+      new HumanPlayer(gameClient, 2),
     ];
     gameClient.setPlayers(players);
     gameClient.start();
