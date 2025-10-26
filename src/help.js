@@ -69,7 +69,7 @@ class Help {
 
       const playerHandContainer = document.getElementById("player-hand");
       playerHandContainer.innerHTML = ""; // Clear previous content
-      this.ui.renderCardsContainer(this.gameClient.getPlayerHand(0), playerHandContainer);
+      this.ui.renderCardsContainer(this.gameClient.getPlayerHands(0), playerHandContainer);
 
       return userHand;
     } else {
