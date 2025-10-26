@@ -253,7 +253,8 @@ export class AI {
    */
   _generateConsecutivePairs(hand) {
     const combinations = [];
-    const sortedHand = [...hand];
+    const handWithoutTwos = hand.filter((card) => card.rank !== "2");
+    const sortedHand = [...handWithoutTwos];
     Card.sort(sortedHand);
 
     const rankToCards = new Map();
