@@ -39,7 +39,7 @@
     "@babel/core": "^7.28.4",
     "@babel/preset-env": "^7.28.3",
     "@babel/register": "^7.28.3",
-    "chai": "^6.2.0",
+    "chai": "^6.2.1",
     "jsdom": "^27.0.0",
     "live-server": "^1.2.0",
     "mocha": "^11.7.4",
