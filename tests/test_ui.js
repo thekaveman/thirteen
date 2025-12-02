@@ -26,9 +26,9 @@ describe("UI", () => {
 
     gameClient.reset();
     const players = [
-      new HumanPlayer(gameClient, 0, ui),
+      new HumanPlayer(gameClient, 0),
       new AIPlayer(gameClient, 1, new MockAI(gameClient)),
-      new HumanPlayer(gameClient, 2, ui),
+      new HumanPlayer(gameClient, 2),
     ];
     gameClient.setPlayers(players);
     gameClient.start();
@@ -103,12 +103,12 @@ describe("UI", () => {
     expect(ui.gameContent.innerHTML).to.include('<h2>Play Area (Round 1) <span class="combination-type">🟢</span></h2>');
   });
 
-  it("renderPlayerHand() should render cards and attach event listeners for human players", () => {
+  it("renderPlayerHand() should render cards and emit cardClicked event for human players", () => {
     const playerHandDiv = document.createElement("div");
     const card = new Card("A", "♠");
     gameClient.setPlayerHand(0, [card, new Card("K", "♦")]);
     gameClient.setCurrentPlayer(0);
-    const handleCardClickSpy = sinon.spy(gameClient.getPlayers(0), "handleCardClick");
+    const emitSpy = sinon.spy(ui, "emit");
 
     ui.renderPlayerHand(0, playerHandDiv);
 
@@ -121,7 +121,7 @@ describe("UI", () => {
 
     // Simulate click
     cardElements[0].dispatchEvent(new window.Event("click", { bubbles: true }));
-    expect(handleCardClickSpy.called).to.be.true;
+    expect(emitSpy.calledWith("cardClicked", card)).to.be.true;
   });
 
   it("renderPlayerHand() should render AI player hands correctly", () => {
