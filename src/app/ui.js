@@ -194,14 +194,6 @@ export class UI {
       this.aiDropdown.appendChild(option);
     }
 
-    // Add event listener for changes
-    this.aiDropdown.onchange = (event) => {
-      const selectedPersonaKey = event.target.value;
-      this.gameClient.setAIPersona(1, selectedPersonaKey);
-      this.updateAIDescription(selectedPersonaKey);
-      this.renderPlayerHand(1, parentElement);
-    };
-
     this.aiSelection.appendChild(this.aiDropdown);
     this.aiSelection.appendChild(this.aiDescription);
     parentElement.appendChild(this.aiSelection);
