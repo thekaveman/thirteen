@@ -25,6 +25,7 @@ export class UI {
       aiDescription: "ai-description",
     };
     this.messageTimeout = null;
+    this._listeners = {};
 
     // Initialize DOM-related properties to null
     this.gameMessages = null;
@@ -39,6 +40,19 @@ export class UI {
     this.aiSelection = null;
     this.aiDropdown = null;
     this.aiDescription = null;
+  }
+
+  on(eventName, listener) {
+    if (!this._listeners[eventName]) {
+      this._listeners[eventName] = [];
+    }
+    this._listeners[eventName].push(listener);
+  }
+
+  emit(eventName, data) {
+    if (this._listeners[eventName]) {
+      this._listeners[eventName].forEach((listener) => listener(data));
+    }
   }
 
   /**
@@ -61,6 +75,14 @@ export class UI {
       this.aiDropdown.id = this.id.aiDropdown;
       this.aiDescription = document.createElement("p");
       this.aiDescription.id = this.id.aiDescription;
+
+      // Add event listeners that emit events
+      if (this.playButton) this.playButton.addEventListener("click", () => this.emit("playClicked"));
+      if (this.passButton) this.passButton.addEventListener("click", () => this.emit("passClicked"));
+      if (this.newGameButton) this.newGameButton.addEventListener("click", () => this.emit("newGameClicked"));
+      if (this.resetButton) this.resetButton.addEventListener("click", () => this.emit("resetClicked"));
+      if (this.startGameButton) this.startGameButton.addEventListener("click", () => this.emit("startClicked"));
+      this.aiDropdown.addEventListener("change", (event) => this.emit("aiChanged", event.target.value));
     }
   }
 
@@ -171,14 +193,6 @@ export class UI {
       option.textContent = `${persona.icon} ${persona.friendly_name}`;
       this.aiDropdown.appendChild(option);
     }
-
-    // Add event listener for changes
-    this.aiDropdown.onchange = (event) => {
-      const selectedPersonaKey = event.target.value;
-      this.gameClient.setAIPersona(1, selectedPersonaKey);
-      this.updateAIDescription(selectedPersonaKey);
-      this.renderPlayerHand(1, parentElement);
-    };
 
     this.aiSelection.appendChild(this.aiDropdown);
     this.aiSelection.appendChild(this.aiDescription);
@@ -292,7 +306,9 @@ export class UI {
         const currentPlayer = this.gameClient.getPlayers(playerIndex);
         if (playerIndex === this.gameClient.getCurrentPlayerIndex() && currentPlayer.type === PLAYER_TYPES.HUMAN) {
           if (cardSpan && cardSpan.addEventListener) {
-            cardSpan.addEventListener("click", currentPlayer.handleCardClick.bind(currentPlayer));
+            cardSpan.addEventListener("click", () => {
+              this.emit("cardClicked", card);
+            });
           }
         }
         if (this.gameClient.isCardSelected(card)) {

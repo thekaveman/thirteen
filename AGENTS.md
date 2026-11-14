@@ -51,3 +51,9 @@ npm test         # Run test suite
 - All code changes must have corresponding tests — TDD is a hard requirement
 - Commit messages should follow conventional commits (enforced by pre-commit hooks)
 - Before making changes, run `npm test` to verify the current state, and run again after changes
+
+## File Safety Rules
+
+- **NEVER delete, overwrite, or modify uncommitted files that you did not create.** This includes `.md`, `.txt`, `.plan`, or any other working files left by the user.
+- Uncommitted files are user work and may contain critical plans, notes, or scratch work.
+- If cleanup is needed, ask the user first. Never assume an untracked/uncommitted file is disposable.

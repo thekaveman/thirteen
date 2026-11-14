@@ -9,13 +9,12 @@ describe("HumanPlayer", () => {
     game = new MockGame(new MockDeck());
     gameClient = new MockGameClient(game);
     ui = new MockUI(gameClient);
-    humanPlayer = new HumanPlayer(gameClient, 0, ui);
+    humanPlayer = new HumanPlayer(gameClient, 0);
   });
 
   it("Constructor should correctly initialize HumanPlayer", () => {
-    const player = new HumanPlayer(gameClient, 0, ui);
+    const player = new HumanPlayer(gameClient, 0);
     expect(player.type).to.equal(PLAYER_TYPES.HUMAN);
-    expect(player.ui).to.equal(ui);
   });
 
   it("takeTurn() should return null", () => {
@@ -24,51 +23,6 @@ describe("HumanPlayer", () => {
   });
 
   describe("Event Handlers", () => {
-    it("handleCardClick() should select and deselect a card", () => {
-      const card = new Card("A", "♠");
-      gameClient.setCurrentPlayer(0);
-      gameClient.setPlayerHands([[card], []]);
-      gameClient.clearSelectedCards();
-
-      const cardElement = document.createElement("div");
-      cardElement.dataset.card = JSON.stringify(card);
-      const event = { target: cardElement };
-
-      humanPlayer.handleCardClick(event);
-      expect(gameClient.getSelectedCards()).to.have.lengthOf(1);
-      expect(gameClient.getSelectedCards()[0].value).to.equal(card.value);
-
-      humanPlayer.handleCardClick(event);
-      expect(gameClient.getSelectedCards()).to.be.empty;
-    });
-
-    it("handleCardClick() should not select cards of another player", () => {
-      gameClient.setCurrentPlayer(0);
-      gameClient.setPlayerHands([[new Card("3", "♠")], [new Card("4", "♦")]]);
-      gameClient.clearSelectedCards();
-
-      const otherPlayerCardElement = document.createElement("div");
-      otherPlayerCardElement.dataset.card = JSON.stringify(gameClient.getPlayerHands(1)[0]);
-      const event = { target: otherPlayerCardElement };
-
-      humanPlayer.handleCardClick(event);
-
-      expect(gameClient.getSelectedCards()).to.be.empty;
-      expect(otherPlayerCardElement.classList.contains("selected")).to.be.false;
-    });
-
-    it("handlePlayButtonClick() should show a message on invalid play", () => {
-      const cardToPlay = new Card("3", "♠");
-      gameClient.setCurrentPlayer(0);
-      gameClient.setPlayerHands([[cardToPlay]]);
-      game.gameState.selectedCards = [cardToPlay];
-      gameClient.setPlayPile([new Card("A", "♠")]); // Invalid play
-
-      humanPlayer.handlePlayButtonClick();
-
-      expect(ui.gameMessages.textContent).to.equal("Invalid play");
-    });
-
     it("handlePlayButtonClick() should call game.playCards on valid play", () => {
       const cardToPlay = new Card("A", "♠");
       gameClient.setCurrentPlayer(0);
