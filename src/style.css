@@ -458,10 +458,16 @@ button:disabled,
 
 #help-container .cards-container {
   padding: var(--spacing-m) 0;
+  overflow-x: visible;
 }
 
-#help-container #play-area .cards-container {
-  padding: 0;
+#help-container .combination .cards-container .card {
+  margin-left: var(--spacing-xxs);
+}
+
+#help-container .play-area .cards-container {
+  overflow-x: visible;
+  height: auto;
 }
 
 .combination-examples {
