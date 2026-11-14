@@ -6,7 +6,9 @@
       "request": "launch",
       "name": "Start app",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["start"]
+      "runtimeArgs": ["start"],
+      "cwd": "${workspaceFolder}",
+      "internalConsoleOptions": "openOnFirstSessionStart"
     },
     {
       "type": "node",
@@ -24,6 +26,17 @@
       "name": "Debug in browser",
       "url": "http://localhost:8888",
       "webRoot": "${workspaceFolder}/src"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "App + Browser Debug",
+      "configurations": ["Start app", "Debug in browser"],
+      "presentation": {
+        "hidden": false,
+        "group": "debug",
+        "order": 1
+      }
     }
   ]
 }

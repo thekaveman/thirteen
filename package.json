@@ -8,7 +8,7 @@
   },
   "scripts": {
     "test": "nyc mocha --require @babel/register --require ./tests/setup.js tests/test_*.js tests/**/test_*.js",
-    "start": "serve -p 8888"
+    "start": "http-server src -p 8888"
   },
   "nyc": {
     "all": true,
@@ -40,10 +40,10 @@
     "@babel/preset-env": "^7.28.3",
     "@babel/register": "^7.28.3",
     "chai": "^6.2.0",
+    "http-server": "^14.1.1",
     "jsdom": "^27.0.0",
     "mocha": "^12.0.3",
     "nyc": "^18.0.0",
-    "serve": "^14.2.8",
     "sinon": "^21.0.0"
   },
   "overrides": {
