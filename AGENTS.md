@@ -14,6 +14,8 @@ This document outlines the development plan for a web-based version of the card 
 - **Markup:** HTML5
 - **Styling:** CSS3
 - **Libraries/Frameworks:** None for the game code. `mocha`, `chai`, and `sinon` are used for tests.
+- **Dev server:** `http-server` (via `npm start`)
+- **Testing:** `mocha` + `chai` + `sinon` + `nyc` (code coverage)
 
 ## MVP Vision
 
@@ -28,8 +30,24 @@ The goal of the MVP is to create the simplest possible, fully playable version o
   - The game validates moves and rejects invalid ones
   - The game correctly identifies the winner of a round and the winner of the game
 
-The source of truth: [Requirements](./.gemini/specs/requirements.md)
+The source of truth: [Requirements](specs/requirements.md)
 
 ## Development Phases & Tasks
 
-An ordered list of tasks: [Tasks](./.gemini/specs/tasks.md)
+An ordered list of tasks: [Tasks](specs/tasks.md)
+
+## Running the Game
+
+```bash
+npm start        # Start dev server on port 8888
+npm test         # Run test suite
+```
+
+## Working with OpenCode Agents
+
+- Always read `specs/tasks.md` first to understand what's done and what's next
+- `specs/requirements.md` is the authoritative source for game rules — do not make assumptions
+- `specs/wishlist.md` contains future ideas — do not implement these unless explicitly requested
+- All code changes must have corresponding tests — TDD is a hard requirement
+- Commit messages should follow conventional commits (enforced by pre-commit hooks)
+- Before making changes, run `npm test` to verify the current state, and run again after changes

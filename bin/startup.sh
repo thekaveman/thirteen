@@ -2,7 +2,7 @@
 set -eu
 
 # install node packages
-npm install --dev
+npm install
 
 # start the app
 npm start

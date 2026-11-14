@@ -20,7 +20,8 @@ services:
       - NODE_ENV=development
     ports:
       - "8888:8888"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     working_dir: /home/node/app
     volumes:
       - .:/home/node/app
-      - ~/.gemini:/home/node/.gemini

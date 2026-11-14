@@ -2,12 +2,17 @@ FROM node:24-trixie
 
 USER root
 
-RUN apt update && apt install -yqq python3.13 python3.13-venv python3-pip && \
-    ln -s /usr/bin/python3.13 /usr/bin/python
+# Install Python tooling and pre-commit
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3 - --break-system-packages && \
+    pip install --break-system-packages --ignore-installed pre-commit
 
-RUN pip install --break-system-packages pre-commit
-RUN npm install -g @google/gemini-cli
+# Install OpenCode CLI globally (postinstall selects native binary)
+RUN npm install -g @opencode/cli
 
 WORKDIR /home/node/app
 
 USER node
+
+# Symlink project opencode.json into OpenCode's config directory
+RUN mkdir -p /home/node/.config/opencode && \
+    ln -s /home/node/app/.devcontainer/opencode.json /home/node/.config/opencode/opencode.json
