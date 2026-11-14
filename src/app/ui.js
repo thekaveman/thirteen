@@ -77,11 +77,11 @@ export class UI {
       this.aiDescription.id = this.id.aiDescription;
 
       // Add event listeners that emit events
-      this.playButton.addEventListener("click", () => this.emit("playClicked"));
-      this.passButton.addEventListener("click", () => this.emit("passClicked"));
-      this.newGameButton.addEventListener("click", () => this.emit("newGameClicked"));
-      this.resetButton.addEventListener("click", () => this.emit("resetClicked"));
-      this.startGameButton.addEventListener("click", () => this.emit("startClicked"));
+      if (this.playButton) this.playButton.addEventListener("click", () => this.emit("playClicked"));
+      if (this.passButton) this.passButton.addEventListener("click", () => this.emit("passClicked"));
+      if (this.newGameButton) this.newGameButton.addEventListener("click", () => this.emit("newGameClicked"));
+      if (this.resetButton) this.resetButton.addEventListener("click", () => this.emit("resetClicked"));
+      if (this.startGameButton) this.startGameButton.addEventListener("click", () => this.emit("startClicked"));
       this.aiDropdown.addEventListener("change", (event) => this.emit("aiChanged", event.target.value));
     }
   }
