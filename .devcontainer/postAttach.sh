@@ -11,4 +11,4 @@ pre-commit install --install-hooks --overwrite
 pre-commit install --hook-type commit-msg
 
 # install node packages
-npm install --dev
+npm install
