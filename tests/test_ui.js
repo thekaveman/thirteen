@@ -251,12 +251,41 @@ describe("UI", () => {
       expect(ui.aiDescription.textContent).to.equal(AI_PERSONAS.random.description);
     });
 
-    it("should update description on dropdown change", () => {
+    it("dropdown change event should emit aiChanged", () => {
       ui.renderAISelection(playerHandDiv);
       const dropdown = ui.aiDropdown;
+      const emitSpy = sinon.spy(ui, "emit");
       dropdown.value = "aggressive";
       dropdown.dispatchEvent(new window.Event("change"));
-      expect(ui.aiDescription.textContent).to.equal(AI_PERSONAS.aggressive.description);
+      expect(emitSpy.calledWith("aiChanged", "aggressive")).to.be.true;
+    });
+
+    it("aiChanged event should update description via handler", () => {
+      // Create a real UI instance with its own DOM elements
+      const realUI = new UI(gameClient);
+      realUI.init();
+      for (const [_, value] of Object.entries(realUI.id)) {
+        const el = document.createElement("div");
+        el.id = value;
+        container.appendChild(el);
+      }
+
+      // Set up the event subscription (mimicking what App.init does)
+      realUI.on("aiChanged", (selectedAI) => {
+        gameClient.setAIPersona(1, selectedAI);
+        realUI.render();
+      });
+
+      // Render AI selection (starts with "random" persona)
+      gameClient.setAIPersona(1, "random");
+      game.gameState.gameStarted = false;
+      const handDiv = document.createElement("div");
+      realUI.renderAISelection(handDiv);
+      expect(realUI.aiDescription.textContent).to.equal(AI_PERSONAS.random.description);
+
+      // Trigger the event (simulating user changing dropdown)
+      realUI.emit("aiChanged", "aggressive");
+      expect(realUI.aiDescription.textContent).to.equal(AI_PERSONAS.aggressive.description);
     });
 
     it("renderAISelection() should default to random if no persona is set", () => {
