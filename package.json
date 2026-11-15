@@ -40,13 +40,17 @@
     "@babel/core": "^7.28.4",
     "@babel/preset-env": "^7.28.3",
     "@babel/register": "^7.28.3",
+    "@eslint/js": "^10.0.1",
+    "@typescript-eslint/eslint-plugin": "^8.72.2",
+    "@typescript-eslint/parser": "^8.72.2",
     "chai": "^6.2.0",
+    "eslint": "^10.15.0",
     "http-server": "^14.1.1",
     "jsdom": "^27.0.0",
     "mocha": "^12.0.3",
     "nyc": "^18.0.0",
     "sinon": "^21.0.0",
-    "typescript": "^7.0.2"
+    "typescript": "^6.0.3"
   },
   "overrides": {
     "glob": "^14.0.6",
