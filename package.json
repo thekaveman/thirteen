@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "nyc mocha --require @babel/register --require ./tests/setup.js tests/test_*.js tests/**/test_*.js",
-    "start": "http-server src -p 8888"
+    "start": "http-server src -p 8888",
+    "build": "tsc && cp src/*.html src/*.css src/logo.png dist/"
   },
   "nyc": {
     "all": true,
