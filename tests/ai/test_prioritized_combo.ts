@@ -1,5 +1,5 @@
 import { PrioritizedComboAI } from "../../src/app/ai/index.js";
-import { MockGame, MockAI, MockGameClient, MockDeck } from "../mocks.js";
+import { MockGame, MockAI, MockGameClient, MockDeck } from "../mocks.ts";
 import { Card } from "../../src/app/game/index.js";
 
 describe("PrioritizedComboAI", () => {

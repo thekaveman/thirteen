@@ -1,6 +1,6 @@
 import { Card, GameClient } from "../../src/app/game/index.js";
 import { AIPlayer, PLAYER_TYPES } from "../../src/app/player/index.js";
-import { MockAI, MockGame, MockGameClient, MockDeck } from "../mocks.js";
+import { MockAI, MockGame, MockGameClient, MockDeck } from "../mocks.ts";
 
 describe("AIPlayer", () => {
   it("Constructor should correctly initialize AIPlayer", () => {

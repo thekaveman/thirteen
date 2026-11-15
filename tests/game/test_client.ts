@@ -1,6 +1,6 @@
 import { Deck, Card, Game, GameClient } from "../../src/app/game/index.js";
 import { HumanPlayer, AIPlayer, PLAYER_TYPES } from "../../src/app/player/index.js";
-import { MockAI, MockUI } from "../mocks.js";
+import { MockAI, MockUI } from "../mocks.ts";
 
 describe("GameClient", () => {
   let game, gameClient;

@@ -1,6 +1,6 @@
 import { AI } from "../../src/app/ai/index.js";
 import { Card, Game, COMBINATION_TYPES, GameClient } from "../../src/app/game/index.js";
-import { MockDeck } from "../mocks.js";
+import { MockDeck } from "../mocks.ts";
 
 describe("AI", () => {
   let game, gameClient, ai;

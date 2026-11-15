@@ -1,7 +1,7 @@
-import chai from "chai";
+import * as chai from "chai";
 import sinon from "sinon";
 import { JSDOM } from "jsdom";
-import { MockDeck, MockGame, MockAI, MockUI, MockAnalytics, MockLocalStorage, MockGameClient } from "./mocks.js";
+import { MockDeck, MockGame, MockAI, MockUI, MockAnalytics, MockLocalStorage, MockGameClient } from "./mocks.ts";
 
 // Import the actual classes
 import { Game, GameClient } from "../src/app/game/index.js";

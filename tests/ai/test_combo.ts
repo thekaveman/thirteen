@@ -1,5 +1,5 @@
 import { ComboAI } from "../../src/app/ai/index.js";
-import { MockGame, MockAI, MockGameClient, MockDeck } from "../mocks.js";
+import { MockGame, MockAI, MockGameClient, MockDeck } from "../mocks.ts";
 
 describe("ComboAI", () => {
   let game, gameClient, mockAI1, mockAI2, comboAI;

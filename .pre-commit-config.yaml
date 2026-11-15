@@ -29,3 +29,19 @@ repos:
         args: ["--unsafe"]
       - id: check-added-large-files
         args: ["--maxkb=1500"]
+
+  - repo: local
+    hooks:
+      - id: tsc-check
+        name: tsc --noEmit
+        entry: npx -- tsc --noEmit
+        language: system
+        pass_filenames: false
+        stages: [pre-commit]
+      - id: eslint
+        name: eslint
+        entry: npx -- eslint src/app/ --ext .ts
+        language: system
+        types: [text]
+        files: \\.ts$
+        stages: [pre-commit]

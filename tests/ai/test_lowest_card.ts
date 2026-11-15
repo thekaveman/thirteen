@@ -1,6 +1,6 @@
 import { LowestCardAI } from "../../src/app/ai/index.js";
 import { Card, Game, GameClient } from "../../src/app/game/index.js";
-import { MockDeck } from "../mocks.js";
+import { MockDeck } from "../mocks.ts";
 
 describe("LowestCardAI", () => {
   let game, gameClient, lowestCardAI;
