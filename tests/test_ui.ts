@@ -1,4 +1,4 @@
-import { MockDeck, MockGame, MockAI, MockGameClient } from "./mocks.js";
+import { MockDeck, MockGame, MockAI, MockGameClient } from "./mocks.ts";
 import { Card, COMBINATION_TYPES } from "../src/app/game/index.js";
 import { HumanPlayer, AIPlayer, PLAYER_TYPES } from "../src/app/player/index.js";
 import { UI } from "../src/app/ui.js";

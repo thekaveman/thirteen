@@ -1,5 +1,5 @@
 import { Player } from "../../src/app/player/index.js";
-import { MockGame, MockGameClient, MockDeck } from "../mocks.js";
+import { MockGame, MockGameClient, MockDeck } from "../mocks.ts";
 
 describe("Player", () => {
   it("Constructor should correctly initialize base Player", () => {

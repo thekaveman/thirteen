@@ -1,7 +1,7 @@
 import { App } from "../src/app/app.js";
 import { Card } from "../src/app/game/index.js";
 import { AIPlayer, HumanPlayer, PLAYER_TYPES } from "../src/app/player/index.js";
-import { MockAI, MockDeck, MockGame, MockUI, MockAnalytics, MockGameClient } from "./mocks.js";
+import { MockAI, MockDeck, MockGame, MockUI, MockAnalytics, MockGameClient } from "./mocks.ts";
 
 describe("App", function () {
   let app, game, gameClient, ai, ui, analytics, container, clock;

@@ -1,6 +1,6 @@
 import { PassAI } from "../../src/app/ai/index.js";
 import { Card, Game, GameClient } from "../../src/app/game/index.js";
-import { MockAI, MockDeck } from "../mocks.js";
+import { MockAI, MockDeck } from "../mocks.ts";
 
 describe("PassAI", () => {
   let game, gameClient, passAI, randomAIStub;

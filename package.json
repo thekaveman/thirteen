@@ -1,7 +1,7 @@
 {
   "name": "thirteen",
   "version": "2025.10.1",
-  "description": "A web-based implementation of the card game Thirteen (Tiến Lên), built with vanilla JavaScript, HTML, and CSS.",
+  "description": "A web-based implementation of the card game Thirteen (Ti\u1ebfn L\u00ean), built with vanilla JavaScript, HTML, and CSS.",
   "main": "src/app.js",
   "directories": {
     "test": "tests"
@@ -9,7 +9,7 @@
   "scripts": {
     "build": "tsc && cp src/*.html src/*.css src/logo.png dist/",
     "start": "npm run build && http-server dist -p 8888",
-    "test": "npm run build && nyc mocha --require @babel/register --require ./tests/setup.js tests/test_*.js tests/**/test_*.js"
+    "test": "npm run build && npx mocha --require @babel/register --extensions ts --require ./tests/setup.ts tests/test_*.ts tests/**/*.ts"
   },
   "nyc": {
     "all": true,
