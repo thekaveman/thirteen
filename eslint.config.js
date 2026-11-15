@@ -29,6 +29,7 @@ export default [
       "no-unused-vars": "warn",
       "no-var": "warn",
       "no-undef": "off",
+      "no-prototype-builtins": "off",
     },
   },
   {
