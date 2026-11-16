@@ -1,7 +1,7 @@
-export { AIPlayer } from "./ai";
-export { Player } from "./base";
-export { createPlayer } from "./factory";
-export { HumanPlayer } from "./human";
+export { AIPlayer } from "./ai.js";
+export { Player } from "./base.js";
+export { createPlayer } from "./factory.js";
+export { HumanPlayer } from "./human.js";
 
 export const PLAYER_TYPES = {
   AI: "ai",

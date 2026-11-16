@@ -1,14 +1,14 @@
-import type { GameClient } from "../game/client";
-import type { Card } from "../game/deck";
-import { AI } from "./base";
-import { HighestCardAI } from "./highest_card";
-import { HighestValueAI } from "./highest_value";
-import { LowestCardAI } from "./lowest_card";
-import { LowestValueAI } from "./lowest_value";
-import { PassAI } from "./pass";
-import { PrioritizedComboAI } from "./prioritized_combo";
-import { RandomAI } from "./random";
-import { RandomComboAI } from "./random_combo";
+import type { GameClient } from "../game/client.js";
+import type { Card } from "../game/deck.js";
+import { AI } from "./base.js";
+import { HighestCardAI } from "./highest_card.js";
+import { HighestValueAI } from "./highest_value.js";
+import { LowestCardAI } from "./lowest_card.js";
+import { LowestValueAI } from "./lowest_value.js";
+import { PassAI } from "./pass.js";
+import { PrioritizedComboAI } from "./prioritized_combo.js";
+import { RandomAI } from "./random.js";
+import { RandomComboAI } from "./random_combo.js";
 
 export interface AIPersonaMetadata {
   name: string;

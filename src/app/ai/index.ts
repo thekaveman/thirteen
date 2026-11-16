@@ -1,14 +1,14 @@
-export { AI } from "./base";
-export { ComboAI } from "./combo";
-export { HighestCardAI } from "./highest_card";
-export { HighestValueAI } from "./highest_value";
-export { LowestCardAI } from "./lowest_card";
-export { LowestValueAI } from "./lowest_value";
-export { PassAI } from "./pass";
-export { AI_PERSONAS } from "./personas";
-export { PrioritizedComboAI } from "./prioritized_combo";
-export { RandomAI } from "./random";
-export { RandomComboAI } from "./random_combo";
+export { AI } from "./base.js";
+export { ComboAI } from "./combo.js";
+export { HighestCardAI } from "./highest_card.js";
+export { HighestValueAI } from "./highest_value.js";
+export { LowestCardAI } from "./lowest_card.js";
+export { LowestValueAI } from "./lowest_value.js";
+export { PassAI } from "./pass.js";
+export { AI_PERSONAS } from "./personas.js";
+export { PrioritizedComboAI } from "./prioritized_combo.js";
+export { RandomAI } from "./random.js";
+export { RandomComboAI } from "./random_combo.js";
 
 export const AI_TYPES = {
   LOWEST_CARD: "lowest_card",

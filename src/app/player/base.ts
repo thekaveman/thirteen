@@ -1,4 +1,4 @@
-import type { GameClient } from "../game/client";
+import type { GameClient } from "../game/client.js";
 
 export interface PlayerData {
   game: string;

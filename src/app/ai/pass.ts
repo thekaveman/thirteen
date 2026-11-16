@@ -1,7 +1,7 @@
-import type { GameClient } from "../game/client";
-import type { Card } from "../game/deck";
-import { AI } from "./base";
-import { RandomAI } from "./random";
+import type { GameClient } from "../game/client.js";
+import type { Card } from "../game/deck.js";
+import { AI } from "./base.js";
+import { RandomAI } from "./random.js";
 
 export class PassAI extends AI {
   strategy: AI;

@@ -1,6 +1,6 @@
-import type { GameClient } from "../game/client";
-import type { Card } from "../game/deck";
-import { AI } from "./base";
+import type { GameClient } from "../game/client.js";
+import type { Card } from "../game/deck.js";
+import { AI } from "./base.js";
 
 export abstract class ComboAI extends AI {
   strategies: AI[];
@@ -31,12 +31,14 @@ export abstract class ComboAI extends AI {
    * @param allPlayerHands All players' hands.
    * @returns The selected AI strategy, or null if none.
    */
-  abstract select(
+  select(
     playerHand: Card[],
     playPile: Card[],
     currentTurn: number,
     allPlayerHands: Card[][],
-  ): AI | null;
+  ): AI | null {
+    throw new Error("Subclasses must implement select()");
+  }
 
   /**
    * Executes the ComboAI's turn by selecting a strategy and returning its chosen move.

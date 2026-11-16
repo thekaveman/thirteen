@@ -1,11 +1,11 @@
-import type { GameClient } from "./game/client";
-import type { Card } from "./game/deck";
-import { AI_PERSONAS } from "./ai/personas";
-import { Card as CardClass, COMBINATION_TYPES } from "./game/index";
-import { PLAYER_TYPES } from "./player/index";
-import type { Player } from "./player/base";
-import type { AIPlayer } from "./player/ai";
-import { log } from "./utils";
+import type { GameClient } from "./game/client.js";
+import type { Card } from "./game/deck.js";
+import { AI_PERSONAS } from "./ai/personas.js";
+import { Card as CardClass, COMBINATION_TYPES } from "./game/index.js";
+import { PLAYER_TYPES } from "./player/index.js";
+import type { Player } from "./player/base.js";
+import type { AIPlayer } from "./player/ai.js";
+import { log } from "./utils.js";
 
 export interface UIId {
   gameMessages: string;

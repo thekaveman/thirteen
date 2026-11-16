@@ -1,6 +1,6 @@
-import type { GameClient } from "../game/client";
-import type { Card } from "../game/deck";
-import { Card as CardClass, COMBINATION_TYPES, RANKS } from "../game/index";
+import type { GameClient } from "../game/client.js";
+import type { Card } from "../game/deck.js";
+import { Card as CardClass, COMBINATION_TYPES, RANKS } from "../game/index.js";
 
 export class AI {
   gameClient: GameClient;
