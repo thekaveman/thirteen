@@ -433,7 +433,8 @@ export class UI {
    * Updates the state of the play, pass, and new game buttons.
    */
   updateButtonStates(): void {
-    const currentPlayer = this.gameClient.getCurrentPlayer() as Player;
+    const currentPlayer = this.gameClient.getCurrentPlayer() as Player | undefined;
+    if (!currentPlayer) return;
     const isHumanPlayerTurn = currentPlayer.type === PLAYER_TYPES.HUMAN;
 
     if (this.gameClient.isGameOver()) {
