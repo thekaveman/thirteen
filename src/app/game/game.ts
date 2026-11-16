@@ -116,7 +116,6 @@ export class Game {
     this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
     this.gameState.playerTurns = new Array(this.gameState.numPlayers).fill(0);
     this.gameState.selectedCards = [];
-    this.deal();
     this.hooks.onGameInit(new GameClient(this));
   }
 
