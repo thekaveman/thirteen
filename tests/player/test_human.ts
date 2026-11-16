@@ -1,13 +1,14 @@
 import { Card } from "../../src/app/game/index.js";
 import { HumanPlayer, PLAYER_TYPES } from "../../src/app/player/index.js";
-import { MockGame, MockGameClient, MockDeck } from "../mocks.ts";
+import { MockGame, MockDeck } from "../mocks.ts";
+import { GameClient } from "../../src/app/game/index.js";
 
 describe("HumanPlayer", () => {
   let game, gameClient, humanPlayer;
 
   beforeEach(() => {
     game = new MockGame(new MockDeck());
-    gameClient = new MockGameClient(game);
+    gameClient = new GameClient(game);
     humanPlayer = new HumanPlayer(gameClient, 0);
   });
 

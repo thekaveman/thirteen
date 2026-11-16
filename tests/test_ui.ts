@@ -1,4 +1,5 @@
-import { MockDeck, MockGame, MockAI, MockGameClient } from "./mocks.ts";
+import { MockDeck, MockGame, MockAI } from "./mocks.ts";
+import { GameClient } from "../src/app/game/index.js";
 import { Card, COMBINATION_TYPES } from "../src/app/game/index.js";
 import { HumanPlayer, AIPlayer, PLAYER_TYPES } from "../src/app/player/index.js";
 import { UI } from "../src/app/ui.js";
@@ -11,7 +12,7 @@ describe("UI", () => {
 
   beforeEach(() => {
     game = new MockGame(new MockDeck());
-    gameClient = new MockGameClient(game);
+    gameClient = new GameClient(game);
     ui = new UI(gameClient);
 
     container = document.createElement("div");

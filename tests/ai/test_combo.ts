@@ -1,12 +1,13 @@
 import { ComboAI } from "../../src/app/ai/index.js";
-import { MockGame, MockAI, MockGameClient, MockDeck } from "../mocks.ts";
+import { MockGame, MockAI, MockDeck } from "../mocks.ts";
+import { GameClient } from "../../src/app/game/index.js";
 
 describe("ComboAI", () => {
   let game, gameClient, mockAI1, mockAI2, comboAI;
 
   beforeEach(() => {
     game = new MockGame(new MockDeck());
-    gameClient = new MockGameClient(game);
+    gameClient = new GameClient(game);
     mockAI1 = new MockAI(gameClient, ["card1"]);
     mockAI2 = new MockAI(gameClient, ["card2"]);
     comboAI = new ComboAI(gameClient, [mockAI1, mockAI2], "test-combo");

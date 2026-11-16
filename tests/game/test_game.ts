@@ -1,6 +1,7 @@
 import { Card, Game } from "../../src/app/game/index.js";
 import { HumanPlayer, AIPlayer } from "../../src/app/player/index.js";
-import { MockAI, MockDeck, MockUI, MockGameClient } from "../mocks.ts";
+import { MockAI, MockDeck, MockUI } from "../mocks.ts";
+import { GameClient } from "../../src/app/game/index.js";
 
 describe("Game", () => {
   let game;
@@ -65,8 +66,8 @@ describe("Game", () => {
 
     it("start() should initialize the game state for starting", () => {
       const players = [
-        new HumanPlayer(new MockGameClient(game), 0, new MockUI(new MockGameClient(game))),
-        new AIPlayer(new MockGameClient(game), 1, new MockAI(new MockGameClient(game), [], "mock")),
+        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
       ];
       game.setPlayers(players);
       game.start();
@@ -92,8 +93,8 @@ describe("Game", () => {
   describe("Player Management", () => {
     it("setPlayers() should initialize players and associated game state", () => {
       const players = [
-        new HumanPlayer(new MockGameClient(game), 0, new MockUI(new MockGameClient(game))),
-        new AIPlayer(new MockGameClient(game), 1, new MockAI(new MockGameClient(game), [], "mock")),
+        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
       ];
       const originalGamesWon = [2, 1];
       game.gameState.gamesWon = originalGamesWon;
@@ -228,14 +229,14 @@ describe("Game", () => {
     it("load() should fail for invalid saved JSON", async () => {
       localStorage.setItem(game.stateKey, "invalid json");
       try {
-        await game.load(new MockUI(new MockGameClient(game)));
+        await game.load(new MockUI(new GameClient(game)));
       } catch (e) {
         expect(e).to.be.an.instanceOf(SyntaxError);
       }
     });
 
     it("load() should not load if no saved state exists", async () => {
-      const loaded = await game.load(new MockUI(new MockGameClient(game)));
+      const loaded = await game.load(new MockUI(new GameClient(game)));
       expect(loaded.loaded).to.be.false;
     });
 
@@ -246,11 +247,11 @@ describe("Game", () => {
     });
 
     it("load() should correctly rehydrate game data", async () => {
-      const mockUI = new MockUI(new MockGameClient(game));
-      const mockAI = new MockAI(new MockGameClient(game), [new Card("3", "♠")], "random");
+      const mockUI = new MockUI(new GameClient(game));
+      const mockAI = new MockAI(new GameClient(game), [new Card("3", "♠")], "random");
       const mockPlayers = [
-        new AIPlayer(new MockGameClient(game), 0, mockAI),
-        new HumanPlayer(new MockGameClient(game), 1, mockUI),
+        new AIPlayer(new GameClient(game), 0, mockAI),
+        new HumanPlayer(new GameClient(game), 1, mockUI),
       ];
 
       game.setPlayers(mockPlayers);

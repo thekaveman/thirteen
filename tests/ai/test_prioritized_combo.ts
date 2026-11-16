@@ -1,5 +1,6 @@
 import { PrioritizedComboAI } from "../../src/app/ai/index.js";
-import { MockGame, MockAI, MockGameClient, MockDeck } from "../mocks.ts";
+import { MockGame, MockAI, MockDeck } from "../mocks.ts";
+import { GameClient } from "../../src/app/game/index.js";
 import { Card } from "../../src/app/game/index.js";
 
 describe("PrioritizedComboAI", () => {
@@ -7,7 +8,7 @@ describe("PrioritizedComboAI", () => {
 
   beforeEach(() => {
     game = new MockGame(new MockDeck());
-    gameClient = new MockGameClient(game);
+    gameClient = new GameClient(game);
     // MockAI1 will always return a move
     mockAI1 = new MockAI(gameClient, [new Card("3", "♠")]);
     // MockAI2 will return no move initially, then a move

@@ -182,12 +182,6 @@ export class MockDeck {
   shuffle() {}
 }
 
-export class MockGameClient extends GameClient {
-  constructor(game) {
-    super(game);
-  }
-}
-
 export class MockGame extends Game {
   constructor(deck, stateKey) {
     super(deck, stateKey);
@@ -251,7 +245,7 @@ export class MockGame extends Game {
         this.gameState.players.map(async (p, i) =>
           createPlayer({
             id: loadedPlayerIds[i],
-            gameClient: new MockGameClient(this),
+            gameClient: new GameClient(this),
             type: loadedPlayerTypes[i],
             number: i,
             ui: ui,

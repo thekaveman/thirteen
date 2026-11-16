@@ -1,13 +1,14 @@
 import { Analytics } from "../src/app/analytics.js";
 import { HumanPlayer, AIPlayer, PLAYER_TYPES } from "../src/app/player/index.js";
-import { MockDeck, MockUI, MockAmplitude, MockAI, MockGame, MockGameClient } from "./mocks.ts";
+import { MockDeck, MockUI, MockAmplitude, MockAI, MockGame } from "./mocks.ts";
+import { GameClient } from "../src/app/game/index.js";
 
 describe("Analytics", () => {
   let game, gameClient, analytics, mockAmplitude;
 
   beforeEach(() => {
     game = new MockGame(new MockDeck(), "test-game");
-    gameClient = new MockGameClient(game);
+    gameClient = new GameClient(game);
     const humanPlayer = new HumanPlayer(gameClient, 0, new MockUI(gameClient));
     const aiPlayer = new AIPlayer(gameClient, 1, new MockAI(gameClient, []));
     gameClient.setPlayers([humanPlayer, aiPlayer]);
