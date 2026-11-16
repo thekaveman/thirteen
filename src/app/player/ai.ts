@@ -1,7 +1,7 @@
 import type { Card } from "../game/deck.js";
 import type { GameClient } from "../game/client.js";
 import type { AI } from "../ai/base.js";
-import { Player } from "./base.js";
+import { Player, type PlayerData } from "./base.js";
 import { PLAYER_TYPES } from "./index.js";
 
 export class AIPlayer extends Player {
@@ -19,7 +19,7 @@ export class AIPlayer extends Player {
     this.persona = this.ai.persona;
   }
 
-  data(): { game: string; id: string; number: number; persona: string | null; type: string; ai: unknown } {
+  data(): PlayerData {
     const d = super.data();
     return { ...d, ai: this.ai.data() };
   }

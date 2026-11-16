@@ -6,6 +6,7 @@ export interface PlayerData {
   number: number;
   persona: string | null;
   type: string;
+  ai?: unknown;
 }
 
 export class Player {
