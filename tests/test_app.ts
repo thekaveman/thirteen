@@ -39,24 +39,24 @@ describe("App", function () {
   });
 
   describe("Initialization", function () {
-    it("init() should initialize the game and UI", function () {
-      app.init();
+    it("init() should initialize the game and UI", async function () {
+      await app.init();
       expect(game.initCalled).to.be.true;
       expect(ui.initCalled).to.be.true;
     });
 
-    it("init() should use default setTimeout", function () {
-      app.init();
+    it("init() should use default setTimeout", async function () {
+      await app.init();
       expect(typeof app.setTimeout).to.equal("function");
       expect(app.setTimeout).to.not.be.null;
     });
 
-    it("init() should load a saved game if one exists and is not over", function () {
+    it("init() should load a saved game if one exists and is not over", async function () {
       game.loadWillSucceed = true;
       game.gameOverOnLoad = false;
       const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
 
-      app.init();
+      await app.init();
 
       expect(game.loadCalled).to.be.true;
       expect(ui.renderCalled).to.be.true;
@@ -64,11 +64,11 @@ describe("App", function () {
       expect(setPlayersSpy.called).to.be.true;
     });
 
-    it("init() should start a new game if no saved game exists (false branch of load)", function () {
+    it("init() should start a new game if no saved game exists (false branch of load)", async function () {
       game.loadWillSucceed = false;
       const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
 
-      app.init();
+      await app.init();
 
       expect(game.loadCalled).to.be.true;
       expect(game.initCalled).to.be.true;
@@ -76,11 +76,11 @@ describe("App", function () {
       expect(ui.renderCalled).to.be.true;
     });
 
-    it("init() should start a new game if no saved game exists", function () {
+    it("init() should start a new game if no saved game exists", async function () {
       game.loadWillSucceed = false;
       const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
 
-      app.init();
+      await app.init();
 
       expect(game.loadCalled).to.be.true;
       expect(game.initCalled).to.be.true;
@@ -88,12 +88,12 @@ describe("App", function () {
       expect(ui.renderCalled).to.be.true;
     });
 
-    it("init() should start a new game if the saved game is over", function () {
+    it("init() should start a new game if the saved game is over", async function () {
       game.loadWillSucceed = true;
       game.gameOverOnLoad = true;
       const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
 
-      app.init();
+      await app.init();
 
       expect(game.loadCalled).to.be.true;
       expect(game.initCalled).to.be.true;
@@ -101,12 +101,12 @@ describe("App", function () {
       expect(ui.renderCalled).to.be.true;
     });
 
-    it("init() should start a new game if the saved game is over (false branch of gameOver)", function () {
+    it("init() should start a new game if the saved game is over (false branch of gameOver)", async function () {
       game.loadWillSucceed = true;
       game.gameOverOnLoad = true;
       const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
 
-      app.init();
+      await app.init();
 
       expect(game.loadCalled).to.be.true;
       expect(game.initCalled).to.be.true;
@@ -116,10 +116,10 @@ describe("App", function () {
   });
 
   describe("Factory Function", function () {
-    it("should create an App instance with all dependencies", function () {
+    it("should create an App instance with all dependencies", async function () {
       const initSpy = sinon.spy(App.prototype, "init");
 
-      const app = App.create({
+      const app = await App.create({
         stateKey: "test-key",
         DeckClass: MockDeck,
         GameClass: MockGame,
@@ -151,9 +151,9 @@ describe("App", function () {
       expect(gameResetSpy.called).to.be.true;
     });
 
-    it("handleAISelection() should be called on dropdown change", function () {
+    it("handleAISelection() should be called on dropdown change", async function () {
       const handleSpy = this.sandbox.spy(app, "handleAISelection");
-      app.init(); // this calls attachHandlers
+      await app.init();
 
       // Simulate change event
       ui.emit("aiChanged", "cautious");
@@ -161,9 +161,9 @@ describe("App", function () {
       expect(handleSpy.calledWith("cautious")).to.be.true;
     });
 
-    it("handleStartGameClick() should start the game and trigger the next turn", function () {
+    it("handleStartGameClick() should start the game and trigger the next turn", async function () {
       const nextTurnSpy = this.sandbox.spy(app, "nextTurn");
-      app.init();
+      await app.init();
       ui.emit("startClicked"); // Simulate click
       expect(game.startCalled).to.be.true;
       expect(game.saveCalled).to.be.true;
@@ -172,9 +172,9 @@ describe("App", function () {
       clock.tick(1001); // Advance timers to trigger AI turn if scheduled
     });
 
-    it("handleNewGameClick() should re-initialize the game", function () {
+    it("handleNewGameClick() should re-initialize the game", async function () {
       const initSpy = this.sandbox.spy(app, "init");
-      app.init();
+      await app.init();
       ui.emit("newGameClicked"); // Simulate click
       expect(game.initCalled).to.be.true;
       expect(game.saveCalled).to.be.true;
@@ -182,8 +182,8 @@ describe("App", function () {
       clock.tick(1001); // Advance timers to trigger AI turn if scheduled
     });
 
-    it("handleResetButtonClick() should clear storage and reset the game", function () {
-      app.init();
+    it("handleResetButtonClick() should clear storage and reset the game", async function () {
+      await app.init();
       const clearStorageSpy = this.sandbox.spy(app, "clearStorage");
       const appInitSpy = this.sandbox.spy(app, "init");
       const analyticsSpy = this.sandbox.spy(analytics, "gameReset");
@@ -194,8 +194,8 @@ describe("App", function () {
       expect(analyticsSpy.called).to.be.true;
     });
 
-    it("handleHumanPlay() should call game.playCards on valid play", function () {
-      app.init();
+    it("handleHumanPlay() should call game.playCards on valid play", async function () {
+      await app.init();
       gameClient.setCurrentPlayer(0); // Human
       const playSpy = this.sandbox.spy(game, "playCards");
       const selectedCards = [new Card("3", "♠")];
@@ -207,8 +207,8 @@ describe("App", function () {
       expect(playSpy.called).to.be.true;
     });
 
-    it("handleHumanPlay() should show a message on invalid play", function () {
-      app.init();
+    it("handleHumanPlay() should show a message on invalid play", async function () {
+      await app.init();
       gameClient.setCurrentPlayer(0); // Human
       const playSpy = this.sandbox.spy(game, "playCards");
       const displayMessageSpy = this.sandbox.spy(ui, "displayMessage");
@@ -222,8 +222,8 @@ describe("App", function () {
       expect(displayMessageSpy.calledWith("Invalid play", "error")).to.be.true;
     });
 
-    it("handleHumanPass() should call game.passTurn", function () {
-      app.init();
+    it("handleHumanPass() should call game.passTurn", async function () {
+      await app.init();
       gameClient.setCurrentPlayer(0); // Human
       const passStub = this.sandbox.stub(game, "passTurn").returns(true);
 
@@ -232,8 +232,8 @@ describe("App", function () {
       expect(passStub.called).to.be.true;
     });
 
-    it("handleHumanPass() should show a message on invalid pass", function () {
-      app.init();
+    it("handleHumanPass() should show a message on invalid pass", async function () {
+      await app.init();
       gameClient.setCurrentPlayer(0); // Human
       const displayMessageSpy = this.sandbox.spy(ui, "displayMessage");
       const passStub = this.sandbox.stub(game, "passTurn").returns(false);
@@ -244,8 +244,8 @@ describe("App", function () {
       expect(displayMessageSpy.calledWith("You cannot pass on the first play of a round.", "error")).to.be.true;
     });
 
-    it("handleCardClick() should toggle card selection", function () {
-      app.init();
+    it("handleCardClick() should toggle card selection", async function () {
+      await app.init();
       const card = new Card("3", "♠");
       const toggleSpy = this.sandbox.spy(gameClient, "toggleCardSelection");
       const renderSpy = this.sandbox.spy(ui, "renderSelectedCards");
@@ -258,8 +258,8 @@ describe("App", function () {
   });
 
   describe("Turn Logic", function () {
-    it("nextTurn() should not call handleAITurn for a human player", function () {
-      app.init();
+    it("nextTurn() should not call handleAITurn for a human player", async function () {
+      await app.init();
       ui.emit("startClicked");
       gameClient.setCurrentPlayer(0); // Human
       const handleAITurnSpy = this.sandbox.spy(app, "handleAITurn");
@@ -267,23 +267,25 @@ describe("App", function () {
       expect(handleAITurnSpy.called).to.be.false;
     });
 
-    it("nextTurn() should call handleAITurn for an AI player", function () {
-      app.init();
+    it("nextTurn() should call handleAITurn for an AI player", async function () {
+      await app.init();
       gameClient.setCurrentPlayer(1); // AI
-      const setTimeoutSpy = this.sandbox.spy(app, "setTimeout");
+      // Stub setTimeoutFn directly since the mock game doesn't have setTimeout
+      const setTimeoutFnStub = this.sandbox.stub(app, "setTimeout").callsFake((fn) => setTimeout(fn, 1000) as any);
       app.nextTurn();
-      expect(setTimeoutSpy.calledOnce).to.be.true;
-      expect(setTimeoutSpy.getCall(0).args[1]).to.equal(1000);
+      expect(setTimeoutFnStub.calledOnce).to.be.true;
+      expect(setTimeoutFnStub.getCall(0).args[1]).to.equal(1000);
 
       // Manually trigger the callback passed to setTimeout
-      const callback = setTimeoutSpy.getCall(0).args[0];
+      const callback = setTimeoutFnStub.getCall(0).args[0];
       const handleAITurnSpy = this.sandbox.spy(app, "handleAITurn");
       callback();
 
       expect(handleAITurnSpy.calledOnce).to.be.true;
     });
 
-    it("nextTurn() should do nothing if the game is over", function () {
+    it("nextTurn() should do nothing if the game is over", async function () {
+      await app.init();
       game.gameState.gameOver = true;
       const handleAITurnSpy = this.sandbox.spy(app, "handleAITurn");
       app.nextTurn();
@@ -301,8 +303,8 @@ describe("App", function () {
       expect(takeTurnSpy.called).to.be.false;
     });
 
-    it("handleAITurn() should play cards when a move is available", function () {
-      app.init();
+    it("handleAITurn() should play cards when a move is available", async function () {
+      await app.init();
       const move = [new Card("3", "♠")];
       const aiPlayer = gameClient.getPlayers(1);
       const takeTurnStub = this.sandbox.stub(aiPlayer.ai, "takeTurn").returns(move);
@@ -316,8 +318,8 @@ describe("App", function () {
       expect(ui.renderCalled).to.be.true;
     });
 
-    it("handleAITurn() should pass turn when no move is available", function () {
-      app.init();
+    it("handleAITurn() should pass turn when no move is available", async function () {
+      await app.init();
       const aiPlayer = gameClient.getPlayers(1);
       const takeTurnStub = this.sandbox.stub(aiPlayer.ai, "takeTurn").returns([]);
       gameClient.setCurrentPlayer(1); // AI

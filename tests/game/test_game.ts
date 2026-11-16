@@ -225,27 +225,27 @@ describe("Game", () => {
       expect(parsedGame.stateKey).to.equal(game.stateKey);
     });
 
-    it("load() should fail for invalid saved JSON", () => {
+    it("load() should fail for invalid saved JSON", async () => {
       localStorage.setItem(game.stateKey, "invalid json");
       try {
-        game.load(new MockUI(new MockGameClient(game)));
+        await game.load(new MockUI(new MockGameClient(game)));
       } catch (e) {
         expect(e).to.be.an.instanceOf(SyntaxError);
       }
     });
 
-    it("load() should not load if no saved state exists", () => {
-      const loaded = game.load(new MockUI(new MockGameClient(game)));
+    it("load() should not load if no saved state exists", async () => {
+      const loaded = await game.load(new MockUI(new MockGameClient(game)));
       expect(loaded.loaded).to.be.false;
     });
 
-    it("load() should not load if no ui is provided", () => {
+    it("load() should not load if no ui is provided", async () => {
       game.save();
-      const loaded = game.load(null);
+      const loaded = await game.load(null);
       expect(loaded.loaded).to.be.false;
     });
 
-    it("load() should correctly rehydrate game data", () => {
+    it("load() should correctly rehydrate game data", async () => {
       const mockUI = new MockUI(new MockGameClient(game));
       const mockAI = new MockAI(new MockGameClient(game), [new Card("3", "♠")], "random");
       const mockPlayers = [
@@ -260,7 +260,7 @@ describe("Game", () => {
       game.save();
 
       const newGame = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
-      const loadedGameState = newGame.load(mockUI);
+      const loadedGameState = await newGame.load(mockUI);
 
       expect(loadedGameState.loaded).to.be.true;
       expect(newGame.id).to.equal(game.id);

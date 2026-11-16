@@ -239,7 +239,7 @@ export class MockGame extends Game {
     this.gameOverOnLoad = false;
   }
 
-  load(ui) {
+  async load(ui) {
     this.loadCalled = true;
     if (this.loadWillSucceed) {
       this.gameState.gameOver = this.gameOverOnLoad;
@@ -247,15 +247,17 @@ export class MockGame extends Game {
       const loadedPlayerTypes = this.gameState.players.map((p) => p.type);
       const loadedPlayerPersonas = this.gameState.players.map((p) => (p.type === PLAYER_TYPES.AI ? p.persona : null));
 
-      this.gameState.players = this.gameState.players.map((p, i) =>
-        createPlayer({
-          id: loadedPlayerIds[i],
-          gameClient: new MockGameClient(this),
-          type: loadedPlayerTypes[i],
-          number: i,
-          ui: ui,
-          persona: loadedPlayerPersonas[i],
-        })
+      this.gameState.players = await Promise.all(
+        this.gameState.players.map(async (p, i) =>
+          createPlayer({
+            id: loadedPlayerIds[i],
+            gameClient: new MockGameClient(this),
+            type: loadedPlayerTypes[i],
+            number: i,
+            ui: ui,
+            persona: loadedPlayerPersonas[i],
+          })
+        )
       );
       return { loaded: true, gameOver: this.gameOverOnLoad, loadedPlayerPersonas: [null, "random"] };
     }

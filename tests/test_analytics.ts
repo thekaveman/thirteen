@@ -76,7 +76,7 @@ describe("Analytics", () => {
     expect(identifiedId._properties.player).to.equal(humanPlayer.id);
     expect(identifiedId._properties.type).to.equal(humanPlayer.type);
     expect(identifiedId._properties.persona).to.be.null; // Human players have null persona
-    expect(identifiedId._properties.data).to.deep.equal(humanPlayer.data());
+    expect(identifiedId._properties.data).to.deep.equal(JSON.stringify(humanPlayer.data()));
     expect(identifiedId._properties.game).to.equal(gameClient.getId());
     expect(identifiedId._properties.games_played).to.equal(1);
   });
@@ -98,7 +98,7 @@ describe("Analytics", () => {
     expect(identifiedId._properties.player).to.equal(mockAIPlayer.id);
     expect(identifiedId._properties.type).to.equal(mockAIPlayer.type);
     expect(identifiedId._properties.persona).to.equal(mockAIPlayer.persona);
-    expect(identifiedId._properties.data).to.deep.equal(mockAIPlayer.data());
+    expect(identifiedId._properties.data).to.deep.equal(JSON.stringify(mockAIPlayer.data()));
     expect(identifiedId._properties.game).to.equal(gameClient.getId());
     expect(identifiedId._properties.games_played).to.equal(1);
   });
@@ -128,7 +128,7 @@ describe("Analytics", () => {
       analyticsWithFallback.gameInit(gameClient);
 
       expect(warnStub.calledOnce).to.be.true;
-      expect(warnStub.calledWithMatch(`Coudn't send analytics for ${eventType}`)).to.be.true;
+      expect(warnStub.calledWithMatch(`Couldn't send analytics for ${eventType}`)).to.be.true;
     });
 
     it("test_idPlayer_handlesErrorsGracefully", () => {

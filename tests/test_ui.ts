@@ -68,10 +68,10 @@ describe("UI", () => {
   });
 
   it("getCombinationTypeIndicator() should return the correct indicator for each type", () => {
-    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.SINGLE)).to.equal("🃏");
-    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.PAIR)).to.equal("🃏🃏");
-    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.TRIPLE)).to.equal("🃏🃏🃏");
-    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.STRAIGHT)).to.equal("🪜");
+    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.SINGLE)).to.equal("\uD83C\uDCCF");
+    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.PAIR)).to.equal("\uD83C\uDCCF\u200D\uD83C\uDCCF");
+    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.TRIPLE)).to.equal("\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF");
+    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.STRAIGHT)).to.equal("\uD83E\uDDDC");
     expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.FOUR_OF_A_KIND)).to.equal("💣");
     expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.CONSECUTIVE_PAIRS)).to.equal("💣");
     expect(ui.getCombinationTypeIndicator("invalid")).to.equal("🟢");
