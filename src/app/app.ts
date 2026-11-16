@@ -82,6 +82,11 @@ export class App {
       return;
     }
 
+    if (!this.gameClient.isGameStarted()) {
+      this.gameClient.start();
+      this.ui.render();
+    }
+
     log(`handleAITurn: Calling takeTurn() for ${aiPlayer.ai.persona}`);
     const move = aiPlayer.takeTurn();
     log(`handleAITurn: takeTurn() for ${aiPlayer.ai.persona} returned: ${JSON.stringify(move)}`);
@@ -124,6 +129,10 @@ export class App {
 
   handleHumanPlay(): void {
     this.ui.clearMessage();
+    if (!this.gameClient.isGameStarted()) {
+      this.gameClient.start();
+      this.ui.render();
+    }
     const selectedCards = this.gameClient.getSelectedCards();
     if (this.gameClient.isValidPlay(selectedCards)) {
       this.gameClient.play(selectedCards);
@@ -137,6 +146,10 @@ export class App {
 
   handleHumanPass(): void {
     this.ui.clearMessage();
+    if (!this.gameClient.isGameStarted()) {
+      this.gameClient.start();
+      this.ui.render();
+    }
     const passSuccessful = this.gameClient.pass();
     if (!passSuccessful) {
       this.ui.displayMessage("You cannot pass on the first play of a round.", "error");
