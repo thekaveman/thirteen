@@ -1,15 +1,15 @@
 {
   "name": "thirteen",
   "version": "2025.10.1",
-  "description": "A web-based implementation of the card game Thirteen (Ti\u1ebfn L\u00ean), built with vanilla JavaScript, HTML, and CSS.",
+  "description": "A web-based implementation of the card game Thirteen (Tiến Lên), built with vanilla TypeScript, HTML, and CSS.",
   "main": "src/app.js",
   "directories": {
     "test": "tests"
   },
   "scripts": {
-    "build": "tsc && cp src/*.html src/*.css src/logo.png dist/",
+    "build": "tsc && cp src/*.html src/*.css src/logo.png favicon.ico dist/",
     "start": "npm run build && http-server dist -p 8888",
-    "test": "npm run build && npx mocha --require @babel/register --extensions ts --require ./tests/setup.ts tests/test_*.ts tests/**/*.ts"
+    "test": "node --loader tsm node_modules/mocha/bin/mocha.js --require ./tests/setup.ts tests/test_*.ts tests/**/*.ts"
   },
   "nyc": {
     "all": true,
@@ -35,7 +35,7 @@
   "bugs": {
     "url": "https://github.com/thekaveman/thirteen/issues"
   },
-  "homepage": "https://thekaveman.github.io/thirteen/src/",
+  "homepage": "https://thirteen.thekaveman.dev/",
   "devDependencies": {
     "@babel/core": "^7.28.4",
     "@babel/preset-env": "^7.28.3",
@@ -50,6 +50,7 @@
     "mocha": "^12.0.3",
     "nyc": "^18.0.0",
     "sinon": "^21.0.0",
+    "tsm": "^2.3.0",
     "typescript": "^6.0.3"
   },
   "overrides": {
