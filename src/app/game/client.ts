@@ -185,11 +185,11 @@ export class GameClient {
    * @param playerIndex Optional index of the player.
    */
   getPlayerPersonas(playerIndex: number = -1): string | null | (string | null)[] {
-    const playerPersonas = this.game.gameState.playerPersonas;
+    const personas = this.game.gameState.players.map((p) => p.persona);
     if (playerIndex > -1) {
-      return playerPersonas[playerIndex];
+      return personas[playerIndex];
     }
-    return playerPersonas;
+    return personas;
   }
 
   /**
@@ -315,7 +315,7 @@ export class GameClient {
    * @param ui An instance of the UI class.
    * @returns True if a saved game was loaded, false otherwise.
    */
-  async load(ui: unknown): Promise<{ loaded: boolean; loadedPlayerTypes?: string[]; loadedPlayerPersonas?: (string | null)[]; gameOver?: boolean }> {
+  async load(ui: unknown): Promise<{ loaded: boolean; loadedPlayerTypes?: string[]; gameOver?: boolean }> {
     return this.game.load(ui);
   }
 
@@ -358,7 +358,7 @@ export class GameClient {
   setAIPersona(playerIndex: number, persona: string): void {
     const player = this.game.gameState.players[playerIndex];
     if (player && player.type === PLAYER_TYPES.AI) {
-      this.game.gameState.playerPersonas[playerIndex] = persona;
+      player.persona = persona;
       (player as AIPlayer).ai.persona = persona;
     }
   }

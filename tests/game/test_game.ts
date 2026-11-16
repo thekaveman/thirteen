@@ -268,7 +268,6 @@ describe("Game", () => {
       expect(newGame.stateKey).to.equal(game.stateKey);
 
       expect(loadedGameState.loadedPlayerTypes).to.deep.equal(game.gameState.playerTypes);
-      expect(loadedGameState.loadedPlayerPersonas).to.deep.equal(game.gameState.playerPersonas);
 
       expect(newGame.gameState.playerHands[0][0]).to.be.an.instanceOf(Card);
       expect(newGame.gameState.playPile[0]).to.be.an.instanceOf(Card);

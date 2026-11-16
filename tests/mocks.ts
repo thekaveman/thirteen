@@ -239,7 +239,6 @@ export class MockGame extends Game {
       this.gameState.gameOver = this.gameOverOnLoad;
       const loadedPlayerIds = this.gameState.players.map((p) => p.id);
       const loadedPlayerTypes = this.gameState.players.map((p) => p.type);
-      const loadedPlayerPersonas = this.gameState.players.map((p) => (p.type === PLAYER_TYPES.AI ? p.persona : null));
 
       this.gameState.players = await Promise.all(
         this.gameState.players.map(async (p, i) =>
@@ -249,11 +248,11 @@ export class MockGame extends Game {
             type: loadedPlayerTypes[i],
             number: i,
             ui: ui,
-            persona: loadedPlayerPersonas[i],
+            persona: p.type === PLAYER_TYPES.AI ? p.persona : null,
           })
         )
       );
-      return { loaded: true, gameOver: this.gameOverOnLoad, loadedPlayerPersonas: [null, "random"] };
+      return { loaded: true, gameOver: this.gameOverOnLoad };
     }
     return { loaded: false };
   }

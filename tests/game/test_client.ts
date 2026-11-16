@@ -194,7 +194,7 @@ describe("GameClient", () => {
       ];
       gameClient.setPlayers(players);
       gameClient.setAIPersona(1, "new_persona");
-      expect(game.gameState.playerPersonas[1]).to.equal("new_persona");
+      expect(gameClient.getPlayerPersonas(1)).to.equal("new_persona");
     });
 
     it("setAIPersona() should not update the persona for a human player", () => {
@@ -204,7 +204,7 @@ describe("GameClient", () => {
       ];
       gameClient.setPlayers(players);
       gameClient.setAIPersona(0, "new_persona");
-      expect(game.gameState.playerPersonas[0]).to.not.equal("new_persona");
+      expect(gameClient.getPlayerPersonas(0)).to.not.equal("new_persona");
     });
 
     it("setPlayerHand() should replace a player's hand", () => {

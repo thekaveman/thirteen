@@ -184,8 +184,9 @@ export class App {
     const loadedGameState = await this.gameClient.load(this.ui);
     if (loadedGameState.loaded && !loadedGameState.gameOver) {
       // If game loaded, update selectedAI from loaded state
-      if (loadedGameState.loadedPlayerPersonas && loadedGameState.loadedPlayerPersonas[1]) {
-        this.selectedAI = loadedGameState.loadedPlayerPersonas[1] as string;
+      const loadedPersona = this.gameClient.getPlayerPersonas(1);
+      if (typeof loadedPersona === "string" && loadedPersona) {
+        this.selectedAI = loadedPersona;
       }
       this.gameClient.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
       this.ui.render();

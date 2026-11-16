@@ -23,7 +23,6 @@ export interface GameState {
   gameOver: boolean;
   gameStarted: boolean;
   playerTypes: string[];
-  playerPersonas: (string | null)[];
 }
 
 export interface GameHooks {
@@ -39,7 +38,6 @@ export interface GameHooks {
 export interface LoadResult {
   loaded: boolean;
   loadedPlayerTypes?: string[];
-  loadedPlayerPersonas?: (string | null)[];
   gameOver?: boolean;
 }
 
@@ -86,7 +84,6 @@ export class Game {
       gameOver: false,
       gameStarted: false,
       playerTypes: [],
-      playerPersonas: [],
     };
     this.id = crypto.randomUUID();
     this.rules = new Rules();
@@ -131,10 +128,6 @@ export class Game {
       // Store data from the parsed state before overwriting this.gameState
       const loadedPlayerIds = parsedState.gameState.players.map((p: { id: string }) => p.id);
       const loadedPlayerTypes = parsedState.gameState.players.map((p: { type: string }) => p.type);
-      const loadedPlayerPersonas = parsedState.gameState.players.map(
-        (p: { type: string; persona: string | null }) =>
-          p.type === PLAYER_TYPES.AI ? p.persona : null,
-      );
 
       this.id = parsedState.id;
       this.stateKey = parsedState.stateKey;
@@ -154,15 +147,14 @@ export class Game {
             type: loadedPlayerTypes[i],
             number: i,
             ui: ui as any,
-            persona: loadedPlayerPersonas[i],
+            persona: parsedState.gameState.players[i].type === PLAYER_TYPES.AI ? parsedState.gameState.players[i].persona : null,
           }),
         ),
       );
       // Assign the stored playerTypes back to gameState
       this.gameState.playerTypes = loadedPlayerTypes;
-      this.gameState.playerPersonas = loadedPlayerPersonas;
       log("Game loaded from localStorage.");
-      return { loaded: true, loadedPlayerTypes, loadedPlayerPersonas, gameOver: this.gameState.gameOver };
+      return { loaded: true, loadedPlayerTypes, gameOver: this.gameState.gameOver };
     }
     return { loaded: false };
   }
@@ -291,7 +283,6 @@ export class Game {
       this.gameState.players = players;
       this.gameState.numPlayers = players.length;
       this.gameState.playerTypes = players.map((p) => p.type);
-      this.gameState.playerPersonas = players.map((p) => p.persona);
       this.gameState.roundsWon = new Array(players.length).fill(0);
       if (this.gameState.gamesWon.length !== players.length) {
         this.gameState.gamesWon = new Array(players.length).fill(0);
