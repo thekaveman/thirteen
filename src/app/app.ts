@@ -8,7 +8,6 @@ import { Deck as DeckClass, Game as GameClass, GameClient as GameClientClass } f
 import type { Player } from "./player/base.js";
 import type { AIPlayer } from "./player/ai.js";
 import { createPlayer, PLAYER_TYPES } from "./player/index.js";
-import type { UI as UIClassType } from "./ui.js";
 import { AI_PERSONAS } from "./ai/personas.js";
 import { log } from "./utils.js";
 import { UI as UI } from "./ui.js";
@@ -25,7 +24,7 @@ export class App {
   analytics: AnalyticsClass;
   gameClient: GameClient;
   ui: UI;
-  setTimeout: ((fn: () => void, ms: number) => number) | undefined;
+  setTimeout: ((_fn: () => void, _ms: number) => number) | undefined;
   humanPlayer: Player;
   selectedAI: string;
   aiPlayers: Record<string, Player>;

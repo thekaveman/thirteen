@@ -22,13 +22,13 @@ export class GameClient {
    * @param analytics The analytics instance to use.
    */
   attachHooks(analytics: {
-    gameInit: (gc: GameClient) => void;
-    gameReset: (gc: GameClient) => void;
-    gameStarted: (gc: GameClient) => void;
-    gameWon: (gc: GameClient) => void;
-    playerMoved: (gc: GameClient) => void;
-    playerPassed: (gc: GameClient) => void;
-    roundPlayed: (gc: GameClient) => void;
+    gameInit: (_gc: GameClient) => void;
+    gameReset: (_gc: GameClient) => void;
+    gameStarted: (_gc: GameClient) => void;
+    gameWon: (_gc: GameClient) => void;
+    playerMoved: (_gc: GameClient) => void;
+    playerPassed: (_gc: GameClient) => void;
+    roundPlayed: (_gc: GameClient) => void;
   }): void {
     this.game.hooks = {
       onGameInit: () => analytics.gameInit(this),

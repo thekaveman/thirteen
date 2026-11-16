@@ -35,7 +35,7 @@ export class AI {
    * @param allPlayerHands All players' hands.
    * @returns The cards to play, or an empty array if the AI passes.
    */
-  takeTurn(playerHand: Card[], playPile: Card[], currentTurn: number, allPlayerHands: Card[][]): Card[] {
+  takeTurn(_playerHand: Card[], _playPile: Card[], _currentTurn: number, _allPlayerHands: Card[][]): Card[] {
     throw new Error("Subclasses must implement takeTurn");
   }
 
@@ -305,7 +305,7 @@ export class AI {
     }
 
     const distinctPairs: Card[][] = [];
-    for (const [rank, cards] of rankToCards.entries()) {
+    for (const [, cards] of rankToCards.entries()) {
       if (cards.length >= 2) {
         distinctPairs.push([cards[0], cards[1]]);
       }

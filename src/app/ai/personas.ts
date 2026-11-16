@@ -1,5 +1,4 @@
 import type { GameClient } from "../game/client.js";
-import type { Card } from "../game/deck.js";
 import { AI } from "./base.js";
 import { HighestCardAI } from "./highest_card.js";
 import { HighestValueAI } from "./highest_value.js";
@@ -15,7 +14,7 @@ export interface AIPersonaMetadata {
   friendly_name: string;
   description: string;
   icon: string;
-  create: (gameClient: GameClient) => AI;
+  create: (_gameClient: GameClient) => AI;
 }
 
 export const AI_PERSONAS: Record<string, AIPersonaMetadata> = {

@@ -19,7 +19,7 @@ export interface PlayerFactoryConfig {
  * @param config The player configuration.
  */
 export async function createPlayer(config: PlayerFactoryConfig): Promise<Player> {
-  const { id, gameClient, type, number, ui, persona } = config;
+  const { id, gameClient, type, number, persona } = config;
   let player: Player | undefined;
 
   if (type === PLAYER_TYPES.HUMAN) {
@@ -29,7 +29,7 @@ export async function createPlayer(config: PlayerFactoryConfig): Promise<Player>
   if (type === PLAYER_TYPES.AI) {
     // Lazy-load AI_PERSONAS to break circular dependency
     const { AI_PERSONAS } = await import("../ai/personas.js");
-    const aiPersonas = AI_PERSONAS as unknown as Record<string, { create: (gc: GameClient) => AI }>;
+    const aiPersonas = AI_PERSONAS as unknown as Record<string, { create: (_gc: GameClient) => AI }>;
     const aiPersona = aiPersonas[persona!];
     if (!aiPersona) {
       throw new Error(`Unknown AI persona: ${persona}`);

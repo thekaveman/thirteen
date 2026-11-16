@@ -1,11 +1,12 @@
 import type { AmplitudeBrowser } from "@amplitude/analytics-browser";
-import { init, Identify } from "@amplitude/analytics-browser";
+import { Identify } from "@amplitude/analytics-browser";
 import type { GameClient } from "./game/client.js";
 import type { HumanPlayer } from "./player/human.js";
 import { PLAYER_TYPES } from "./player/index.js";
 
 // Extend Window interface to include amplitude
 declare global {
+  // eslint-disable-next-line no-unused-vars
   interface Window {
     amplitude: AmplitudeBrowser;
   }
@@ -37,7 +38,7 @@ interface AnalyticsEventData {
 }
 
 export class Analytics {
-  api: AmplitudeBrowser | { track(eventType: string, payload: unknown): void };
+  api: AmplitudeBrowser | { track(_eventType: string, _payload: unknown): void };
 
   constructor() {
     if (typeof window !== "undefined" && window.amplitude) {

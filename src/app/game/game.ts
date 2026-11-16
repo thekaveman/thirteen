@@ -27,13 +27,13 @@ export interface GameState {
 }
 
 export interface GameHooks {
-  onGameInit: (gameClient: GameClient) => void;
-  onGameReset: (gameClient: GameClient) => void;
-  onGameStarted: (gameClient: GameClient) => void;
-  onGameWon: (gameClient: GameClient) => void;
-  onPlayerMoved: (gameClient: GameClient) => void;
-  onPlayerPassed: (gameClient: GameClient) => void;
-  onRoundPlayed: (gameClient: GameClient) => void;
+  onGameInit: (_gameClient: GameClient) => void;
+  onGameReset: (_gameClient: GameClient) => void;
+  onGameStarted: (_gameClient: GameClient) => void;
+  onGameWon: (_gameClient: GameClient) => void;
+  onPlayerMoved: (_gameClient: GameClient) => void;
+  onPlayerPassed: (_gameClient: GameClient) => void;
+  onRoundPlayed: (_gameClient: GameClient) => void;
 }
 
 export interface LoadResult {

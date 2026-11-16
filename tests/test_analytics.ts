@@ -1,5 +1,4 @@
 import { Analytics } from "../src/app/analytics.js";
-import { GameClient } from "../src/app/game/index.js";
 import { HumanPlayer, AIPlayer, PLAYER_TYPES } from "../src/app/player/index.js";
 import { MockDeck, MockUI, MockAmplitude, MockAI, MockGame, MockGameClient } from "./mocks.ts";
 

@@ -32,10 +32,10 @@ export abstract class ComboAI extends AI {
    * @returns The selected AI strategy, or null if none.
    */
   select(
-    playerHand: Card[],
-    playPile: Card[],
-    currentTurn: number,
-    allPlayerHands: Card[][],
+    _playerHand: Card[],
+    _playPile: Card[],
+    _currentTurn: number,
+    _allPlayerHands: Card[][],
   ): AI | null {
     throw new Error("Subclasses must implement select()");
   }

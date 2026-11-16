@@ -22,9 +22,9 @@ export interface UIId {
   aiDescription: string;
 }
 
-type EventListener = (data: unknown) => void;
+type EventListener = (_data: unknown) => void;
 
-type PreRenderCallback = (cardSpan: HTMLElement, card: Card) => void;
+type PreRenderCallback = (_cardSpan: HTMLElement, _card: Card) => void;
 
 export class UI {
   gameClient: GameClient;
