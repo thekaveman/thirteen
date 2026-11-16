@@ -1,6 +1,5 @@
-import type { Card as CardType } from "./deck";
-import { Card } from "./deck";
-import { Game } from "./game";
+import { Card } from "./deck.js";
+import { Game } from "./game.js";
 import type { Player } from "../player/base.js";
 import type { HumanPlayer } from "../player/human.js";
 import type { AIPlayer } from "../player/ai.js";
@@ -22,13 +21,13 @@ export class GameClient {
    * @param analytics The analytics instance to use.
    */
   attachHooks(analytics: {
-    gameInit: (gc: GameClient) => void;
-    gameReset: (gc: GameClient) => void;
-    gameStarted: (gc: GameClient) => void;
-    gameWon: (gc: GameClient) => void;
-    playerMoved: (gc: GameClient) => void;
-    playerPassed: (gc: GameClient) => void;
-    roundPlayed: (gc: GameClient) => void;
+    gameInit: (_gc: GameClient) => void;
+    gameReset: (_gc: GameClient) => void;
+    gameStarted: (_gc: GameClient) => void;
+    gameWon: (_gc: GameClient) => void;
+    playerMoved: (_gc: GameClient) => void;
+    playerPassed: (_gc: GameClient) => void;
+    roundPlayed: (_gc: GameClient) => void;
   }): void {
     this.game.hooks = {
       onGameInit: () => analytics.gameInit(this),
@@ -78,7 +77,7 @@ export class GameClient {
       round: this.getRoundNumber(),
       started: this.isGameStarted(),
       turn: this.getCurrentTurn(),
-      hands: this.getPlayerHands() as CardType[][],
+      hands: this.getPlayerHands() as Card[][],
       players: (this.getPlayers() as Player[]).map((p) => p.data()),
       combination: this.getPlayPileCombinationType(),
       move: this.getSelectedCards(),
@@ -186,11 +185,11 @@ export class GameClient {
    * @param playerIndex Optional index of the player.
    */
   getPlayerPersonas(playerIndex: number = -1): string | null | (string | null)[] {
-    const playerPersonas = this.game.gameState.playerPersonas;
+    const personas = this.game.gameState.players.map((p) => p.persona);
     if (playerIndex > -1) {
-      return playerPersonas[playerIndex];
+      return personas[playerIndex];
     }
-    return playerPersonas;
+    return personas;
   }
 
   /**
@@ -316,7 +315,7 @@ export class GameClient {
    * @param ui An instance of the UI class.
    * @returns True if a saved game was loaded, false otherwise.
    */
-  load(ui: unknown): { loaded: boolean; loadedPlayerTypes?: string[]; loadedPlayerPersonas?: (string | null)[]; gameOver?: boolean } {
+  async load(ui: unknown): Promise<{ loaded: boolean; loadedPlayerTypes?: string[]; gameOver?: boolean }> {
     return this.game.load(ui);
   }
 
@@ -359,7 +358,7 @@ export class GameClient {
   setAIPersona(playerIndex: number, persona: string): void {
     const player = this.game.gameState.players[playerIndex];
     if (player && player.type === PLAYER_TYPES.AI) {
-      this.game.gameState.playerPersonas[playerIndex] = persona;
+      player.persona = persona;
       (player as AIPlayer).ai.persona = persona;
     }
   }

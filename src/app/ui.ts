@@ -1,11 +1,11 @@
-import type { GameClient } from "./game/client";
-import type { Card } from "./game/deck";
-import { AI_PERSONAS } from "./ai/personas";
-import { Card as CardClass, COMBINATION_TYPES } from "./game/index";
-import { PLAYER_TYPES } from "./player/index";
-import type { Player } from "./player/base";
-import type { AIPlayer } from "./player/ai";
-import { log } from "./utils";
+import type { GameClient } from "./game/client.js";
+import type { Card } from "./game/deck.js";
+import { AI_PERSONAS } from "./ai/personas.js";
+import { Card as CardClass, COMBINATION_TYPES } from "./game/index.js";
+import { PLAYER_TYPES } from "./player/index.js";
+import type { Player } from "./player/base.js";
+import type { AIPlayer } from "./player/ai.js";
+import { log } from "./utils.js";
 
 export interface UIId {
   gameMessages: string;
@@ -22,9 +22,9 @@ export interface UIId {
   aiDescription: string;
 }
 
-type EventListener = (data: unknown) => void;
+type EventListener = (_data: unknown) => void;
 
-type PreRenderCallback = (cardSpan: HTMLElement, card: Card) => void;
+type PreRenderCallback = (_cardSpan: HTMLElement, _card: Card) => void;
 
 export class UI {
   gameClient: GameClient;
@@ -430,45 +430,53 @@ export class UI {
   }
 
   /**
+   * Sets the display style of a button element if it exists.
+   * @param button The button element to update.
+   * @param display The display value to set.
+   */
+  #setButtonDisplay(button: HTMLElement | null, display: string): void {
+    if (button) button.style.display = display;
+  }
+
+  /**
    * Updates the state of the play, pass, and new game buttons.
    */
   updateButtonStates(): void {
-    const currentPlayer = this.gameClient.getCurrentPlayer() as Player;
+    const currentPlayer = this.gameClient.getCurrentPlayer() as Player | undefined;
+    if (!currentPlayer) return;
     const isHumanPlayerTurn = currentPlayer.type === PLAYER_TYPES.HUMAN;
 
     if (this.gameClient.isGameOver()) {
-      if (this.playButton) this.playButton.style.display = "none";
-      if (this.passButton) this.passButton.style.display = "none";
-      if (this.newGameButton) this.newGameButton.style.display = "block";
-      if (this.startGameButton) this.startGameButton.style.display = "none";
+      this.#setButtonDisplay(this.playButton, "none");
+      this.#setButtonDisplay(this.passButton, "none");
+      this.#setButtonDisplay(this.newGameButton, "block");
+      this.#setButtonDisplay(this.startGameButton, "none");
       if (this.resetButton) {
-        this.resetButton.style.display = "block";
+        this.#setButtonDisplay(this.resetButton, "block");
         (this.resetButton as HTMLButtonElement).disabled = false;
       }
     } else if (!this.gameClient.isGameStarted()) {
-      // Game has not started yet, show start button
-      if (this.playButton) this.playButton.style.display = "none";
-      if (this.passButton) this.passButton.style.display = "none";
-      if (this.newGameButton) this.newGameButton.style.display = "none";
-      if (this.startGameButton) this.startGameButton.style.display = "block";
+      this.#setButtonDisplay(this.playButton, "none");
+      this.#setButtonDisplay(this.passButton, "none");
+      this.#setButtonDisplay(this.newGameButton, "none");
+      this.#setButtonDisplay(this.startGameButton, "block");
       if (this.resetButton) {
-        this.resetButton.style.display = "block";
+        this.#setButtonDisplay(this.resetButton, "block");
         (this.resetButton as HTMLButtonElement).disabled = false;
       }
     } else {
-      // Game is in progress
       if (this.playButton) {
-        this.playButton.style.display = "block";
+        this.#setButtonDisplay(this.playButton, "block");
         (this.playButton as HTMLButtonElement).disabled = !isHumanPlayerTurn;
       }
       if (this.passButton) {
-        this.passButton.style.display = "block";
+        this.#setButtonDisplay(this.passButton, "block");
         (this.passButton as HTMLButtonElement).disabled = !isHumanPlayerTurn;
       }
-      if (this.newGameButton) this.newGameButton.style.display = "none";
-      if (this.startGameButton) this.startGameButton.style.display = "none";
+      this.#setButtonDisplay(this.newGameButton, "none");
+      this.#setButtonDisplay(this.startGameButton, "none");
       if (this.resetButton) {
-        this.resetButton.style.display = "block";
+        this.#setButtonDisplay(this.resetButton, "block");
         (this.resetButton as HTMLButtonElement).disabled = !isHumanPlayerTurn;
       }
     }

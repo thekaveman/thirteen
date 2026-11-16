@@ -1,10 +1,10 @@
-import { GameClient } from "./client";
-import type { Card } from "./deck";
-import { Card as CardClass, Deck } from "./deck";
+import { GameClient } from "./client.js";
+import type { Card } from "./deck.js";
+import { Card as CardClass, Deck } from "./deck.js";
 import type { Player } from "../player/base.js";
 import { PLAYER_TYPES, createPlayer } from "../player/index.js";
-import { Rules } from "./rules";
-import { log } from "../utils";
+import { Rules } from "./rules.js";
+import { log } from "../utils.js";
 
 export interface GameState {
   numPlayers: number;
@@ -23,23 +23,21 @@ export interface GameState {
   gameOver: boolean;
   gameStarted: boolean;
   playerTypes: string[];
-  playerPersonas: (string | null)[];
 }
 
 export interface GameHooks {
-  onGameInit: (gameClient: GameClient) => void;
-  onGameReset: (gameClient: GameClient) => void;
-  onGameStarted: (gameClient: GameClient) => void;
-  onGameWon: (gameClient: GameClient) => void;
-  onPlayerMoved: (gameClient: GameClient) => void;
-  onPlayerPassed: (gameClient: GameClient) => void;
-  onRoundPlayed: (gameClient: GameClient) => void;
+  onGameInit: (_gameClient: GameClient) => void;
+  onGameReset: (_gameClient: GameClient) => void;
+  onGameStarted: (_gameClient: GameClient) => void;
+  onGameWon: (_gameClient: GameClient) => void;
+  onPlayerMoved: (_gameClient: GameClient) => void;
+  onPlayerPassed: (_gameClient: GameClient) => void;
+  onRoundPlayed: (_gameClient: GameClient) => void;
 }
 
 export interface LoadResult {
   loaded: boolean;
   loadedPlayerTypes?: string[];
-  loadedPlayerPersonas?: (string | null)[];
   gameOver?: boolean;
 }
 
@@ -86,7 +84,6 @@ export class Game {
       gameOver: false,
       gameStarted: false,
       playerTypes: [],
-      playerPersonas: [],
     };
     this.id = crypto.randomUUID();
     this.rules = new Rules();
@@ -116,7 +113,6 @@ export class Game {
     this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
     this.gameState.playerTurns = new Array(this.gameState.numPlayers).fill(0);
     this.gameState.selectedCards = [];
-    this.deal();
     this.hooks.onGameInit(new GameClient(this));
   }
 
@@ -125,17 +121,13 @@ export class Game {
    * @param ui An instance of the UI class.
    * @returns True if a saved game was loaded, false otherwise.
    */
-  load(ui: unknown): LoadResult {
+  async load(ui: unknown): Promise<LoadResult> {
     const savedState = localStorage.getItem(this.stateKey);
     const parsedState = savedState ? JSON.parse(savedState) : null;
     if (parsedState && ui) {
       // Store data from the parsed state before overwriting this.gameState
       const loadedPlayerIds = parsedState.gameState.players.map((p: { id: string }) => p.id);
       const loadedPlayerTypes = parsedState.gameState.players.map((p: { type: string }) => p.type);
-      const loadedPlayerPersonas = parsedState.gameState.players.map(
-        (p: { type: string; persona: string | null }) =>
-          p.type === PLAYER_TYPES.AI ? p.persona : null,
-      );
 
       this.id = parsedState.id;
       this.stateKey = parsedState.stateKey;
@@ -146,22 +138,23 @@ export class Game {
       this.gameState.playerHands = [...this.gameState.playerHands].map((h) => CardClass.objectsToList(h));
       this.gameState.playPile = CardClass.objectsToList([...this.gameState.playPile]);
       this.gameState.selectedCards = CardClass.objectsToList([...this.gameState.selectedCards]);
-      // Re-hydrate players
-      this.gameState.players = parsedState.gameState.players.map((p: { id: string }, i: number) =>
-        createPlayer({
-          id: loadedPlayerIds[i],
-          gameClient: new GameClient(this),
-          type: loadedPlayerTypes[i],
-          number: i,
-          ui: ui as any,
-          persona: loadedPlayerPersonas[i],
-        }),
+      // Re-hydrate players (async due to dynamic AI persona loading)
+      this.gameState.players = await Promise.all(
+        parsedState.gameState.players.map(async (p: { id: string }, i: number) =>
+          createPlayer({
+            id: loadedPlayerIds[i],
+            gameClient: new GameClient(this),
+            type: loadedPlayerTypes[i],
+            number: i,
+            ui: ui as any,
+            persona: parsedState.gameState.players[i].type === PLAYER_TYPES.AI ? parsedState.gameState.players[i].persona : null,
+          }),
+        ),
       );
       // Assign the stored playerTypes back to gameState
       this.gameState.playerTypes = loadedPlayerTypes;
-      this.gameState.playerPersonas = loadedPlayerPersonas;
       log("Game loaded from localStorage.");
-      return { loaded: true, loadedPlayerTypes, loadedPlayerPersonas, gameOver: this.gameState.gameOver };
+      return { loaded: true, loadedPlayerTypes, gameOver: this.gameState.gameOver };
     }
     return { loaded: false };
   }
@@ -290,7 +283,6 @@ export class Game {
       this.gameState.players = players;
       this.gameState.numPlayers = players.length;
       this.gameState.playerTypes = players.map((p) => p.type);
-      this.gameState.playerPersonas = players.map((p) => p.persona);
       this.gameState.roundsWon = new Array(players.length).fill(0);
       if (this.gameState.gamesWon.length !== players.length) {
         this.gameState.gamesWon = new Array(players.length).fill(0);

@@ -1,13 +1,23 @@
-import type { AmplitudeBrowser } from "@amplitude/analytics-browser";
-import { init, Identify } from "@amplitude/analytics-browser";
-import type { GameClient } from "./game/client";
-import type { HumanPlayer } from "./player/human";
-import { PLAYER_TYPES } from "./player/index";
+import type { GameClient } from "./game/client.js";
+import type { HumanPlayer } from "./player/human.js";
+import { PLAYER_TYPES } from "./player/index.js";
 
-// Extend Window interface to include amplitude
+// Minimal Amplitude interface — matches the CDN-loaded global
+interface AmplitudeBrowser {
+  Identify: new () => {
+    setOnce(_key: string, _value: unknown): unknown;
+    set(_key: string, _value: unknown): unknown;
+    add(_key: string, _value: unknown): unknown;
+  };
+  identify(_id: unknown): void;
+  track(_eventType: string, _payload: unknown): void;
+}
+
+// Extend Window interface to include amplitude from CDN
 declare global {
+  // eslint-disable-next-line no-unused-vars
   interface Window {
-    amplitude: AmplitudeBrowser;
+    amplitude?: AmplitudeBrowser;
   }
 }
 
@@ -37,7 +47,7 @@ interface AnalyticsEventData {
 }
 
 export class Analytics {
-  api: AmplitudeBrowser | { track(eventType: string, payload: unknown): void };
+  api: AmplitudeBrowser | { track(_eventType: string, _payload: unknown): void };
 
   constructor() {
     if (typeof window !== "undefined" && window.amplitude) {
@@ -55,22 +65,22 @@ export class Analytics {
    * Private method to initialize player data in the central service.
    * @param gameClient The game instance sending this event.
    */
-  async #idPlayer(gameClient: GameClient): Promise<void> {
+  #idPlayer(gameClient: GameClient): void {
     try {
-      const id = new Identify();
+      // Only identify if the API has an Identify constructor (CDN or mock)
+      const ampApi = this.api as AmplitudeBrowser;
+      if (!ampApi.Identify) return;
+      const id = new ampApi.Identify();
       const player = gameClient.getFirstHumanPlayer() as HumanPlayer | undefined;
       if (!player) return;
 
       id.setOnce("player", player.id);
       id.setOnce("type", player.type);
-      id.setOnce("persona", player.type === PLAYER_TYPES.AI ? player.persona ?? "none" : "none");
+      id.setOnce("persona", player.type === PLAYER_TYPES.AI ? (player.persona as any) : null);
       id.setOnce("data", JSON.stringify(player.data()));
       id.set("game", gameClient.getId());
       id.add("games_played", 1);
-
-      if ("identify" in this.api) {
-        (this.api as AmplitudeBrowser).identify(id);
-      }
+      ampApi.identify(id);
     } catch (error) {
       console.error("Error initializing player:", error);
     }
@@ -82,7 +92,7 @@ export class Analytics {
    * @param gameClient The game instance sending this event.
    * @param payload The data associated with the event.
    */
-  async #send(eventType: string, gameClient: GameClient, payload: object = {}): Promise<void> {
+  #send(eventType: string, gameClient: GameClient, payload: object = {}): void {
     try {
       const data = gameClient.getAnalyticsData() as AnalyticsEventData;
       const event: {
@@ -117,92 +127,77 @@ export class Analytics {
   }
 
   /**
-   * Tracks a game initialized event.
+   * Tracks the game initialization event.
    * @param gameClient The game instance sending this event.
    */
   gameInit(gameClient: GameClient): void {
-    this.#send("game_initialized", gameClient);
+    this.#idPlayer(gameClient);
+    this.#send("game_initialized", gameClient, { id: gameClient.getId() });
   }
 
   /**
-   * Tracks a game reset event.
+   * Tracks the game reset event.
    * @param gameClient The game instance sending this event.
    */
   gameReset(gameClient: GameClient): void {
-    this.#send("game_reset", gameClient);
+    this.#send("game_reset", gameClient, { id: gameClient.getId() });
   }
 
   /**
-   * Tracks a game start event.
+   * Tracks the game start event.
    * @param gameClient The game instance sending this event.
    */
   gameStarted(gameClient: GameClient): void {
-    const data = gameClient.getAnalyticsData() as AnalyticsEventData;
-    this.#send("game_started", gameClient, {
-      human_player: data.human_player,
-      ai_player: data.ai_player,
-      current_player: data.current_player,
-    });
     this.#idPlayer(gameClient);
+    this.#send("game_started", gameClient, {
+      id: gameClient.getId(),
+      round: gameClient.getRoundNumber(),
+      turn: gameClient.getCurrentTurn(),
+    });
   }
 
   /**
-   * Tracks a game won event.
+   * Tracks the game won event.
    * @param gameClient The game instance sending this event.
    */
   gameWon(gameClient: GameClient): void {
-    const data = gameClient.getAnalyticsData() as AnalyticsEventData;
     this.#send("game_won", gameClient, {
-      human_player: data.human_player,
-      ai_player: data.ai_player,
-      current_player: data.current_player,
-      game_rounds: data.game_rounds,
-      game_turns: data.game_turns,
-      player_rounds_won: data.player_rounds_won,
-      player_turns: data.player_turns,
-      player_games_won: data.player_games_won,
+      id: gameClient.getId(),
+      round: gameClient.getRoundNumber(),
     });
   }
 
   /**
-   * Tracks a round played event.
-   * @param gameClient The game instance sending this event.
-   */
-  roundPlayed(gameClient: GameClient): void {
-    const data = gameClient.getAnalyticsData() as AnalyticsEventData;
-    this.#send("round_played", gameClient, {
-      rounds: data.rounds,
-      rounds_won: data.rounds_won,
-    });
-  }
-
-  /**
-   * Tracks when a player makes a move.
+   * Tracks the player moved event.
    * @param gameClient The game instance sending this event.
    */
   playerMoved(gameClient: GameClient): void {
-    const data = gameClient.getAnalyticsData() as AnalyticsEventData;
     this.#send("player_moved", gameClient, {
-      current_player: data.current_player,
-      combination: data.combination,
-      move: data.move,
-      pile: data.pile,
-      round: data.round,
+      id: gameClient.getId(),
+      turn: gameClient.getCurrentTurn(),
     });
   }
 
   /**
-   * Tracks when a player passes their turn.
+   * Tracks the player passed event.
    * @param gameClient The game instance sending this event.
    */
   playerPassed(gameClient: GameClient): void {
-    const data = gameClient.getAnalyticsData() as AnalyticsEventData;
     this.#send("player_passed", gameClient, {
-      current_player: data.current_player,
-      combination: data.combination,
-      consecutive_passes: data.consecutive_passes,
-      pile: data.pile,
-      round: data.round,
+      id: gameClient.getId(),
+      turn: gameClient.getCurrentTurn(),
+    });
+  }
+
+  /**
+   * Tracks the round played event.
+   * @param gameClient The game instance sending this event.
+   */
+  roundPlayed(gameClient: GameClient): void {
+    this.#send("round_played", gameClient, {
+      id: gameClient.getId(),
+      round: gameClient.getRoundNumber(),
+      turn: gameClient.getCurrentTurn(),
     });
   }
 }

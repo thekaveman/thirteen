@@ -1,8 +1,8 @@
-import type { GameClient } from "../game/client";
-import type { Card } from "../game/deck";
-import type { AI } from "./base";
-import { ComboAI } from "./combo";
-import { AI_TYPES } from "./index";
+import type { GameClient } from "../game/client.js";
+import type { Card } from "../game/deck.js";
+import type { AI } from "./base.js";
+import { ComboAI } from "./combo.js";
+import { AI_TYPES } from "./index.js";
 
 export class RandomComboAI extends ComboAI {
   /**
@@ -24,7 +24,7 @@ export class RandomComboAI extends ComboAI {
    * @param allPlayerHands All players' hands.
    * @returns The selected AI strategy.
    */
-  select(playerHand: Card[], playPile: Card[], currentTurn: number, allPlayerHands: Card[][]): AI | null {
+  select(_playerHand: Card[], _playPile: Card[], _currentTurn: number, _allPlayerHands: Card[][]): AI | null {
     if (this.strategies.length === 0) {
       return null;
     }

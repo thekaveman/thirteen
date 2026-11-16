@@ -1,7 +1,7 @@
-export { Card, Deck } from "./deck";
-export { GameClient } from "./client";
-export { Game } from "./game";
-export { Rules } from "./rules";
+export { Card, Deck } from "./deck.js";
+export { GameClient } from "./client.js";
+export { Game } from "./game.js";
+export { Rules } from "./rules.js";
 
 export const SUITS: readonly string[] = ["♠", "♣", "♦", "♥"];
 export const RANKS: readonly string[] = ["3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A", "2"];

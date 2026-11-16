@@ -1,6 +1,6 @@
-import type { GameClient } from "../game/client";
-import type { Card } from "../game/deck";
-import { AI } from "./base";
+import type { GameClient } from "../game/client.js";
+import type { Card } from "../game/deck.js";
+import { AI } from "./base.js";
 
 export class RandomAI extends AI {
   /**

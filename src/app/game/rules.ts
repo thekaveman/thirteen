@@ -1,6 +1,6 @@
-import { COMBINATION_TYPES, RANKS } from "./index";
-import type { Card } from "./deck";
-import { Card as CardClass } from "./deck";
+import { COMBINATION_TYPES, RANKS } from "./index.js";
+import type { Card } from "./deck.js";
+import { Card as CardClass } from "./deck.js";
 
 export class Rules {
   /**

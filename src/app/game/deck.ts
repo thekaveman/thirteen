@@ -1,4 +1,4 @@
-import { SUITS, RANKS } from "./index";
+import { SUITS, RANKS } from "./index.js";
 
 export class Card {
   rank: string;

@@ -1,7 +1,7 @@
-import { AI } from "./app/ai/index";
-import { AI_PERSONAS } from "./app/ai/personas";
-import { Card, Deck, Game, COMBINATION_TYPES, RANKS, SUITS, GameClient } from "./app/game/index";
-import { UI } from "./app/ui";
+import { AI } from "./app/ai/index.js";
+import { AI_PERSONAS } from "./app/ai/personas.js";
+import { Card, Deck, Game, COMBINATION_TYPES, RANKS, SUITS, GameClient } from "./app/game/index.js";
+import { UI } from "./app/ui.js";
 
 interface TryItState {
   hand: Card[];

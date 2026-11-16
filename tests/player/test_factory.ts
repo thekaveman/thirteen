@@ -10,8 +10,8 @@ describe("Player Factory", () => {
     gameClient = new GameClient(game);
   });
 
-  it("should create a HumanPlayer", () => {
-    const player = createPlayer({
+  it("should create a HumanPlayer", async () => {
+    const player = await createPlayer({
       type: PLAYER_TYPES.HUMAN,
       gameClient: gameClient,
       number: 0,
@@ -22,8 +22,8 @@ describe("Player Factory", () => {
     expect(player.number).to.equal(0);
   });
 
-  it("should create an AIPlayer with a valid persona", () => {
-    const player = createPlayer({
+  it("should create an AIPlayer with a valid persona", async () => {
+    const player = await createPlayer({
       type: PLAYER_TYPES.AI,
       persona: "random",
       gameClient: gameClient,
@@ -35,24 +35,30 @@ describe("Player Factory", () => {
     expect(player.number).to.equal(1);
   });
 
-  it("should throw an error for an unknown AI persona", () => {
-    expect(() =>
-      createPlayer({
+  it("should throw an error for an unknown AI persona", async () => {
+    try {
+      await createPlayer({
         type: PLAYER_TYPES.AI,
         persona: "unknown-persona",
         gameClient: gameClient,
         number: 1,
-      })
-    ).to.throw("Unknown AI persona: unknown-persona");
+      });
+      expect.fail("Should have thrown");
+    } catch (error) {
+      expect(error.message).to.equal("Unknown AI persona: unknown-persona");
+    }
   });
 
-  it("should throw an error for an unknown player type", () => {
-    expect(() =>
-      createPlayer({
+  it("should throw an error for an unknown player type", async () => {
+    try {
+      await createPlayer({
         type: "unknown-type",
         gameClient: gameClient,
         number: 1,
-      })
-    ).to.throw("Unknown player type: unknown-type");
+      });
+      expect.fail("Should have thrown");
+    } catch (error) {
+      expect(error.message).to.equal("Unknown player type: unknown-type");
+    }
   });
 });

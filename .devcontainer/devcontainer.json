@@ -15,7 +15,7 @@
           }
         }
       },
-      "extensions": ["eamodio.gitlens", "esbenp.prettier-vscode", "google.gemini-cli-vscode-ide-companion", "mhutchie.git-graph"]
+      "extensions": ["eamodio.gitlens", "esbenp.prettier-vscode", "mhutchie.git-graph"]
     }
   }
 }

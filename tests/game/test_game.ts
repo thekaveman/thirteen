@@ -1,6 +1,7 @@
 import { Card, Game } from "../../src/app/game/index.js";
-import { HumanPlayer, AIPlayer, PLAYER_TYPES } from "../../src/app/player/index.js";
-import { MockAI, MockDeck, MockUI, MockGameClient } from "../mocks.ts";
+import { HumanPlayer, AIPlayer } from "../../src/app/player/index.js";
+import { MockAI, MockDeck, MockUI } from "../mocks.ts";
+import { GameClient } from "../../src/app/game/index.js";
 
 describe("Game", () => {
   let game;
@@ -65,8 +66,8 @@ describe("Game", () => {
 
     it("start() should initialize the game state for starting", () => {
       const players = [
-        new HumanPlayer(new MockGameClient(game), 0, new MockUI(new MockGameClient(game))),
-        new AIPlayer(new MockGameClient(game), 1, new MockAI(new MockGameClient(game), [], "mock")),
+        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
       ];
       game.setPlayers(players);
       game.start();
@@ -92,8 +93,8 @@ describe("Game", () => {
   describe("Player Management", () => {
     it("setPlayers() should initialize players and associated game state", () => {
       const players = [
-        new HumanPlayer(new MockGameClient(game), 0, new MockUI(new MockGameClient(game))),
-        new AIPlayer(new MockGameClient(game), 1, new MockAI(new MockGameClient(game), [], "mock")),
+        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
       ];
       const originalGamesWon = [2, 1];
       game.gameState.gamesWon = originalGamesWon;
@@ -225,32 +226,32 @@ describe("Game", () => {
       expect(parsedGame.stateKey).to.equal(game.stateKey);
     });
 
-    it("load() should fail for invalid saved JSON", () => {
+    it("load() should fail for invalid saved JSON", async () => {
       localStorage.setItem(game.stateKey, "invalid json");
       try {
-        game.load(new MockUI(new MockGameClient(game)));
+        await game.load(new MockUI(new GameClient(game)));
       } catch (e) {
         expect(e).to.be.an.instanceOf(SyntaxError);
       }
     });
 
-    it("load() should not load if no saved state exists", () => {
-      const loaded = game.load(new MockUI(new MockGameClient(game)));
+    it("load() should not load if no saved state exists", async () => {
+      const loaded = await game.load(new MockUI(new GameClient(game)));
       expect(loaded.loaded).to.be.false;
     });
 
-    it("load() should not load if no ui is provided", () => {
+    it("load() should not load if no ui is provided", async () => {
       game.save();
-      const loaded = game.load(null);
+      const loaded = await game.load(null);
       expect(loaded.loaded).to.be.false;
     });
 
-    it("load() should correctly rehydrate game data", () => {
-      const mockUI = new MockUI(new MockGameClient(game));
-      const mockAI = new MockAI(new MockGameClient(game), [new Card("3", "♠")], "random");
+    it("load() should correctly rehydrate game data", async () => {
+      const mockUI = new MockUI(new GameClient(game));
+      const mockAI = new MockAI(new GameClient(game), [new Card("3", "♠")], "random");
       const mockPlayers = [
-        new AIPlayer(new MockGameClient(game), 0, mockAI),
-        new HumanPlayer(new MockGameClient(game), 1, mockUI),
+        new AIPlayer(new GameClient(game), 0, mockAI),
+        new HumanPlayer(new GameClient(game), 1, mockUI),
       ];
 
       game.setPlayers(mockPlayers);
@@ -260,14 +261,13 @@ describe("Game", () => {
       game.save();
 
       const newGame = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
-      const loadedGameState = newGame.load(mockUI);
+      const loadedGameState = await newGame.load(mockUI);
 
       expect(loadedGameState.loaded).to.be.true;
       expect(newGame.id).to.equal(game.id);
       expect(newGame.stateKey).to.equal(game.stateKey);
 
       expect(loadedGameState.loadedPlayerTypes).to.deep.equal(game.gameState.playerTypes);
-      expect(loadedGameState.loadedPlayerPersonas).to.deep.equal(game.gameState.playerPersonas);
 
       expect(newGame.gameState.playerHands[0][0]).to.be.an.instanceOf(Card);
       expect(newGame.gameState.playPile[0]).to.be.an.instanceOf(Card);

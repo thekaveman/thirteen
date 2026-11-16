@@ -26,7 +26,22 @@ export default [
       },
     },
     rules: {
-      "no-unused-vars": "warn",
+      "no-unused-vars": [
+        "error",
+        {
+          vars: "all",
+          args: "after-used",
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "",
+          ignoreRestSiblings: false,
+          caughtErrors: "all",
+          caughtErrorsIgnorePattern: "^_",
+          ignoreClassWithStaticInitBlock: false,
+          ignoreUsingDeclarations: false,
+          reportUsedIgnorePattern: false,
+        },
+      ],
       "no-var": "warn",
       "no-undef": "off",
       "no-prototype-builtins": "off",

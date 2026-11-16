@@ -1,7 +1,7 @@
-import type { GameClient } from "../game/client";
-import type { Card } from "../game/deck";
-import { AI } from "./base";
-import { AI_TYPES } from "./index";
+import type { GameClient } from "../game/client.js";
+import type { Card } from "../game/deck.js";
+import { AI } from "./base.js";
+import { AI_TYPES } from "./index.js";
 
 export class HighestValueAI extends AI {
   /**

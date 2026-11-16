@@ -1,4 +1,4 @@
-import type { GameClient } from "../game/client";
+import type { GameClient } from "../game/client.js";
 
 export interface PlayerData {
   game: string;
@@ -6,6 +6,7 @@ export interface PlayerData {
   number: number;
   persona: string | null;
   type: string;
+  ai?: unknown;
 }
 
 export class Player {

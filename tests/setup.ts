@@ -1,7 +1,7 @@
 import * as chai from "chai";
 import sinon from "sinon";
 import { JSDOM } from "jsdom";
-import { MockDeck, MockGame, MockAI, MockUI, MockAnalytics, MockLocalStorage, MockGameClient } from "./mocks.ts";
+import { MockDeck, MockGame, MockAI, MockUI, MockAnalytics, MockLocalStorage } from "./mocks.ts";
 
 // Import the actual classes
 import { Game, GameClient } from "../src/app/game/index.js";
@@ -16,7 +16,7 @@ global.MockGame = MockGame;
 global.MockAI = MockAI;
 global.MockUI = MockUI;
 global.MockAnalytics = MockAnalytics;
-global.MockGameClient = MockGameClient;
+global.GameClient = GameClient;
 
 // Make the actual classes available globally for stubbing
 global.Game = Game;
@@ -56,7 +56,7 @@ export const mochaHooks = {
     });
 
     gameClientStub = sinon.stub(global, "GameClient").callsFake(function (game) {
-      const instance = sinon.createStubInstance(MockGameClient, { game: game });
+      const instance = sinon.createStubInstance(GameClient, { game: game });
       instance.game = game;
       return instance;
     });

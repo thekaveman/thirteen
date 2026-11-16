@@ -92,7 +92,7 @@ export class MockAI extends AI {
     };
   }
 
-  takeTurn(hand, playPile, currentTurn, playerHands) {
+  takeTurn(hand, playPile, _currentTurn, _playerHands) {
     this.takeTurnCalled = true;
     if (this.move !== undefined) {
       return this.move;
@@ -182,12 +182,6 @@ export class MockDeck {
   shuffle() {}
 }
 
-export class MockGameClient extends GameClient {
-  constructor(game) {
-    super(game);
-  }
-}
-
 export class MockGame extends Game {
   constructor(deck, stateKey) {
     super(deck, stateKey);
@@ -211,25 +205,25 @@ export class MockGame extends Game {
     this.gameClient = new GameClient(this);
 
     this.hooks = {
-      onGameInit: (gameClient) => {
+      onGameInit: (_gameClient) => {
         this.onGameInitCalled = true;
       },
-      onGameReset: (gameClient) => {
+      onGameReset: (_gameClient) => {
         this.onGameResetCalled = true;
       },
-      onGameStarted: (gameClient) => {
+      onGameStarted: (_gameClient) => {
         this.onGameStartedCalled = true;
       },
-      onGameWon: (gameClient) => {
+      onGameWon: (_gameClient) => {
         this.onGameWonCalled = true;
       },
-      onPlayerMoved: (gameClient) => {
+      onPlayerMoved: (_gameClient) => {
         this.onPlayerMovedCalled = true;
       },
-      onPlayerPassed: (gameClient) => {
+      onPlayerPassed: (_gameClient) => {
         this.onPlayerPassedCalled = true;
       },
-      onRoundPlayed: (gameClient) => {
+      onRoundPlayed: (_gameClient) => {
         this.onRoundPlayedCalled = true;
       },
     };
@@ -239,25 +233,26 @@ export class MockGame extends Game {
     this.gameOverOnLoad = false;
   }
 
-  load(ui) {
+  async load(ui) {
     this.loadCalled = true;
     if (this.loadWillSucceed) {
       this.gameState.gameOver = this.gameOverOnLoad;
       const loadedPlayerIds = this.gameState.players.map((p) => p.id);
       const loadedPlayerTypes = this.gameState.players.map((p) => p.type);
-      const loadedPlayerPersonas = this.gameState.players.map((p) => (p.type === PLAYER_TYPES.AI ? p.persona : null));
 
-      this.gameState.players = this.gameState.players.map((p, i) =>
-        createPlayer({
-          id: loadedPlayerIds[i],
-          gameClient: new MockGameClient(this),
-          type: loadedPlayerTypes[i],
-          number: i,
-          ui: ui,
-          persona: loadedPlayerPersonas[i],
-        })
+      this.gameState.players = await Promise.all(
+        this.gameState.players.map(async (p, i) =>
+          createPlayer({
+            id: loadedPlayerIds[i],
+            gameClient: new GameClient(this),
+            type: loadedPlayerTypes[i],
+            number: i,
+            ui: ui,
+            persona: p.type === PLAYER_TYPES.AI ? p.persona : null,
+          })
+        )
       );
-      return { loaded: true, gameOver: this.gameOverOnLoad, loadedPlayerPersonas: [null, "random"] };
+      return { loaded: true, gameOver: this.gameOverOnLoad };
     }
     return { loaded: false };
   }
@@ -322,7 +317,7 @@ export class MockPlayer extends Player {
     };
   }
 
-  handleCardClick(event) {}
+  handleCardClick(_event) {}
 }
 
 export class MockUI {
