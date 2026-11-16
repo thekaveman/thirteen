@@ -4,7 +4,7 @@ import { AI } from "./base.js";
 import { RandomAI } from "./random.js";
 
 export class PassAI extends AI {
-  strategy: AI;
+  _strategy: AI | null;
 
   /**
    * Creates an instance of PassAI.
@@ -15,7 +15,17 @@ export class PassAI extends AI {
    */
   constructor(gameClient: GameClient, strategy: AI | null = null, persona: string | null = null) {
     super(gameClient, "pass", persona);
-    this.strategy = strategy || new RandomAI(gameClient, persona);
+    this._strategy = strategy;
+  }
+
+  /**
+   * Lazily creates a RandomAI strategy when first needed.
+   */
+  private get strategy(): AI {
+    if (!this._strategy) {
+      this._strategy = new RandomAI(this.gameClient, this.persona);
+    }
+    return this._strategy;
   }
 
   /**
