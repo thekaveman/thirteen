@@ -44,14 +44,13 @@ jobs:
           set -o pipefail
           npm test
 
+      - name: Build
+        run: npm run build
+
       - name: Prepare deployment directory
         run: |
           mkdir -p _site
-          # copy app source files to the root
-          cp -r src/* _site/
-          cp favicon.ico _site/
-          cp -r node_modules _site/
-          cp -r tests _site/
+          cp -r dist/* _site/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v4
