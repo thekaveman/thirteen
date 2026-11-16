@@ -25,7 +25,7 @@ export class App {
   gameClient: GameClient;
   ui: UI;
   setTimeout: ((_fn: () => void, _ms: number) => number) | undefined;
-  humanPlayer: Player;
+  humanPlayer!: Player | null;
   selectedAI: string;
   aiPlayers: Record<string, Player>;
 
@@ -53,7 +53,6 @@ export class App {
     this.ui.on("aiChanged", (selectedAI: unknown) => this.handleAISelection(selectedAI as string));
     this.ui.on("cardClicked", (card: unknown) => this.handleCardClick(card as Card));
 
-    this.humanPlayer = {} as Player;
     this.selectedAI = "random"; // Default AI persona
     this.aiPlayers = {};
   }
@@ -72,6 +71,7 @@ export class App {
   handleAISelection(selectedAI: string): void {
     this.selectedAI = selectedAI;
     this.gameClient.setAIPersona(1, this.selectedAI);
+    if (!this.humanPlayer) return;
     this.gameClient.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
     this.ui.render();
   }
