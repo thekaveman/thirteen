@@ -47,13 +47,10 @@ jobs:
       - name: Prepare deployment directory
         run: |
           mkdir -p _site
-          # copy app src files to the root
+          # copy app source files to the root
           cp -r src/* _site/
           cp favicon.ico _site/
-          # copy directories related to the online tests
-          cp -r coverage _site/
           cp -r node_modules _site/
-          cp -r src _site/
           cp -r tests _site/
 
       - name: Upload artifact
