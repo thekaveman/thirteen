@@ -1,4 +1,3 @@
-import type { Card as CardType } from "./deck.js";
 import { Card } from "./deck.js";
 import { Game } from "./game.js";
 import type { Player } from "../player/base.js";
@@ -78,7 +77,7 @@ export class GameClient {
       round: this.getRoundNumber(),
       started: this.isGameStarted(),
       turn: this.getCurrentTurn(),
-      hands: this.getPlayerHands() as CardType[][],
+      hands: this.getPlayerHands() as Card[][],
       players: (this.getPlayers() as Player[]).map((p) => p.data()),
       combination: this.getPlayPileCombinationType(),
       move: this.getSelectedCards(),
