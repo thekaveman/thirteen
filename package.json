@@ -35,7 +35,7 @@
   "bugs": {
     "url": "https://github.com/thekaveman/thirteen/issues"
   },
-  "homepage": "https://thirteen.thekaveman.dev/",
+  "homepage": "https://13.thekaveman.dev/",
   "devDependencies": {
     "@babel/core": "^7.28.4",
     "@babel/preset-env": "^7.28.3",
