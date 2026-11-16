@@ -1,8 +1,8 @@
 import type { AmplitudeBrowser } from "@amplitude/analytics-browser";
 import { init, Identify } from "@amplitude/analytics-browser";
-import type { GameClient } from "./game/client";
-import type { HumanPlayer } from "./player/human";
-import { PLAYER_TYPES } from "./player/index";
+import type { GameClient } from "./game/client.js";
+import type { HumanPlayer } from "./player/human.js";
+import { PLAYER_TYPES } from "./player/index.js";
 
 // Extend Window interface to include amplitude
 declare global {
@@ -55,15 +55,17 @@ export class Analytics {
    * Private method to initialize player data in the central service.
    * @param gameClient The game instance sending this event.
    */
-  async #idPlayer(gameClient: GameClient): Promise<void> {
+  #idPlayer(gameClient: GameClient): void {
     try {
-      const id = new Identify();
+      // Use this.api.Identify when available for testability
+      const IdentifyConstructor = ((this.api as any).Identify as typeof Identify) || Identify;
+      const id = new IdentifyConstructor();
       const player = gameClient.getFirstHumanPlayer() as HumanPlayer | undefined;
       if (!player) return;
 
       id.setOnce("player", player.id);
       id.setOnce("type", player.type);
-      id.setOnce("persona", player.type === PLAYER_TYPES.AI ? player.persona ?? "none" : "none");
+      id.setOnce("persona", player.type === PLAYER_TYPES.AI ? (player.persona as any) : null);
       id.setOnce("data", JSON.stringify(player.data()));
       id.set("game", gameClient.getId());
       id.add("games_played", 1);
@@ -82,7 +84,7 @@ export class Analytics {
    * @param gameClient The game instance sending this event.
    * @param payload The data associated with the event.
    */
-  async #send(eventType: string, gameClient: GameClient, payload: object = {}): Promise<void> {
+  #send(eventType: string, gameClient: GameClient, payload: object = {}): void {
     try {
       const data = gameClient.getAnalyticsData() as AnalyticsEventData;
       const event: {

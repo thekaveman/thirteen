@@ -1,10 +1,10 @@
-import { GameClient } from "./client";
-import type { Card } from "./deck";
-import { Card as CardClass, Deck } from "./deck";
+import { GameClient } from "./client.js";
+import type { Card } from "./deck.js";
+import { Card as CardClass, Deck } from "./deck.js";
 import type { Player } from "../player/base.js";
 import { PLAYER_TYPES, createPlayer } from "../player/index.js";
-import { Rules } from "./rules";
-import { log } from "../utils";
+import { Rules } from "./rules.js";
+import { log } from "../utils.js";
 
 export interface GameState {
   numPlayers: number;
@@ -125,7 +125,7 @@ export class Game {
    * @param ui An instance of the UI class.
    * @returns True if a saved game was loaded, false otherwise.
    */
-  load(ui: unknown): LoadResult {
+  async load(ui: unknown): Promise<LoadResult> {
     const savedState = localStorage.getItem(this.stateKey);
     const parsedState = savedState ? JSON.parse(savedState) : null;
     if (parsedState && ui) {
@@ -146,16 +146,18 @@ export class Game {
       this.gameState.playerHands = [...this.gameState.playerHands].map((h) => CardClass.objectsToList(h));
       this.gameState.playPile = CardClass.objectsToList([...this.gameState.playPile]);
       this.gameState.selectedCards = CardClass.objectsToList([...this.gameState.selectedCards]);
-      // Re-hydrate players
-      this.gameState.players = parsedState.gameState.players.map((p: { id: string }, i: number) =>
-        createPlayer({
-          id: loadedPlayerIds[i],
-          gameClient: new GameClient(this),
-          type: loadedPlayerTypes[i],
-          number: i,
-          ui: ui as any,
-          persona: loadedPlayerPersonas[i],
-        }),
+      // Re-hydrate players (async due to dynamic AI persona loading)
+      this.gameState.players = await Promise.all(
+        parsedState.gameState.players.map(async (p: { id: string }, i: number) =>
+          createPlayer({
+            id: loadedPlayerIds[i],
+            gameClient: new GameClient(this),
+            type: loadedPlayerTypes[i],
+            number: i,
+            ui: ui as any,
+            persona: loadedPlayerPersonas[i],
+          }),
+        ),
       );
       // Assign the stored playerTypes back to gameState
       this.gameState.playerTypes = loadedPlayerTypes;

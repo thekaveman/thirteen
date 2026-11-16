@@ -1,8 +1,8 @@
-import type { Card } from "../game/deck";
-import type { GameClient } from "../game/client";
-import { log } from "../utils";
-import { Player } from "./base";
-import { PLAYER_TYPES } from "./index";
+import type { Card } from "../game/deck.js";
+import type { GameClient } from "../game/client.js";
+import { log } from "../utils.js";
+import { Player } from "./base.js";
+import { PLAYER_TYPES } from "./index.js";
 
 export class HumanPlayer extends Player {
   /**
@@ -14,9 +14,9 @@ export class HumanPlayer extends Player {
     super(PLAYER_TYPES.HUMAN, gameClient, number);
   }
 
-  takeTurn(): void {
+  takeTurn(): Card[] | null {
     // For human players, the turn is taken via UI interactions
-    return;
+    return null;
   }
 
   handlePassButtonClick(): void {

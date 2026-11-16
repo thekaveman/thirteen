@@ -1,6 +1,6 @@
-import type { Card as CardType } from "./deck";
-import { Card } from "./deck";
-import { Game } from "./game";
+import type { Card as CardType } from "./deck.js";
+import { Card } from "./deck.js";
+import { Game } from "./game.js";
 import type { Player } from "../player/base.js";
 import type { HumanPlayer } from "../player/human.js";
 import type { AIPlayer } from "../player/ai.js";
@@ -316,7 +316,7 @@ export class GameClient {
    * @param ui An instance of the UI class.
    * @returns True if a saved game was loaded, false otherwise.
    */
-  load(ui: unknown): { loaded: boolean; loadedPlayerTypes?: string[]; loadedPlayerPersonas?: (string | null)[]; gameOver?: boolean } {
+  async load(ui: unknown): Promise<{ loaded: boolean; loadedPlayerTypes?: string[]; loadedPlayerPersonas?: (string | null)[]; gameOver?: boolean }> {
     return this.game.load(ui);
   }
 

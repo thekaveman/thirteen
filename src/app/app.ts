@@ -1,17 +1,17 @@
-import type { Analytics as AnalyticsClass } from "./analytics";
-import { Analytics } from "./analytics";
-import type { Card } from "./game/deck";
-import type { Deck } from "./game/deck";
-import type { Game } from "./game/game";
-import type { GameClient } from "./game/client";
-import { Deck as DeckClass, Game as GameClass, GameClient as GameClientClass } from "./game/index";
-import type { Player } from "./player/base";
-import type { AIPlayer } from "./player/ai";
-import { createPlayer, PLAYER_TYPES } from "./player/index";
-import type { UI as UIClassType } from "./ui";
-import { AI_PERSONAS } from "./ai/personas";
-import { log } from "./utils";
-import { UI as UI } from "./ui";
+import type { Analytics as AnalyticsClass } from "./analytics.js";
+import { Analytics } from "./analytics.js";
+import type { Card } from "./game/deck.js";
+import type { Deck } from "./game/deck.js";
+import type { Game } from "./game/game.js";
+import type { GameClient } from "./game/client.js";
+import { Deck as DeckClass, Game as GameClass, GameClient as GameClientClass } from "./game/index.js";
+import type { Player } from "./player/base.js";
+import type { AIPlayer } from "./player/ai.js";
+import { createPlayer, PLAYER_TYPES } from "./player/index.js";
+import type { UI as UIClassType } from "./ui.js";
+import { AI_PERSONAS } from "./ai/personas.js";
+import { log } from "./utils.js";
+import { UI as UI } from "./ui.js";
 
 export interface AppOptions {
   stateKey?: string;
@@ -25,7 +25,7 @@ export class App {
   analytics: AnalyticsClass;
   gameClient: GameClient;
   ui: UI;
-  setTimeoutFn: ((fn: () => void, ms: number) => number) | undefined;
+  setTimeout: ((fn: () => void, ms: number) => number) | undefined;
   humanPlayer: Player;
   selectedAI: string;
   aiPlayers: Record<string, Player>;
@@ -42,7 +42,7 @@ export class App {
     this.attachHooks(); // attach analytics hooks
 
     this.ui = ui;
-    this.setTimeoutFn =
+    this.setTimeout =
       typeof window !== "undefined" ? setTimeout.bind(window) : undefined;
 
     this.ui.init();
@@ -54,19 +54,9 @@ export class App {
     this.ui.on("aiChanged", (selectedAI: unknown) => this.handleAISelection(selectedAI as string));
     this.ui.on("cardClicked", (card: unknown) => this.handleCardClick(card as Card));
 
-    this.humanPlayer = createPlayer({ gameClient: this.gameClient, type: PLAYER_TYPES.HUMAN, number: 0, id: crypto.randomUUID() });
+    this.humanPlayer = {} as Player;
     this.selectedAI = "random"; // Default AI persona
     this.aiPlayers = {};
-    // Populate aiPlayers
-    for (const personaKey of Object.keys(AI_PERSONAS)) {
-      this.aiPlayers[personaKey] = createPlayer({
-        gameClient: this.gameClient,
-        type: PLAYER_TYPES.AI,
-        number: 1, // Assuming AI is always player 1
-        persona: personaKey,
-        id: crypto.randomUUID(),
-      });
-    }
   }
 
   attachHooks(): void {
@@ -156,9 +146,30 @@ export class App {
     this.nextTurn();
   }
 
-  init(): void {
+  async init(): Promise<void> {
+    // Create players asynchronously (due to dynamic AI persona loading)
+    this.humanPlayer = await createPlayer({ gameClient: this.gameClient, type: PLAYER_TYPES.HUMAN, number: 0, id: crypto.randomUUID() });
+    // Populate aiPlayers asynchronously
+    const aiPlayerPromises: Promise<Player>[] = [];
+    for (const personaKey of Object.keys(AI_PERSONAS)) {
+      aiPlayerPromises.push(
+        createPlayer({
+          gameClient: this.gameClient,
+          type: PLAYER_TYPES.AI,
+          number: 1, // Assuming AI is always player 1
+          persona: personaKey,
+          id: crypto.randomUUID(),
+        }),
+      );
+    }
+    const aiPlayers = await Promise.all(aiPlayerPromises);
+    const personaKeys = Object.keys(AI_PERSONAS);
+    for (let i = 0; i < personaKeys.length; i++) {
+      this.aiPlayers[personaKeys[i]] = aiPlayers[i];
+    }
+
     // Attempt to load game state
-    const loadedGameState = this.gameClient.load(this.ui);
+    const loadedGameState = await this.gameClient.load(this.ui);
     if (loadedGameState.loaded && !loadedGameState.gameOver) {
       // If game loaded, update selectedAI from loaded state
       if (loadedGameState.loadedPlayerPersonas && loadedGameState.loadedPlayerPersonas[1]) {
@@ -190,8 +201,8 @@ export class App {
     }
     const currentPlayer = this.gameClient.getCurrentPlayer();
     if (currentPlayer.type === PLAYER_TYPES.AI) {
-      if (this.setTimeoutFn) {
-        this.setTimeoutFn(() => this.handleAITurn(), 1000);
+      if (this.setTimeout) {
+        this.setTimeout(() => this.handleAITurn(), 1000);
       }
     } else {
       log("Human player's turn. Waiting for user input.");
@@ -205,7 +216,7 @@ export class App {
    * @param options Options for creating the app.
    * @returns A new App instance.
    */
-  static create(options: AppOptions = {}): App {
+  static async create(options: AppOptions = {}): Promise<App> {
     const {
       stateKey = GameClass.STATE_KEY,
       DeckClass: DeckCls = DeckClass,
@@ -219,8 +230,7 @@ export class App {
     const gameClient = new GameClientClass(game);
     const app = new App(gameClient, new UICls(gameClient), new AnalyticsCls());
 
-    app.ui.render();
-    app.init();
+    await app.init();
     return app;
   }
 }

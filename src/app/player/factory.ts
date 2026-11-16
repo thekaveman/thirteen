@@ -1,10 +1,9 @@
-import type { GameClient } from "../game/client";
+import type { GameClient } from "../game/client.js";
 import type { AI } from "../ai/base.js";
-import { Player } from "./base";
-import { AIPlayer } from "./ai";
-import { HumanPlayer } from "./human";
-import { PLAYER_TYPES } from "./index";
-import { AI_PERSONAS } from "../ai/personas.js";
+import { Player } from "./base.js";
+import { AIPlayer } from "./ai.js";
+import { HumanPlayer } from "./human.js";
+import { PLAYER_TYPES } from "./index.js";
 
 export interface PlayerFactoryConfig {
   id: string;
@@ -19,7 +18,7 @@ export interface PlayerFactoryConfig {
  * Creates a player instance based on the provided configuration.
  * @param config The player configuration.
  */
-export function createPlayer(config: PlayerFactoryConfig): Player {
+export async function createPlayer(config: PlayerFactoryConfig): Promise<Player> {
   const { id, gameClient, type, number, ui, persona } = config;
   let player: Player | undefined;
 
@@ -28,7 +27,8 @@ export function createPlayer(config: PlayerFactoryConfig): Player {
   }
 
   if (type === PLAYER_TYPES.AI) {
-    // AI_PERSONAS is from a .js file — cast to access create function with proper types
+    // Lazy-load AI_PERSONAS to break circular dependency
+    const { AI_PERSONAS } = await import("../ai/personas.js");
     const aiPersonas = AI_PERSONAS as unknown as Record<string, { create: (gc: GameClient) => AI }>;
     const aiPersona = aiPersonas[persona!];
     if (!aiPersona) {
