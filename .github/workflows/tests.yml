@@ -33,7 +33,7 @@ jobs:
         continue-on-error: true
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Build game
         run: npm run build
