@@ -728,4 +728,25 @@ button:disabled,
   .logo {
     width: 60px;
   }
+
+  /* Card typography and dimensions */
+  .card {
+    font-size: 0.75em;
+    padding: 10px 6px;
+    width: 42px;
+  }
+
+  .card-count,
+  .combination-type,
+  .rounds-won {
+    font-size: 0.7em;
+  }
+
+  .player-hand > h2 {
+    font-size: 0.9em;
+  }
+
+  .cards-container {
+    padding: 8px var(--spacing-m);
+  }
 }
