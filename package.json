@@ -41,6 +41,7 @@
     "@babel/preset-env": "^7.28.3",
     "@babel/register": "^7.28.3",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.1",
     "@typescript-eslint/eslint-plugin": "^8.72.2",
     "@typescript-eslint/parser": "^8.72.2",
     "chai": "^6.2.0",
@@ -56,6 +57,5 @@
   "overrides": {
     "glob": "^14.0.6",
     "minimatch": "^11.0.8"
-  },
-  "dependencies": {}
+  }
 }
