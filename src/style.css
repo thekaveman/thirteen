@@ -669,3 +669,63 @@ button:disabled,
     margin: 0 var(--spacing-xs);
   }
 }
+
+/* ===================================================
+   Phone (max-width: 575px)
+   =================================================== */
+@media (max-width: 575px) {
+  body {
+    padding-bottom: 40px;
+  }
+
+  #game-container {
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  #game-board {
+    flex-grow: 1;
+    overflow-y: auto;
+  }
+
+  #players-hands {
+    gap: var(--spacing-s);
+  }
+
+  .player-hand {
+    flex: 1;
+    height: auto;
+    min-height: 120px;
+    max-width: 100%;
+    padding-bottom: var(--spacing-xl);
+  }
+
+  .player-hand .cards-container {
+    overflow-x: auto;
+    padding: var(--spacing-s) var(--spacing-m);
+  }
+
+  #controls {
+    position: static;
+    padding: var(--spacing-s) var(--spacing-xs);
+    box-shadow: none;
+    margin-top: var(--spacing-s);
+    z-index: auto;
+    bottom: auto;
+  }
+
+  #controls button {
+    flex: 1;
+    padding: var(--spacing-s) var(--spacing-xs);
+    font-size: var(--font-size-xs);
+    min-height: 44px;
+  }
+
+  h1 {
+    font-size: var(--font-size-s);
+  }
+
+  .logo {
+    width: 60px;
+  }
+}
