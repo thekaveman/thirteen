@@ -42,7 +42,7 @@ jobs:
         id: responsive-tests
         run: |
           set -o pipefail
-          npm test:responsive 2>&1 | tee responsive-test-results.log
+          npm run test:responsive 2>&1 | tee responsive-test-results.log
         continue-on-error: true
 
       - name: Add test results to job summary
