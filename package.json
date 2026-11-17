@@ -40,7 +40,7 @@
   "homepage": "https://13.thekaveman.dev/",
   "devDependencies": {
     "@babel/core": "^7.28.4",
-    "@babel/preset-env": "^7.28.3",
+    "@babel/preset-env": "^8.0.7",
     "@babel/register": "^7.28.3",
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.65.1",
