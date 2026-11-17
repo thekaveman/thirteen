@@ -9,7 +9,9 @@
   "scripts": {
     "build": "tsc && cp src/*.html src/*.css src/logo.png favicon.ico dist/",
     "start": "npm run build && http-server dist -p 8888",
-    "test": "node --loader tsm node_modules/mocha/bin/mocha.js --require ./tests/setup.ts tests/test_*.ts tests/**/*.ts"
+    "test": "node --loader tsm node_modules/mocha/bin/mocha.js --require ./tests/setup.ts tests/test_*.ts tests/**/*.ts",
+    "test:responsive": "npx playwright test",
+    "test:responsive:update": "npx playwright test --update-snapshots"
   },
   "nyc": {
     "all": true,
