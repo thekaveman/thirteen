@@ -9,7 +9,9 @@
   "scripts": {
     "build": "tsc && cp src/*.html src/*.css src/logo.png favicon.ico dist/",
     "start": "npm run build && http-server dist -p 8888",
-    "test": "node --loader tsm node_modules/mocha/bin/mocha.js --require ./tests/setup.ts tests/test_*.ts tests/**/*.ts"
+    "test": "node --loader tsm node_modules/mocha/bin/mocha.js --require ./tests/setup.ts tests/test_*.ts tests/**/*.ts",
+    "test:responsive": "npx playwright test",
+    "test:responsive:update": "npx playwright test --update-snapshots"
   },
   "nyc": {
     "all": true,
@@ -41,6 +43,7 @@
     "@babel/preset-env": "^7.28.3",
     "@babel/register": "^7.28.3",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.65.1",
     "@typescript-eslint/eslint-plugin": "^8.72.2",
     "@typescript-eslint/parser": "^8.72.2",
     "chai": "^6.2.0",
@@ -56,6 +59,5 @@
   "overrides": {
     "glob": "^14.0.6",
     "minimatch": "^11.0.8"
-  },
-  "dependencies": {}
+  }
 }
