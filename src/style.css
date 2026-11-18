@@ -205,6 +205,12 @@ h2 {
   padding-bottom: 0;
 }
 
+#play-area .cards-container .card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .card {
   display: inline-block;
   padding: 16px 8px;
