@@ -16,6 +16,7 @@ export interface UIId {
   passButton: string;
   newGameButton: string;
   startGameButton: string;
+  cancelButton: string;
   resetButton: string;
   aiSelection: string;
   aiDropdown: string;
@@ -41,6 +42,7 @@ export class UI {
   passButton: HTMLElement | null;
   newGameButton: HTMLElement | null;
   startGameButton: HTMLElement | null;
+  cancelButton: HTMLElement | null;
   resetButton: HTMLElement | null;
   aiSelection: HTMLElement | null;
   aiDropdown: HTMLSelectElement | null;
@@ -61,6 +63,7 @@ export class UI {
       passButton: "pass-button",
       newGameButton: "new-game-button",
       startGameButton: "start-game-button",
+      cancelButton: "cancel-button",
       resetButton: "reset-button",
       aiSelection: "ai-selection",
       aiDropdown: "ai-dropdown",
@@ -78,6 +81,7 @@ export class UI {
     this.passButton = null;
     this.newGameButton = null;
     this.startGameButton = null;
+    this.cancelButton = null;
     this.resetButton = null;
     this.aiSelection = null;
     this.aiDropdown = null;
@@ -110,6 +114,7 @@ export class UI {
       this.passButton = document.getElementById(this.id.passButton);
       this.newGameButton = document.getElementById(this.id.newGameButton);
       this.startGameButton = document.getElementById(this.id.startGameButton);
+      this.cancelButton = document.getElementById(this.id.cancelButton);
       this.resetButton = document.getElementById(this.id.resetButton);
       this.aiSelection = document.createElement("div");
       this.aiSelection.id = this.id.aiSelection;
@@ -124,6 +129,8 @@ export class UI {
       if (this.newGameButton) this.newGameButton.addEventListener("click", () => this.emit("newGameClicked", undefined));
       if (this.resetButton) this.resetButton.addEventListener("click", () => this.emit("resetClicked", undefined));
       if (this.startGameButton) this.startGameButton.addEventListener("click", () => this.emit("startClicked", undefined));
+      if (this.cancelButton) this.cancelButton.addEventListener("click", () => this.emit("cancelClicked", undefined));
+      if (this.resetButton) this.resetButton.addEventListener("click", () => this.emit("resetClicked", undefined));
       if (this.aiDropdown)
         this.aiDropdown.addEventListener("change", (event: Event) =>
           this.emit("aiChanged", (event.target as HTMLSelectElement).value),
@@ -439,7 +446,7 @@ export class UI {
   }
 
   /**
-   * Updates the state of the play, pass, and new game buttons.
+   * Updates the state of the play, pass, cancel, and reset buttons.
    */
   updateButtonStates(): void {
     const currentPlayer = this.gameClient.getCurrentPlayer() as Player | undefined;
@@ -449,6 +456,7 @@ export class UI {
     if (this.gameClient.isGameOver()) {
       this.#setButtonDisplay(this.playButton, "none");
       this.#setButtonDisplay(this.passButton, "none");
+      this.#setButtonDisplay(this.cancelButton, "none");
       this.#setButtonDisplay(this.newGameButton, "block");
       this.#setButtonDisplay(this.startGameButton, "none");
       if (this.resetButton) {
@@ -458,6 +466,7 @@ export class UI {
     } else if (!this.gameClient.isGameStarted()) {
       this.#setButtonDisplay(this.playButton, "none");
       this.#setButtonDisplay(this.passButton, "none");
+      this.#setButtonDisplay(this.cancelButton, "none");
       this.#setButtonDisplay(this.newGameButton, "none");
       this.#setButtonDisplay(this.startGameButton, "block");
       if (this.resetButton) {
@@ -473,12 +482,13 @@ export class UI {
         this.#setButtonDisplay(this.passButton, "block");
         (this.passButton as HTMLButtonElement).disabled = !isHumanPlayerTurn;
       }
+      if (this.cancelButton) {
+        this.#setButtonDisplay(this.cancelButton, "block");
+        (this.cancelButton as HTMLButtonElement).disabled = !isHumanPlayerTurn;
+      }
       this.#setButtonDisplay(this.newGameButton, "none");
       this.#setButtonDisplay(this.startGameButton, "none");
-      if (this.resetButton) {
-        this.#setButtonDisplay(this.resetButton, "block");
-        (this.resetButton as HTMLButtonElement).disabled = !isHumanPlayerTurn;
-      }
+      this.#setButtonDisplay(this.resetButton, "none");
     }
   }
 

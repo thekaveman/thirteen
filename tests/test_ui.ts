@@ -222,7 +222,7 @@ describe("UI", () => {
       ui.updateButtonStates();
       expect(ui.playButton.disabled).to.be.false;
       expect(ui.passButton.disabled).to.be.false;
-      expect(ui.resetButton.disabled).to.be.false;
+      expect(ui.cancelButton.disabled).to.be.false;
     });
 
     it("should disable Play/Pass for AI player's turn", () => {
@@ -231,7 +231,19 @@ describe("UI", () => {
       ui.updateButtonStates();
       expect(ui.playButton.disabled).to.be.true;
       expect(ui.passButton.disabled).to.be.true;
-      expect(ui.resetButton.disabled).to.be.true;
+      expect(ui.cancelButton.disabled).to.be.true;
+    });
+
+    it("should show Play/Pass/Cancel during an active game", () => {
+      game.gameState.gameStarted = true;
+      gameClient.setCurrentPlayer(0);
+      ui.updateButtonStates();
+      expect(ui.playButton.style.display).to.equal("block");
+      expect(ui.passButton.style.display).to.equal("block");
+      expect(ui.cancelButton.style.display).to.equal("block");
+      expect(ui.newGameButton.style.display).to.equal("none");
+      expect(ui.startGameButton.style.display).to.equal("none");
+      expect(ui.resetButton.style.display).to.equal("none");
     });
   });
 

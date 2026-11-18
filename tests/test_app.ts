@@ -195,6 +195,22 @@ describe("App", function () {
       expect(analyticsSpy.called).to.be.true;
     });
 
+    it("handleCancelClick() should clear selected cards", async function () {
+      await app.init();
+      gameClient.setCurrentPlayer(0); // Human
+      const selectedCards = [new Card("3", "♠"), new Card("4", "♦")];
+      gameClient.toggleCardSelection(selectedCards[0]);
+      gameClient.toggleCardSelection(selectedCards[1]);
+      const clearSelectedSpy = this.sandbox.spy(gameClient, "clearSelectedCards");
+      const renderSelectedSpy = this.sandbox.spy(ui, "renderSelectedCards");
+
+      ui.emit("cancelClicked");
+
+      expect(clearSelectedSpy.called).to.be.true;
+      expect(renderSelectedSpy.called).to.be.true;
+      expect(gameClient.getSelectedCards()).to.have.lengthOf(0);
+    });
+
     it("handleHumanPlay() should call game.playCards on valid play", async function () {
       await app.init();
       gameClient.setCurrentPlayer(0); // Human

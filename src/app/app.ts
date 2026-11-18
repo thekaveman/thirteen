@@ -48,6 +48,7 @@ export class App {
     this.ui.on("playClicked", () => this.handleHumanPlay());
     this.ui.on("passClicked", () => this.handleHumanPass());
     this.ui.on("newGameClicked", () => this.handleNewGameClick());
+    this.ui.on("cancelClicked", () => this.handleCancelClick());
     this.ui.on("resetClicked", () => this.handleResetButtonClick());
     this.ui.on("startClicked", () => this.handleStartGameClick());
     this.ui.on("aiChanged", (selectedAI: unknown) => this.handleAISelection(selectedAI as string));
@@ -111,6 +112,12 @@ export class App {
   handleNewGameClick(): void {
     log("Game initialized");
     this.init();
+  }
+
+  handleCancelClick(): void {
+    log("Cancel clicked - clearing selected cards");
+    this.gameClient.clearSelectedCards();
+    this.ui.renderSelectedCards();
   }
 
   handleResetButtonClick(): void {
