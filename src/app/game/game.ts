@@ -215,12 +215,6 @@ export class Game {
       return false;
     }
 
-    // Initialize playerPassed if not properly set up
-    const pp = this.gameState.playerPassed;
-    if (!pp || !Array.isArray(pp) || pp.length !== this.gameState.numPlayers) {
-      this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
-    }
-
     this.gameState.playerTurns[this.gameState.currentPlayer]++;
     this.gameState.consecutivePasses++;
     this.gameState.playerPassed[this.gameState.currentPlayer] = true;
@@ -260,12 +254,6 @@ export class Game {
    * Handles a valid play, updating the game state.
    */
   playCards(): void {
-    // Initialize playerPassed if not properly set up
-    const pp = this.gameState.playerPassed;
-    if (!pp || !Array.isArray(pp) || pp.length !== this.gameState.numPlayers) {
-      this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
-    }
-
     // Reject plays from passed players
     if (this.gameState.playerPassed[this.gameState.currentPlayer]) {
       log("Cannot play cards: this player has passed.");
