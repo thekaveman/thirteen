@@ -772,3 +772,15 @@ button:disabled,
     bottom: auto;
   }
 }
+
+/* Smallest screens (≤352px): smaller cards + tighter overlap to force 7 per row */
+@media (max-width: 352px) {
+  .player-hand .cards-container .card {
+    width: 38px;
+    padding: 8px 4px;
+  }
+
+  .player-hand .cards-container .card:not(:first-of-type) {
+    margin-left: -14px;
+  }
+}
