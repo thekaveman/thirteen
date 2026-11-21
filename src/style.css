@@ -289,7 +289,9 @@ h2 {
   z-index: 1000;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  transition:
+    opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
 }
 
 #game-messages.visible {
@@ -707,7 +709,9 @@ button:disabled,
   }
 
   .player-hand .cards-container {
-    overflow-x: auto;
+    flex-wrap: wrap;
+    justify-content: center;
+    overflow-x: hidden;
     padding: var(--spacing-s) var(--spacing-m);
   }
 
@@ -737,15 +741,22 @@ button:disabled,
 
   /* Card typography and dimensions */
   .card {
-    font-size: 0.75em;
-    padding: 10px 6px;
+    font-size: 0.77em;
+    padding: 10px 7px;
     width: 42px;
   }
 
+  .player-hand .cards-container .card {
+    margin-left: -10px;
+  }
+
   .card-count,
-  .combination-type,
-  .rounds-won {
+  .combination-type {
     font-size: 0.7em;
+  }
+
+  .rounds-won {
+    display: none;
   }
 
   .player-hand > h2 {
@@ -754,5 +765,10 @@ button:disabled,
 
   .cards-container {
     padding: 8px var(--spacing-m);
+  }
+
+  #ai-selection {
+    top: 5%;
+    bottom: auto;
   }
 }
