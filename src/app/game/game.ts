@@ -23,6 +23,7 @@ export interface GameState {
   gameOver: boolean;
   gameStarted: boolean;
   playerTypes: string[];
+  playerPassed: boolean[];
 }
 
 export interface GameHooks {
@@ -84,6 +85,7 @@ export class Game {
       gameOver: false,
       gameStarted: false,
       playerTypes: [],
+      playerPassed: [],
     };
     this.id = crypto.randomUUID();
     this.rules = new Rules();
@@ -113,6 +115,7 @@ export class Game {
     this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
     this.gameState.playerTurns = new Array(this.gameState.numPlayers).fill(0);
     this.gameState.selectedCards = [];
+    this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
     this.hooks.onGameInit(new GameClient(this));
   }
 
@@ -153,10 +156,28 @@ export class Game {
       );
       // Assign the stored playerTypes back to gameState
       this.gameState.playerTypes = loadedPlayerTypes;
+      // Initialize playerPassed if missing (backward compat with old saves)
+      const pp = this.gameState.playerPassed;
+      if (!pp || !Array.isArray(pp) || pp.length !== this.gameState.numPlayers) {
+        this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
+      }
       log("Game loaded from localStorage.");
       return { loaded: true, loadedPlayerTypes, gameOver: this.gameState.gameOver };
     }
     return { loaded: false };
+  }
+
+  /**
+   * Checks if the round should end: all players except lastPlayerToPlay have passed.
+   */
+  shouldEndRound(): boolean {
+    const pp = this.gameState.playerPassed;
+    for (let i = 0; i < this.gameState.numPlayers; i++) {
+      if (i !== this.gameState.lastPlayerToPlay && !pp[i]) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
@@ -180,6 +201,7 @@ export class Game {
         ? this.gameState.lastPlayerToPlay
         : this.rules.findStartingPlayer(this.gameState.playerHands);
     this.gameState.roundNumber++;
+    this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
     this.hooks.onRoundPlayed(new GameClient(this));
   }
 
@@ -193,17 +215,40 @@ export class Game {
       return false;
     }
 
+    // Initialize playerPassed if not properly set up
+    const pp = this.gameState.playerPassed;
+    if (!pp || !Array.isArray(pp) || pp.length !== this.gameState.numPlayers) {
+      this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
+    }
+
     this.gameState.playerTurns[this.gameState.currentPlayer]++;
     this.gameState.consecutivePasses++;
+    this.gameState.playerPassed[this.gameState.currentPlayer] = true;
     this.gameState.selectedCards = []; // Clear selected cards on pass
 
     this.hooks.onPlayerPassed(new GameClient(this));
 
-    if (this.gameState.consecutivePasses >= this.gameState.numPlayers - 1) {
+    // Check if round should end (all non-last players have passed)
+    if (this.shouldEndRound()) {
+      log(`Player ${this.gameState.lastPlayerToPlay + 1} wins round ${this.gameState.roundNumber}.`);
+      this.nextRound();
+      this.gameState.currentTurn++;
+      this.save();
+      return true;
+    }
+
+    // Skip passed players to find the next active player
+    const numPlayers = this.gameState.numPlayers;
+    let nextPlayer = (this.gameState.currentPlayer + 1) % numPlayers;
+    while (nextPlayer !== this.gameState.lastPlayerToPlay && this.gameState.playerPassed[nextPlayer]) {
+      nextPlayer = (nextPlayer + 1) % numPlayers;
+    }
+    // If we've cycled back to lastPlayerToPlay, all others have passed
+    if (nextPlayer === this.gameState.lastPlayerToPlay && this.shouldEndRound()) {
       log(`Player ${this.gameState.lastPlayerToPlay + 1} wins round ${this.gameState.roundNumber}.`);
       this.nextRound();
     } else {
-      this.nextPlayer();
+      this.gameState.currentPlayer = nextPlayer;
     }
 
     this.gameState.currentTurn++;
@@ -215,6 +260,18 @@ export class Game {
    * Handles a valid play, updating the game state.
    */
   playCards(): void {
+    // Initialize playerPassed if not properly set up
+    const pp = this.gameState.playerPassed;
+    if (!pp || !Array.isArray(pp) || pp.length !== this.gameState.numPlayers) {
+      this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
+    }
+
+    // Reject plays from passed players
+    if (this.gameState.playerPassed[this.gameState.currentPlayer]) {
+      log("Cannot play cards: this player has passed.");
+      return;
+    }
+
     // Move selected cards to play pile
     this.gameState.playPile = [...this.gameState.selectedCards];
 
@@ -233,6 +290,11 @@ export class Game {
     if (currentPlayerHand.length === 0) {
       log(`Player ${this.gameState.currentPlayer + 1} wins the game!`);
       this.win();
+      // Clear selected cards
+      this.gameState.selectedCards = [];
+      this.gameState.currentTurn++;
+      this.save();
+      return;
     }
 
     this.gameState.consecutivePasses = 0;
@@ -240,6 +302,15 @@ export class Game {
 
     // Clear selected cards
     this.gameState.selectedCards = [];
+
+    // Check if round should end (all other players have passed)
+    if (this.shouldEndRound()) {
+      log(`Player ${this.gameState.lastPlayerToPlay + 1} wins round ${this.gameState.roundNumber}.`);
+      this.nextRound();
+      this.gameState.currentTurn++;
+      this.save();
+      return;
+    }
 
     // Switch to next player
     if (!this.gameState.gameOver) {
@@ -284,6 +355,7 @@ export class Game {
       this.gameState.numPlayers = players.length;
       this.gameState.playerTypes = players.map((p) => p.type);
       this.gameState.roundsWon = new Array(players.length).fill(0);
+      this.gameState.playerPassed = new Array(players.length).fill(false);
       if (this.gameState.gamesWon.length !== players.length) {
         this.gameState.gamesWon = new Array(players.length).fill(0);
       }
