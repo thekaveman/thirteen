@@ -46,7 +46,8 @@ describe("Rules", () => {
       expect(rules.getCombinationType([new Card("3", "♠"), new Card("4", "♦"), new Card("5", "♣")])).to.equal(
         COMBINATION_TYPES.STRAIGHT
       );
-      const consecutivePairs = [
+      // Three consecutive pairs is no longer a normal combo type; it is a bomb only
+      const threeConsecutivePairs = [
         new Card("3", "♠"),
         new Card("3", "♦"),
         new Card("4", "♣"),
@@ -54,7 +55,7 @@ describe("Rules", () => {
         new Card("5", "♠"),
         new Card("5", "♦"),
       ];
-      expect(rules.getCombinationType(consecutivePairs)).to.equal(COMBINATION_TYPES.CONSECUTIVE_PAIRS);
+      expect(rules.getCombinationType(threeConsecutivePairs)).to.equal(COMBINATION_TYPES.INVALID);
       expect(rules.getCombinationType([new Card("K", "♠"), new Card("A", "♠")])).to.equal(COMBINATION_TYPES.INVALID);
     });
 
@@ -123,22 +124,6 @@ describe("Rules", () => {
       expect(rules.isBombForSingleTwo(fourOfAKind)).to.be.true;
       expect(rules.isBombForSingleTwo(threeConsecutivePairs)).to.be.true;
       expect(rules.isBombForSingleTwo(invalidBomb)).to.be.false;
-    });
-
-    it("isBombForPairOfTwos() should identify correct bombs for a pair of twos", () => {
-      const fourConsecutivePairs = [
-        new Card("3", "♠"),
-        new Card("3", "♦"),
-        new Card("4", "♣"),
-        new Card("4", "♥"),
-        new Card("5", "♠"),
-        new Card("5", "♦"),
-        new Card("6", "♣"),
-        new Card("6", "♦"),
-      ];
-      const invalidBomb = [new Card("A", "♠"), new Card("A", "♦"), new Card("A", "♣"), new Card("A", "♥")];
-      expect(rules.isBombForPairOfTwos(fourConsecutivePairs)).to.be.true;
-      expect(rules.isBombForPairOfTwos(invalidBomb)).to.be.false;
     });
   });
 
@@ -221,7 +206,48 @@ describe("Rules", () => {
         expect(isValid).to.be.true;
       });
 
-      it("should allow four consecutive pairs to beat a pair of 2s", () => {
+      it("should allow a higher four-of-a-kind to beat a lower four-of-a-kind", () => {
+        const playPile = [new Card("3", "♠"), new Card("3", "♦"), new Card("3", "♣"), new Card("3", "♥")];
+        const bomb = [new Card("5", "♠"), new Card("5", "♦"), new Card("5", "♣"), new Card("5", "♥")];
+        const isValid = rules.isValidPlay(bomb, playPile, bomb, 1, [bomb]);
+        expect(isValid).to.be.true;
+      });
+
+      it("should allow a higher three consecutive pairs to beat a lower three consecutive pairs", () => {
+        const playPile = [
+          new Card("3", "♠"),
+          new Card("3", "♦"),
+          new Card("4", "♣"),
+          new Card("4", "♥"),
+          new Card("5", "♠"),
+          new Card("5", "♦"),
+        ];
+        const bomb = [
+          new Card("4", "♠"),
+          new Card("4", "♦"),
+          new Card("5", "♣"),
+          new Card("5", "♥"),
+          new Card("6", "♠"),
+          new Card("6", "♦"),
+        ];
+        const isValid = rules.isValidPlay(bomb, playPile, bomb, 1, [bomb]);
+        expect(isValid).to.be.true;
+      });
+
+      it("should reject three consecutive pairs as a normal play (start of round)", () => {
+        const bomb = [
+          new Card("3", "♠"),
+          new Card("3", "♦"),
+          new Card("4", "♣"),
+          new Card("4", "♥"),
+          new Card("5", "♠"),
+          new Card("5", "♦"),
+        ];
+        const isValid = rules.isValidPlay(bomb, [], bomb, 1, [bomb]);
+        expect(isValid).to.be.false;
+      });
+
+      it("should reject four consecutive pairs as any type of play", () => {
         const bomb = [
           new Card("3", "♠"),
           new Card("3", "♦"),
@@ -232,9 +258,9 @@ describe("Rules", () => {
           new Card("6", "♣"),
           new Card("6", "♦"),
         ];
-        const playPile = [new Card("2", "♠"), new Card("2", "♦")];
-        const isValid = rules.isValidPlay(bomb, playPile, bomb, 1, [bomb]);
-        expect(isValid).to.be.true;
+        expect(rules.isValidPlay(bomb, [], bomb, 1, [bomb])).to.be.false;
+        const playPile = [new Card("2", "♠")];
+        expect(rules.isValidPlay(bomb, playPile, bomb, 1, [bomb])).to.be.false;
       });
 
       it("should not allow a bomb on a non-2 card", () => {
@@ -247,6 +273,48 @@ describe("Rules", () => {
       it("should not allow a four-of-a-kind to bomb a pair of 2s", () => {
         const bomb = [new Card("4", "♠"), new Card("4", "♦"), new Card("4", "♣"), new Card("4", "♥")];
         const playPile = [new Card("2", "♠"), new Card("2", "♦")];
+        const isValid = rules.isValidPlay(bomb, playPile, bomb, 1, [bomb]);
+        expect(isValid).to.be.false;
+      });
+
+      it("should not allow three consecutive pairs to bomb a pair of 2s", () => {
+        const bomb = [
+          new Card("3", "♠"),
+          new Card("3", "♦"),
+          new Card("4", "♣"),
+          new Card("4", "♥"),
+          new Card("5", "♠"),
+          new Card("5", "♦"),
+        ];
+        const playPile = [new Card("2", "♠"), new Card("2", "♦")];
+        const isValid = rules.isValidPlay(bomb, playPile, bomb, 1, [bomb]);
+        expect(isValid).to.be.false;
+      });
+
+      it("should not allow a three consecutive pairs to beat a four-of-a-kind bomb", () => {
+        const playPile = [new Card("3", "♠"), new Card("3", "♦"), new Card("3", "♣"), new Card("3", "♥")];
+        const bomb = [
+          new Card("3", "♠"),
+          new Card("3", "♦"),
+          new Card("4", "♣"),
+          new Card("4", "♥"),
+          new Card("5", "♠"),
+          new Card("5", "♦"),
+        ];
+        const isValid = rules.isValidPlay(bomb, playPile, bomb, 1, [bomb]);
+        expect(isValid).to.be.false;
+      });
+
+      it("should not allow a four-of-a-kind to beat a three consecutive pairs bomb", () => {
+        const playPile = [
+          new Card("3", "♠"),
+          new Card("3", "♦"),
+          new Card("4", "♣"),
+          new Card("4", "♥"),
+          new Card("5", "♠"),
+          new Card("5", "♦"),
+        ];
+        const bomb = [new Card("5", "♠"), new Card("5", "♦"), new Card("5", "♣"), new Card("5", "♥")];
         const isValid = rules.isValidPlay(bomb, playPile, bomb, 1, [bomb]);
         expect(isValid).to.be.false;
       });
