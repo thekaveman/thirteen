@@ -367,15 +367,13 @@ export class UI {
     const playerHand = this.gameClient.getPlayerHands(playerIndex) as Card[];
     this.renderCardsContainer(playerHand, cardsContainer, preRender);
 
-    const cardCountEl = handDiv.querySelector(".card-count") as HTMLElement | null;
+    let cardCountEl = handDiv.querySelector(".card-count") as HTMLElement | null;
     if (!cardCountEl) {
-      const newCardCountEl = document.createElement("p");
-      newCardCountEl.classList.add("card-count");
-      handDiv.appendChild(newCardCountEl);
-      newCardCountEl.textContent = `Cards remaining: ${playerHand.length}`;
-    } else {
-      cardCountEl.textContent = `Cards remaining: ${playerHand.length}`;
+      cardCountEl = document.createElement("p");
+      cardCountEl.classList.add("card-count");
+      handDiv.appendChild(cardCountEl);
     }
+    cardCountEl.textContent = `Cards: ${playerHand.length}/13`;
   }
 
   /**

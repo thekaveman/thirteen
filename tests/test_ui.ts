@@ -93,7 +93,7 @@ describe("UI", () => {
     expect(player1HandDiv.querySelector("h2").textContent).to.include("👉 Player 1");
     expect(player1HandDiv.classList.contains("current")).to.be.true;
     expect(player1HandDiv.querySelector(".games-won").textContent).to.equal("Games won: 1");
-    expect(player1HandDiv.querySelector(".card-count").textContent).to.equal("Cards remaining: 1");
+    expect(player1HandDiv.querySelector(".card-count").textContent).to.equal("Cards: 1/13");
   });
 
   it("renderPlayArea() should clear game content before rendering", () => {

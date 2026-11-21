@@ -170,11 +170,13 @@ h2 {
 }
 
 .games-won {
+  position: absolute;
+  bottom: var(--spacing-s);
+  left: var(--spacing-m);
   font-size: var(--font-size-s);
   color: var(--color-darker-gray);
   font-weight: bold;
-  margin-bottom: 0;
-  padding: 0 var(--spacing-m);
+  margin: 0;
 }
 
 combination-type {
@@ -255,12 +257,11 @@ combination-type {
 
 .card-count {
   position: absolute;
-  bottom: 0;
-  left: var(--spacing-xl);
-  right: 0;
+  top: calc(var(--spacing-xs) * 0.8);
+  right: var(--spacing-m);
   font-size: var(--font-size-xxs);
   color: var(--color-medium-gray);
-  text-align: left;
+  text-align: right;
 }
 
 #game-messages {
