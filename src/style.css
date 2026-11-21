@@ -583,9 +583,9 @@ button:disabled,
   }
 
   .player-hand {
+    flex: 1;
     padding: var(--spacing-m);
     height: 400px;
-    width: 45%;
     padding-bottom: var(--spacing-xxl);
   }
 
@@ -595,7 +595,7 @@ button:disabled,
   }
 
   .player-hand .cards-container .card {
-    margin-left: var(--spacing-xs);
+    margin-left: -10px;
   }
 
   #game-messages.visible {
@@ -616,15 +616,10 @@ button:disabled,
     padding: 0;
   }
 
-  .cards-container .card:first-child {
-    margin-left: var(--spacing-xs);
-  }
-
   .card {
-    font-size: var(--font-size-m);
-    padding: var(--spacing-m) var(--spacing-s);
-    margin-left: var(--spacing-xs);
-    width: 60px;
+    font-size: 1em;
+    padding: 12px 8px;
+    width: 46px;
   }
 
   .card.selected {
@@ -647,6 +642,9 @@ button:disabled,
 
   .card {
     justify-content: left;
+    font-size: 1.1em;
+    padding: 13px 9px;
+    width: 50px;
   }
 
   #controls {
