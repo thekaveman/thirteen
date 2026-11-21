@@ -586,7 +586,7 @@ button:disabled,
   .player-hand {
     flex: 1;
     padding: var(--spacing-m);
-    height: 400px;
+    height: 250px;
     padding-bottom: var(--spacing-xxl);
   }
 
@@ -606,7 +606,8 @@ button:disabled,
   }
 
   #ai-selection {
-    bottom: calc(var(--spacing-xxl) * 1.75);
+    top: var(--spacing-s);
+    bottom: auto;
     left: var(--spacing-m);
     right: var(--spacing-m);
   }
