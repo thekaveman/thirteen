@@ -331,6 +331,7 @@ export class MockUI {
     this.passButton = { style: { display: "" } };
     this.newGameButton = { style: { display: "" } };
     this.startGameButton = { style: { display: "" } };
+    this.cancelButton = { style: { display: "" } };
     this.resetButton = { style: { display: "" } };
     this.aiDropdown = { value: "random" };
     this.gameMessages = { textContent: "", classList: { add: () => {}, remove: () => {} } };

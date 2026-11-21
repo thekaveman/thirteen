@@ -92,9 +92,8 @@ describe("UI", () => {
     const player1HandDiv = document.getElementById("player-hand-0");
     expect(player1HandDiv.querySelector("h2").textContent).to.include("👉 Player 1");
     expect(player1HandDiv.classList.contains("current")).to.be.true;
-    expect(player1HandDiv.querySelector(".rounds-won").textContent).to.equal("Rounds won: 2");
     expect(player1HandDiv.querySelector(".games-won").textContent).to.equal("Games won: 1");
-    expect(player1HandDiv.querySelector(".card-count").textContent).to.equal("Cards remaining: 1");
+    expect(player1HandDiv.querySelector(".card-count").textContent).to.equal("Cards: 1/13");
   });
 
   it("renderPlayArea() should clear game content before rendering", () => {
@@ -222,7 +221,7 @@ describe("UI", () => {
       ui.updateButtonStates();
       expect(ui.playButton.disabled).to.be.false;
       expect(ui.passButton.disabled).to.be.false;
-      expect(ui.resetButton.disabled).to.be.false;
+      expect(ui.cancelButton.disabled).to.be.false;
     });
 
     it("should disable Play/Pass for AI player's turn", () => {
@@ -231,7 +230,19 @@ describe("UI", () => {
       ui.updateButtonStates();
       expect(ui.playButton.disabled).to.be.true;
       expect(ui.passButton.disabled).to.be.true;
-      expect(ui.resetButton.disabled).to.be.true;
+      expect(ui.cancelButton.disabled).to.be.true;
+    });
+
+    it("should show Play/Pass/Cancel during an active game", () => {
+      game.gameState.gameStarted = true;
+      gameClient.setCurrentPlayer(0);
+      ui.updateButtonStates();
+      expect(ui.playButton.style.display).to.equal("block");
+      expect(ui.passButton.style.display).to.equal("block");
+      expect(ui.cancelButton.style.display).to.equal("block");
+      expect(ui.newGameButton.style.display).to.equal("none");
+      expect(ui.startGameButton.style.display).to.equal("none");
+      expect(ui.resetButton.style.display).to.equal("none");
     });
   });
 
