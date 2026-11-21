@@ -34,23 +34,8 @@ export class Rules {
     if (this.isPair(cards)) return COMBINATION_TYPES.PAIR;
     if (this.isTriple(cards)) return COMBINATION_TYPES.TRIPLE;
     if (this.isStraight(cards)) return COMBINATION_TYPES.STRAIGHT;
-    if (this.isConsecutivePairs(cards)) return COMBINATION_TYPES.CONSECUTIVE_PAIRS;
     if (this.isFourOfAKind(cards)) return COMBINATION_TYPES.FOUR_OF_A_KIND;
     return COMBINATION_TYPES.INVALID;
-  }
-
-  /**
-   * Checks if a combination of cards is a bomb that can beat a pair of 2s.
-   * A bomb against a pair of 2s is four consecutive pairs.
-   * @param cards The cards to check.
-   * @returns True if the cards form a bomb that beats a pair of 2s.
-   */
-  isBombForPairOfTwos(cards: readonly Card[]): boolean {
-    const combinationType = this.getCombinationType(cards);
-    if (combinationType === COMBINATION_TYPES.CONSECUTIVE_PAIRS && cards.length === 8) {
-      return true;
-    }
-    return false;
   }
 
   /**
@@ -64,7 +49,7 @@ export class Rules {
     if (combinationType === COMBINATION_TYPES.FOUR_OF_A_KIND) {
       return true;
     }
-    if (combinationType === COMBINATION_TYPES.CONSECUTIVE_PAIRS && cards.length === 6) {
+    if (this.isConsecutivePairs(cards)) {
       return true;
     }
     return false;
@@ -76,7 +61,7 @@ export class Rules {
    * @returns True if the combination is consecutive pairs.
    */
   isConsecutivePairs(cards: readonly Card[]): boolean {
-    if (cards.length < 6 || cards.length % 2 !== 0 || cards.some((card) => card.rank === "2")) {
+    if (cards.length !== 6 || cards.length % 2 !== 0 || cards.some((card) => card.rank === "2")) {
       return false;
     }
     const pairs: Card[][] = [];
@@ -179,31 +164,49 @@ export class Rules {
     }
 
     const playPileCombinationType = this.getCombinationType(playPile);
+
+    // Determine if the selection is a bomb (four-of-a-kind or three consecutive pairs)
     const selectedCombinationType = this.getCombinationType(selectedCards);
-
-    if (selectedCombinationType === COMBINATION_TYPES.INVALID) {
-      return false;
-    }
-
-    // Bomb logic: A bomb can only be played on a 2 or a pair of 2s.
-    if (
+    const isSelectedBomb =
       selectedCombinationType === COMBINATION_TYPES.FOUR_OF_A_KIND ||
-      selectedCombinationType === COMBINATION_TYPES.CONSECUTIVE_PAIRS
-    ) {
-      if (playPile.length === 0) return false; // Bombs cannot be played on an empty pile
+      this.isConsecutivePairs(selectedCards);
+
+    // Bomb logic: Bombs can only be played on a single 2 or a previous bomb of the same type
+    if (isSelectedBomb) {
+      if (playPile.length === 0) return false;
 
       const topCard = playPile[playPile.length - 1];
-      if (topCard.rank !== "2") return false; // Bombs can only be played on 2s
 
-      if (playPile.length === 1) {
+      // Check if play pile is a single 2
+      if (topCard.rank === "2" && playPile.length === 1) {
         return this.isBombForSingleTwo(selectedCards);
       }
 
-      if (playPile.length === 2) {
-        return this.isBombForPairOfTwos(selectedCards);
+      // Check if play pile is a bomb of the same type
+      const playPileIsBomb =
+        playPileCombinationType === COMBINATION_TYPES.FOUR_OF_A_KIND ||
+        this.isConsecutivePairs(playPile);
+
+      if (playPileIsBomb) {
+        const selectedBombType = selectedCombinationType === COMBINATION_TYPES.FOUR_OF_A_KIND ? "four_of_a_kind" : "consecutive_pairs";
+        const playPileBombType = playPileCombinationType === COMBINATION_TYPES.FOUR_OF_A_KIND ? "four_of_a_kind" : (this.isConsecutivePairs(playPile) ? "consecutive_pairs" : null);
+
+        if (selectedBombType === playPileBombType) {
+          // Same bomb type: must be higher value
+          const highestSelectedCard = selectedCards.reduce((max, card) => (card.value > max.value ? card : max));
+          const highestPlayPileCard = playPile.reduce((max, card) => (card.value > max.value ? card : max));
+          return highestSelectedCard.value > highestPlayPileCard.value;
+        }
+
+        return false; // Different bomb type
       }
 
-      return false; // Bombs cannot be played on other combinations
+      return false; // Cannot bomb on non-2, non-bomb plays
+    }
+
+    // Reject invalid combinations (e.g., four consecutive pairs is not a valid combo)
+    if (selectedCombinationType === COMBINATION_TYPES.INVALID) {
+      return false;
     }
 
     // Standard play validation
