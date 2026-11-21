@@ -177,14 +177,7 @@ h2 {
   padding: 0 var(--spacing-m);
 }
 
-.rounds-won {
-  font-size: var(--font-size-xs);
-  color: var(--color-medium-gray);
-  margin: 0;
-  padding: 0 var(--spacing-m);
-}
-
-.combination-type {
+combination-type {
   font-size: var(--font-size-xxs);
   color: var(--color-medium-gray);
   margin-left: var(--spacing-xs);
@@ -584,10 +577,6 @@ button:disabled,
     margin-bottom: var(--spacing-l);
   }
 
-  .rounds-won {
-    margin-bottom: var(--spacing-s);
-  }
-
   #players-hands {
     flex-direction: row;
     gap: var(--spacing-l);
@@ -678,9 +667,6 @@ button:disabled,
   }
 }
 
-/* ===================================================
-   Phone (max-width: 575px)
-   =================================================== */
 @media (max-width: 575px) {
   body {
     padding-bottom: 40px;
@@ -753,10 +739,6 @@ button:disabled,
   .card-count,
   .combination-type {
     font-size: 0.7em;
-  }
-
-  .rounds-won {
-    display: none;
   }
 
   .player-hand > h2 {

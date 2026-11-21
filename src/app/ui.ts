@@ -341,14 +341,6 @@ export class UI {
     }
     gamesWonEl.textContent = `Games won: ${this.gameClient.getGamesWon(playerIndex)}`;
 
-    let roundsWonEl = handDiv.querySelector(".rounds-won") as HTMLElement | null;
-    if (!roundsWonEl) {
-      roundsWonEl = document.createElement("p");
-      roundsWonEl.classList.add("rounds-won");
-      handDiv.appendChild(roundsWonEl);
-    }
-    roundsWonEl.textContent = `Rounds won: ${this.gameClient.getRoundsWon(playerIndex)}`;
-
     // Clear the cards container before rendering new cards
     let cardsContainer = handDiv.querySelector(".cards-container") as HTMLElement | null;
     if (cardsContainer) {
