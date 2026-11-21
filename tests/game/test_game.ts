@@ -148,15 +148,16 @@ describe("Game", () => {
       game.gameState.numPlayers = 3;
       game.gameState.currentPlayer = 2;
       game.gameState.lastPlayerToPlay = 1;
-      game.gameState.consecutivePasses = 1;
+      game.gameState.consecutivePasses = 0;
       game.gameState.roundNumber = 1;
       game.gameState.roundsWon = [0, 0, 0];
       game.gameState.playPile = [new Card("A", "♠")];
+      // Player 0 already passed, player 2 (current) is now passing
+      game.gameState.playerPassed = [true, false, false];
 
       game.passTurn();
 
       expect(game.gameState.playPile).to.be.empty;
-      expect(game.gameState.consecutivePasses).to.equal(0);
       expect(game.gameState.currentPlayer).to.equal(1);
       expect(game.gameState.roundNumber).to.equal(2);
       expect(game.gameState.roundsWon[1]).to.equal(1);
@@ -277,6 +278,165 @@ describe("Game", () => {
       expect(newGame.gameState.playPile[0].suit).to.equal("♠");
       expect(newGame.gameState.selectedCards[0].rank).to.equal("A");
       expect(newGame.gameState.selectedCards[0].suit).to.equal("♠");
+    });
+  });
+
+  describe("Player Passed Tracking", () => {
+    beforeEach(() => {
+      game.gameState.numPlayers = 3;
+      game.gameState.players = [
+        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 2, new MockUI(new GameClient(game))),
+      ];
+    });
+
+    it("should initialize playerPassed array in init()", () => {
+      game.init();
+
+      expect(game.gameState.playerPassed).to.be.an("array").that.has.lengthOf(3);
+      expect(game.gameState.playerPassed).to.deep.equal([false, false, false]);
+    });
+
+    it("should reset playerPassed array on init() call for a new round", () => {
+      game.init();
+      game.gameState.playerPassed = [true, true, true];
+
+      game.init();
+
+      expect(game.gameState.playerPassed).to.deep.equal([false, false, false]);
+    });
+
+    it("should mark player as passed when passTurn() is called", () => {
+      game.init();
+      game.gameState.currentPlayer = 1;
+      game.gameState.playPile = [new Card("3", "♠")];
+
+      game.passTurn();
+
+      expect(game.gameState.playerPassed[1]).to.be.true;
+    });
+
+    it("should not be possible to play cards after passing", () => {
+      game.init();
+      // Mark player 0 as passed, then advance to them
+      game.gameState.playerPassed = [true, false, false];
+      game.gameState.currentPlayer = 0;
+      game.gameState.lastPlayerToPlay = 1;
+      game.gameState.playPile = [new Card("K", "♠")];
+
+      const cardToPlay = new Card("4", "♠");
+      game.gameState.playerHands = [[cardToPlay], [], []];
+      game.gameState.selectedCards = [cardToPlay];
+
+      game.playCards();
+
+      // Cards should NOT have been played (state unchanged)
+      expect(game.gameState.playerHands[0]).to.have.lengthOf(1);
+      expect(game.gameState.selectedCards).to.have.lengthOf(1);
+    });
+
+    it("should end the round when all non-passed players except lastPlayerToPlay have passed", () => {
+      game.init();
+      game.gameState.currentPlayer = 2;
+      game.gameState.lastPlayerToPlay = 1;
+      game.gameState.roundNumber = 1;
+      game.gameState.roundsWon = [0, 0, 0];
+      game.gameState.playPile = [new Card("A", "♠")];
+      // Player 0 has passed, player 2 is about to pass
+      game.gameState.playerPassed = [true, false, false];
+
+      game.passTurn();
+
+      // Player 2 passed, so all non-last players (0 and 2) have passed
+      expect(game.gameState.playPile).to.be.empty;
+      expect(game.gameState.roundNumber).to.equal(2);
+      expect(game.gameState.roundsWon[1]).to.equal(1);
+      expect(game.gameState.currentPlayer).to.equal(1);
+    });
+
+    it("should NOT end the round when a non-passed player other than lastPlayerToPlay remains", () => {
+      game.init();
+      game.gameState.currentPlayer = 1;
+      game.gameState.lastPlayerToPlay = 2;
+      game.gameState.roundNumber = 1;
+      game.gameState.playPile = [new Card("A", "♠")];
+      // No one has passed yet
+      game.gameState.playerPassed = [false, false, false];
+
+      game.passTurn();
+
+      // Player 1 passed, but player 0 has NOT passed
+      // All non-last players (0 and 1): player 0 hasn't passed → round continues
+      expect(game.gameState.playPile).to.not.be.empty;
+      expect(game.gameState.roundNumber).to.equal(1);
+      // Next active player after 1 is 2 (lastPlayerToPlay, not passed)
+      expect(game.gameState.currentPlayer).to.equal(2);
+    });
+
+    it("should end the round after playCards() when all other players have passed", () => {
+      game.init();
+      game.gameState.currentPlayer = 0;
+      game.gameState.lastPlayerToPlay = 1;
+      game.gameState.roundNumber = 1;
+      game.gameState.roundsWon = [0, 0, 0];
+      game.gameState.playPile = [new Card("A", "♠")];
+      // Players 1 and 2 have passed, player 0 has not
+      game.gameState.playerPassed = [false, true, true];
+
+      const cardToPlay = new Card("4", "♠");
+      // Player has 2 cards, plays 1 (not their last card, so no win)
+      game.gameState.playerHands = [[cardToPlay, new Card("5", "♠")], [], []];
+      game.gameState.selectedCards = [cardToPlay];
+
+      game.playCards();
+
+      // Player 0 plays, becomes lastPlayerToPlay
+      // Non-last players (1 and 2) have both passed → round ends
+      expect(game.gameState.playPile).to.be.empty;
+      expect(game.gameState.roundNumber).to.equal(2);
+      expect(game.gameState.roundsWon[0]).to.equal(1);
+      expect(game.gameState.currentPlayer).to.equal(0);
+    });
+
+    it("nextRound() should clear all playerPassed values", () => {
+      game.init();
+      game.gameState.currentPlayer = 0;
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.roundNumber = 1;
+      game.gameState.playerPassed = [true, false, true];
+      game.gameState.playPile = [new Card("A", "♠")];
+
+      game.nextRound();
+
+      expect(game.gameState.playerPassed).to.deep.equal([false, false, false]);
+      expect(game.gameState.playPile).to.be.empty;
+    });
+
+    it("should work correctly with 2 players (1+1 mode)", () => {
+      game.gameState.numPlayers = 2;
+      game.gameState.players = [
+        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
+      ];
+      game.init();
+
+      // Player 0 starts and plays
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.currentPlayer = 0;
+      game.gameState.playPile = [new Card("3", "♠")];
+
+      // Player 1 passes
+      game.gameState.currentPlayer = 1;
+      game.gameState.playerPassed = [false, true];
+
+      game.passTurn();
+
+      // Round should end (all other players except lastPlayerToPlay have passed)
+      expect(game.gameState.playPile).to.be.empty;
+      expect(game.gameState.roundNumber).to.equal(2);
+      expect(game.gameState.currentPlayer).to.equal(0);
+      expect(game.gameState.playerPassed).to.deep.equal([false, false]);
     });
   });
 });
