@@ -275,7 +275,7 @@ combination-type {
   width: 95%;
   min-height: 50px;
   position: fixed;
-  top: 25%;
+  top: 38%;
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: rgba(255, 255, 255, 0.95);
@@ -752,6 +752,10 @@ button:disabled,
   #ai-selection {
     top: 5%;
     bottom: auto;
+  }
+
+  #game-messages {
+    top: 21%;
   }
 }
 
