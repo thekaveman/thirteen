@@ -49,6 +49,23 @@ describe("GameClient", () => {
       expect(data).to.have.property("player_games_won");
     });
 
+    it("getAIPersona() should return the persona for a given AI slot index", () => {
+      const players = [
+        new HumanPlayer(gameClient, 0),
+        new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random")),
+        new AIPlayer(gameClient, 2, new MockAI(gameClient, [], "aggressive")),
+      ];
+      gameClient.setPlayers(players);
+      expect(gameClient.getAIPersona(0)).to.equal("random");
+      expect(gameClient.getAIPersona(1)).to.equal("aggressive");
+    });
+
+    it("getAIPersona() should return null for an out-of-range index", () => {
+      const players = [new HumanPlayer(gameClient, 0), new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random"))];
+      gameClient.setPlayers(players);
+      expect(gameClient.getAIPersona(5)).to.be.null;
+    });
+
     it("getCurrentPlayer() should return the current player", () => {
       const players = [new HumanPlayer(gameClient, 0)];
       gameClient.setPlayers(players);
@@ -91,6 +108,22 @@ describe("GameClient", () => {
       expect(humanPlayer.number).to.equal(1);
     });
 
+    it("getGamesWon() should return all games won when no index is provided", () => {
+      const players = [new HumanPlayer(gameClient, 0), new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random"))];
+      gameClient.setPlayers(players);
+      game.gameState.gamesWon = [1, 0];
+      const allGamesWon = gameClient.getGamesWon();
+      expect(allGamesWon).to.deep.equal([1, 0]);
+    });
+
+    it("getGamesWon() should return a single value when index is provided", () => {
+      const players = [new HumanPlayer(gameClient, 0), new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random"))];
+      gameClient.setPlayers(players);
+      game.gameState.gamesWon = [1, 0];
+      expect(gameClient.getGamesWon(0)).to.equal(1);
+      expect(gameClient.getGamesWon(1)).to.equal(0);
+    });
+
     it("getPlayPile() should return the play pile", () => {
       const playPile = [new Card("A", "♠")];
       game.gameState.playPile = playPile;
@@ -109,10 +142,64 @@ describe("GameClient", () => {
       expect(gameClient.getPlayerHands(1)).to.equal(hands[1]);
     });
 
+    it("getPlayerPersonas() should return all personas when no index is provided", () => {
+      const players = [
+        new HumanPlayer(gameClient, 0),
+        new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random")),
+        new AIPlayer(gameClient, 2, new MockAI(gameClient, [], "aggressive")),
+      ];
+      gameClient.setPlayers(players);
+      const personas = gameClient.getPlayerPersonas();
+      expect(personas).to.deep.equal([null, "random", "aggressive"]);
+    });
+
+    it("getPlayerPersonas() should return a single persona when index is provided", () => {
+      const players = [
+        new HumanPlayer(gameClient, 0),
+        new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random")),
+        new AIPlayer(gameClient, 2, new MockAI(gameClient, [], "aggressive")),
+      ];
+      gameClient.setPlayers(players);
+      expect(gameClient.getPlayerPersonas(1)).to.equal("random");
+      expect(gameClient.getPlayerPersonas(2)).to.equal("aggressive");
+    });
+
     it("getPlayers() should return the list of players", () => {
       const players = [new HumanPlayer(gameClient, 0)];
       game.gameState.players = players;
       expect(gameClient.getPlayers()).to.equal(players);
+    });
+
+    it("getPlayerTurns() should return all player turns when no index is provided", () => {
+      const players = [new HumanPlayer(gameClient, 0), new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random"))];
+      gameClient.setPlayers(players);
+      game.gameState.playerTurns = [3, 2];
+      const allTurns = gameClient.getPlayerTurns();
+      expect(allTurns).to.deep.equal([3, 2]);
+    });
+
+    it("getPlayerTurns() should return a single value when index is provided", () => {
+      const players = [new HumanPlayer(gameClient, 0), new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random"))];
+      gameClient.setPlayers(players);
+      game.gameState.playerTurns = [3, 2];
+      expect(gameClient.getPlayerTurns(0)).to.equal(3);
+      expect(gameClient.getPlayerTurns(1)).to.equal(2);
+    });
+
+    it("getRoundsWon() should return all rounds won when no index is provided", () => {
+      const players = [new HumanPlayer(gameClient, 0), new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random"))];
+      gameClient.setPlayers(players);
+      game.gameState.roundsWon = [1, 0];
+      const allRoundsWon = gameClient.getRoundsWon();
+      expect(allRoundsWon).to.deep.equal([1, 0]);
+    });
+
+    it("getRoundsWon() should return a single value when index is provided", () => {
+      const players = [new HumanPlayer(gameClient, 0), new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random"))];
+      gameClient.setPlayers(players);
+      game.gameState.roundsWon = [1, 0];
+      expect(gameClient.getRoundsWon(0)).to.equal(1);
+      expect(gameClient.getRoundsWon(1)).to.equal(0);
     });
 
     it("getSelectedCards() should return the selected cards", () => {
@@ -136,6 +223,28 @@ describe("GameClient", () => {
     beforeEach(() => {
       const players = [new HumanPlayer(gameClient, 0), new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random"))];
       gameClient.setPlayers(players);
+    });
+
+    it("attachHooks() should trigger onGameWon when game is won", () => {
+      const players = [new HumanPlayer(gameClient, 0), new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random"))];
+      gameClient.setPlayers(players);
+
+      const analytics = {
+        gameInit: sinon.spy(),
+        gameReset: sinon.spy(),
+        gameStarted: sinon.spy(),
+        gameWon: sinon.spy(),
+        playerMoved: sinon.spy(),
+        playerPassed: sinon.spy(),
+        roundPlayed: sinon.spy(),
+      };
+
+      gameClient.attachHooks(analytics);
+
+      // Trigger the onGameWon hook by calling it directly
+      const hookResult = game.hooks.onGameWon(new GameClient(game));
+      expect(analytics.gameWon.calledOnce).to.be.true;
+      expect(analytics.gameWon.firstCall.args[0]).to.be.an.instanceOf(GameClient);
     });
 
     it("clearSelectedCards() should empty the selectedCards array", () => {
@@ -162,6 +271,14 @@ describe("GameClient", () => {
       const ui = new MockUI(gameClient);
       gameClient.load(ui);
       sinon.assert.calledWith(spy, ui);
+    });
+
+    it("nextRound() should call game.nextRound", () => {
+      const players = [new HumanPlayer(gameClient, 0), new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random"))];
+      gameClient.setPlayers(players);
+      const spy = sinon.spy(game, "nextRound");
+      gameClient.nextRound();
+      sinon.assert.calledOnce(spy);
     });
 
     it("pass() should call game.passTurn", () => {
@@ -246,5 +363,13 @@ describe("GameClient", () => {
       expect(game.gameState.selectedCards[0].value).to.equal(card2.value);
       expect(game.gameState.selectedCards[1].value).to.equal(card1.value);
     });
+  });
+
+  it("win() should call game.win", () => {
+    const players = [new HumanPlayer(gameClient, 0), new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random"))];
+    gameClient.setPlayers(players);
+    const spy = sinon.spy(game, "win");
+    gameClient.win();
+    sinon.assert.calledOnce(spy);
   });
 });
