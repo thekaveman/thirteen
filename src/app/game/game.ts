@@ -155,8 +155,8 @@ export class Game {
             number: i,
             ui: ui as any,
             persona: parsedState.gameState.players[i].type === PLAYER_TYPES.AI ? parsedState.gameState.players[i].persona : null,
-          }),
-        ),
+          })
+        )
       );
       // Assign the stored playerTypes back to gameState
       this.gameState.playerTypes = loadedPlayerTypes;
@@ -235,20 +235,14 @@ export class Game {
       return true;
     }
 
-    // Skip passed players to find the next active player
+    // Skip passed players to find the next active player, then switch to them
     const numPlayers = this.gameState.numPlayers;
     let nextPlayer = (this.gameState.currentPlayer + 1) % numPlayers;
     while (nextPlayer !== this.gameState.lastPlayerToPlay && this.gameState.playerPassed[nextPlayer]) {
       nextPlayer = (nextPlayer + 1) % numPlayers;
     }
-    // If we've cycled back to lastPlayerToPlay, all others have passed
-    if (nextPlayer === this.gameState.lastPlayerToPlay && this.shouldEndRound()) {
-      log(`Player ${this.gameState.lastPlayerToPlay + 1} wins round ${this.gameState.roundNumber}.`);
-      this.nextRound();
-    } else {
-      this.gameState.currentPlayer = nextPlayer;
-    }
 
+    this.gameState.currentPlayer = nextPlayer;
     this.gameState.currentTurn++;
     this.save();
     return true;
