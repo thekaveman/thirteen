@@ -1,3 +1,5 @@
+import { describe, it } from "mocha";
+import { expect } from "chai";
 import { SUITS, RANKS, Card, Deck } from "../../src/app/game/index.js";
 
 describe("Card", () => {

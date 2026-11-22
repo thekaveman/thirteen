@@ -205,6 +205,28 @@ export class GameClient {
   }
 
   /**
+   * Gets the number of AI players.
+   */
+  getNumAIPlayers(): number {
+    return this.game.gameState.numAIPlayers;
+  }
+
+  /**
+   * Gets the AI personas array.
+   */
+  getAIPersonas(): (string | null)[] {
+    return this.game.gameState.aiPersonas;
+  }
+
+  /**
+   * Gets the AI persona for a given AI slot index (0-based).
+   * @param aiSlotIndex The index of the AI player (0-based).
+   */
+  getAIPersona(aiSlotIndex: number): string | null {
+    return this.game.gameState.aiPersonas[aiSlotIndex] ?? null;
+  }
+
+  /**
    * Gets the turn count for each player or the given player.
    * @param playerIndex Optional player index in the list of players.
    */
@@ -374,9 +396,11 @@ export class GameClient {
   /**
    * Initializes the game's players.
    * @param players The list of players to initialize into the game.
+   * @param options Optional configuration.
+   * @param options.skipDeal If true, skip re-dealing cards (used when restoring state from save).
    */
-  setPlayers(players: Player[]): void {
-    this.game.setPlayers(players);
+  setPlayers(players: Player[], options?: { skipDeal?: boolean }): void {
+    this.game.setPlayers(players, options);
   }
 
   /**

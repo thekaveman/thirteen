@@ -8,6 +8,7 @@ import { log } from "../utils.js";
 
 export interface GameState {
   numPlayers: number;
+  numAIPlayers: number;
   players: Player[];
   playerHands: Card[][];
   playerTurns: number[];
@@ -20,6 +21,7 @@ export interface GameState {
   roundNumber: number;
   roundsWon: number[];
   gamesWon: number[];
+  aiPersonas: (string | null)[];
   gameOver: boolean;
   gameStarted: boolean;
   playerTypes: string[];
@@ -70,6 +72,7 @@ export class Game {
     };
     this.gameState = {
       numPlayers: 0,
+      numAIPlayers: 0,
       players: [],
       playerHands: [],
       playerTurns: [],
@@ -82,6 +85,7 @@ export class Game {
       roundNumber: 1,
       roundsWon: [],
       gamesWon: [],
+      aiPersonas: [],
       gameOver: false,
       gameStarted: false,
       playerTypes: [],
@@ -151,8 +155,8 @@ export class Game {
             number: i,
             ui: ui as any,
             persona: parsedState.gameState.players[i].type === PLAYER_TYPES.AI ? parsedState.gameState.players[i].persona : null,
-          }),
-        ),
+          })
+        )
       );
       // Assign the stored playerTypes back to gameState
       this.gameState.playerTypes = loadedPlayerTypes;
@@ -231,20 +235,14 @@ export class Game {
       return true;
     }
 
-    // Skip passed players to find the next active player
+    // Skip passed players to find the next active player, then switch to them
     const numPlayers = this.gameState.numPlayers;
     let nextPlayer = (this.gameState.currentPlayer + 1) % numPlayers;
     while (nextPlayer !== this.gameState.lastPlayerToPlay && this.gameState.playerPassed[nextPlayer]) {
       nextPlayer = (nextPlayer + 1) % numPlayers;
     }
-    // If we've cycled back to lastPlayerToPlay, all others have passed
-    if (nextPlayer === this.gameState.lastPlayerToPlay && this.shouldEndRound()) {
-      log(`Player ${this.gameState.lastPlayerToPlay + 1} wins round ${this.gameState.roundNumber}.`);
-      this.nextRound();
-    } else {
-      this.gameState.currentPlayer = nextPlayer;
-    }
 
+    this.gameState.currentPlayer = nextPlayer;
     this.gameState.currentTurn++;
     this.save();
     return true;
@@ -336,31 +334,44 @@ export class Game {
   /**
    * Initializes the game's players.
    * @param players The list of players to initialize into the game.
+   * @param options Optional configuration.
+   * @param options.skipDeal If true, skip resetting game state fields (used when restoring state from save).
    */
-  setPlayers(players: Player[]): void {
+  setPlayers(players: Player[], options?: { skipDeal?: boolean }): void {
     if (players) {
       this.gameState.players = players;
       this.gameState.numPlayers = players.length;
       this.gameState.playerTypes = players.map((p) => p.type);
-      this.gameState.roundsWon = new Array(players.length).fill(0);
-      this.gameState.playerPassed = new Array(players.length).fill(false);
-      if (this.gameState.gamesWon.length !== players.length) {
-        this.gameState.gamesWon = new Array(players.length).fill(0);
+      // Count AI players and save their personas (player 0 is human, rest are AI)
+      this.gameState.numAIPlayers = players.length - 1;
+      this.gameState.aiPersonas = players.slice(1).map((p) => p.persona);
+
+      const skipDeal = options?.skipDeal ?? false;
+      if (!skipDeal) {
+        // For a fresh game, initialize game state fields including empty hands for rendering
+        this.gameState.playerHands = players.map(() => []);
+        this.gameState.roundsWon = new Array(players.length).fill(0);
+        this.gameState.playerPassed = new Array(players.length).fill(false);
+        if (this.gameState.gamesWon.length !== players.length) {
+          this.gameState.gamesWon = new Array(players.length).fill(0);
+        }
       }
-      this.deal();
-      this.gameState.currentPlayer = this.rules.findStartingPlayer(this.gameState.playerHands);
-      this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
       this.save();
     }
   }
 
   /**
-   * Marks the game as started.
+   * Marks the game as started. If not already started, deals cards and finds the starting player.
    */
   start(): void {
-    this.gameState.gameStarted = true;
-    this.save();
-    this.hooks.onGameStarted(new GameClient(this));
+    if (!this.gameState.gameStarted) {
+      this.deal();
+      this.gameState.currentPlayer = this.rules.findStartingPlayer(this.gameState.playerHands);
+      this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
+      this.gameState.gameStarted = true;
+      this.save();
+      this.hooks.onGameStarted(new GameClient(this));
+    }
   }
 
   /**

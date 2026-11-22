@@ -1,13 +1,15 @@
+import { expect } from "chai";
+import { beforeEach, describe } from "mocha";
 import { Card } from "../../src/app/game/index.js";
 import { HumanPlayer, PLAYER_TYPES } from "../../src/app/player/index.js";
 import { MockGame, MockDeck } from "../mocks.ts";
 import { GameClient } from "../../src/app/game/index.js";
 
 describe("HumanPlayer", () => {
-  let game, gameClient, humanPlayer;
+  let game: MockGame, gameClient: GameClient, humanPlayer: HumanPlayer;
 
   beforeEach(() => {
-    game = new MockGame(new MockDeck());
+    game = new MockGame(new MockDeck(), "test-state");
     gameClient = new GameClient(game);
     humanPlayer = new HumanPlayer(gameClient, 0);
   });

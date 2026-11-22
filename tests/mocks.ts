@@ -252,7 +252,11 @@ export class MockGame extends Game {
           })
         )
       );
-      return { loaded: true, gameOver: this.gameOverOnLoad };
+
+      // Restore playerTypes from the loaded state
+      this.gameState.playerTypes = loadedPlayerTypes;
+
+      return { loaded: true, gameOver: this.gameOverOnLoad, loadedPlayerTypes };
     }
     return { loaded: false };
   }

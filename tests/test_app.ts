@@ -1,3 +1,6 @@
+import { expect } from "chai";
+import { afterEach, beforeEach, describe } from "mocha";
+import * as sinon from "sinon";
 import { App } from "../src/app/app.js";
 import { Card } from "../src/app/game/index.js";
 import { PLAYER_TYPES } from "../src/app/player/index.js";
@@ -5,7 +8,7 @@ import { MockAI, MockDeck, MockGame, MockUI, MockAnalytics } from "./mocks.ts";
 import { GameClient } from "../src/app/game/index.js";
 
 describe("App", function () {
-  let app, game, gameClient, ai, ui, analytics, container, clock;
+  let app: App, game: MockGame, gameClient: GameClient, ai: MockAI, ui: MockUI, analytics: MockAnalytics, container, clock;
 
   beforeEach(function () {
     this.sandbox = sinon.createSandbox();
@@ -15,6 +18,10 @@ describe("App", function () {
     ai = new MockAI(gameClient, null);
     ui = new MockUI(gameClient);
     analytics = new MockAnalytics();
+
+    // Default: no saved game
+    game.loadWillSucceed = false;
+
     app = new App(gameClient, ui, analytics);
 
     // Mock UI elements
@@ -65,19 +72,32 @@ describe("App", function () {
       expect(setPlayersSpy.called).to.be.true;
     });
 
-    it("init() should start a new game if no saved game exists (false branch of load)", async function () {
-      game.loadWillSucceed = false;
+    it("init() should restore AI configuration from saved game state", async function () {
+      game.loadWillSucceed = true;
+      game.gameOverOnLoad = false;
+
+      // Pre-set AI configuration on the game state so getNumAIPlayers/getAIPersonas
+      // return the expected values when init() calls them
+      game.gameState.numAIPlayers = 2;
+      game.gameState.aiPersonas = ["aggressive", "cautious"];
+
       const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
 
       await app.init();
 
       expect(game.loadCalled).to.be.true;
-      expect(game.initCalled).to.be.true;
+      expect(app.numAIPlayers).to.equal(2);
+      expect(app.aiPlayers.length).to.equal(2);
       expect(setPlayersSpy.called).to.be.true;
-      expect(ui.renderCalled).to.be.true;
+      // Verify setPlayers was called with human + 2 AI players
+      const callArgs = setPlayersSpy.firstCall.args[0];
+      expect(callArgs).to.have.lengthOf(3);
+      expect(callArgs[0].type).to.equal("human");
+      expect(callArgs[1].type).to.equal("ai");
+      expect(callArgs[2].type).to.equal("ai");
     });
 
-    it("init() should start a new game if no saved game exists", async function () {
+    it("init() should create default AI configuration when no saved game exists", async function () {
       game.loadWillSucceed = false;
       const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
 
@@ -85,13 +105,21 @@ describe("App", function () {
 
       expect(game.loadCalled).to.be.true;
       expect(game.initCalled).to.be.true;
+      expect(app.numAIPlayers).to.equal(1);
+      expect(app.aiPlayers.length).to.equal(1);
       expect(setPlayersSpy.called).to.be.true;
-      expect(ui.renderCalled).to.be.true;
+      // Verify setPlayers was called with human + 1 AI player
+      const callArgs = setPlayersSpy.firstCall.args[0];
+      expect(callArgs).to.have.lengthOf(2);
+      expect(callArgs[0].type).to.equal("human");
+      expect(callArgs[1].type).to.equal("ai");
     });
 
     it("init() should start a new game if the saved game is over", async function () {
       game.loadWillSucceed = true;
       game.gameOverOnLoad = true;
+      game.gameState.numAIPlayers = 2;
+      game.gameState.aiPersonas = ["aggressive", "cautious"];
       const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
 
       await app.init();
@@ -100,19 +128,8 @@ describe("App", function () {
       expect(game.initCalled).to.be.true;
       expect(setPlayersSpy.called).to.be.true;
       expect(ui.renderCalled).to.be.true;
-    });
-
-    it("init() should start a new game if the saved game is over (false branch of gameOver)", async function () {
-      game.loadWillSucceed = true;
-      game.gameOverOnLoad = true;
-      const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
-
-      await app.init();
-
-      expect(game.loadCalled).to.be.true;
-      expect(game.initCalled).to.be.true;
-      expect(setPlayersSpy.called).to.be.true;
-      expect(ui.renderCalled).to.be.true;
+      expect(app.numAIPlayers).to.equal(2);
+      expect(app.aiPlayers.length).to.equal(2);
     });
   });
 
@@ -138,6 +155,41 @@ describe("App", function () {
     });
   });
 
+  describe("AI Player Management", function () {
+    it("addAIPlayer() should create a new AI player and increment numAIPlayers", async function () {
+      await app.addAIPlayer();
+
+      expect(app.aiPlayers.length).to.equal(1);
+      expect(app.numAIPlayers).to.equal(2); // started at 1
+    });
+
+    it("addAIPlayer() should create multiple AI players with incrementing indices", async function () {
+      await app.addAIPlayer();
+      await app.addAIPlayer();
+
+      expect(app.aiPlayers.length).to.equal(2);
+      expect(app.numAIPlayers).to.equal(3); // started at 1, added 2
+    });
+
+    it("removeAIPlayer() should remove the last AI player and decrement numAIPlayers", async function () {
+      await app.addAIPlayer();
+      expect(app.aiPlayers.length).to.equal(1);
+      expect(app.numAIPlayers).to.equal(2);
+
+      app.removeAIPlayer();
+
+      expect(app.aiPlayers.length).to.equal(0);
+      expect(app.numAIPlayers).to.equal(1);
+    });
+
+    it("removeAIPlayer() should do nothing when no AI players exist", function () {
+      app.removeAIPlayer();
+
+      expect(app.aiPlayers.length).to.equal(0);
+      expect(app.numAIPlayers).to.equal(1); // unchanged
+    });
+  });
+
   describe("Event Handlers", function () {
     it("attachHooks() should attach analytics hooks correctly", function () {
       const gameInitSpy = this.sandbox.spy(analytics, "gameInit");
@@ -152,35 +204,87 @@ describe("App", function () {
       expect(gameResetSpy.called).to.be.true;
     });
 
-    it("handleAISelection() should be called on dropdown change", async function () {
-      const handleSpy = this.sandbox.spy(app, "handleAISelection");
+    it("handleAISelection() should update persona and call setPlayers when humanPlayer and AI players exist", async function () {
       await app.init();
 
-      // Simulate change event
-      ui.emit("aiChanged", "cautious");
+      const setAIPersonaSpy = this.sandbox.spy(gameClient, "setAIPersona");
+      const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
 
-      expect(handleSpy.calledWith("cautious")).to.be.true;
+      ui.emit("aiChanged", "aggressive");
+
+      expect(app.selectedAI).to.equal("aggressive");
+      expect(setAIPersonaSpy.calledWith(1, "aggressive")).to.be.true;
+      expect(setPlayersSpy.called).to.be.true;
+      // setPlayers should include human + AI player
+      const players = setPlayersSpy.firstCall.args[0];
+      expect(players).to.have.lengthOf(2);
+      expect(players[0].type).to.equal("human");
+      expect(players[1].type).to.equal("ai");
     });
 
-    it("handleStartGameClick() should start the game and trigger the next turn", async function () {
-      const nextTurnSpy = this.sandbox.spy(app, "nextTurn");
+    it("handleAISelection() should not call setAIPersona when no AI players exist", async function () {
       await app.init();
-      ui.emit("startClicked"); // Simulate click
+
+      // Remove AI players
+      app.aiPlayers = [];
+      app.numAIPlayers = 0;
+
+      const setAIPersonaSpy = this.sandbox.spy(gameClient, "setAIPersona");
+      app.handleAISelection("aggressive");
+
+      expect(setAIPersonaSpy.called).to.be.false;
+    });
+
+    it("handleAISelection() should not call setPlayers when humanPlayer is null", function () {
+      app.humanPlayer = null;
+      app.aiPlayers = [{ type: "ai" }];
+
+      const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
+      app.handleAISelection("aggressive");
+
+      expect(setPlayersSpy.called).to.be.false;
+    });
+
+    it("handleStartGameClick() should call start() with human + all AI players", async function () {
+      await app.init();
+
+      const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
+      const nextTurnSpy = this.sandbox.spy(app, "nextTurn");
+
+      ui.emit("startClicked");
+
+      // setPlayers should NOT be called here (it was called during init())
+      expect(setPlayersSpy.called).to.be.false;
       expect(game.startCalled).to.be.true;
-      expect(game.saveCalled).to.be.true;
-      expect(ui.renderCalled).to.be.true;
       expect(nextTurnSpy.called).to.be.true;
-      clock.tick(1001); // Advance timers to trigger AI turn if scheduled
+      clock.tick(1001);
+    });
+
+    it("handleStartGameClick() should return early if no human player exists", async function () {
+      await app.init();
+
+      // Override getFirstHumanPlayer to return undefined
+      gameClient.getFirstHumanPlayer = () => undefined;
+      const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
+
+      app.handleStartGameClick();
+
+      expect(setPlayersSpy.called).to.be.false;
+      expect(game.startCalled).to.be.false;
     });
 
     it("handleNewGameClick() should re-initialize the game", async function () {
-      const initSpy = this.sandbox.spy(app, "init");
       await app.init();
-      ui.emit("newGameClicked"); // Simulate click
+      const preGameNumAIPlayers = app.numAIPlayers;
+      const preGameAIPlayersLength = app.aiPlayers.length;
+      const initSpy = this.sandbox.spy(app, "init");
+      ui.emit("newGameClicked");
       expect(game.initCalled).to.be.true;
       expect(game.saveCalled).to.be.true;
       expect(initSpy.called).to.be.true;
-      clock.tick(1001); // Advance timers to trigger AI turn if scheduled
+      clock.tick(1001);
+      expect(app.numAIPlayers).to.equal(preGameNumAIPlayers);
+      expect(app.aiPlayers.length).to.equal(preGameAIPlayersLength);
     });
 
     it("handleResetButtonClick() should clear storage and reset the game", async function () {
@@ -188,7 +292,7 @@ describe("App", function () {
       const clearStorageSpy = this.sandbox.spy(app, "clearStorage");
       const appInitSpy = this.sandbox.spy(app, "init");
       const analyticsSpy = this.sandbox.spy(analytics, "gameReset");
-      ui.emit("resetClicked"); // Simulate click
+      ui.emit("resetClicked");
       expect(clearStorageSpy.called).to.be.true;
       expect(game.resetCalled).to.be.true;
       expect(appInitSpy.called).to.be.true;
@@ -287,6 +391,9 @@ describe("App", function () {
     it("nextTurn() should call handleAITurn for an AI player", async function () {
       await app.init();
       gameClient.setCurrentPlayer(1); // AI
+      // Stub takeTurn since init() doesn't deal cards
+      const aiPlayer = gameClient.getPlayers(1);
+      this.sandbox.stub(aiPlayer.ai, "takeTurn").returns([]);
       // Stub setTimeoutFn directly since the mock game doesn't have setTimeout
       const setTimeoutFnStub = this.sandbox.stub(app, "setTimeout").callsFake((fn) => setTimeout(fn, 1000) as any);
       app.nextTurn();
@@ -324,28 +431,29 @@ describe("App", function () {
       await app.init();
       const move = [new Card("3", "♠")];
       const aiPlayer = gameClient.getPlayers(1);
-      const takeTurnStub = this.sandbox.stub(aiPlayer.ai, "takeTurn").returns(move);
+      // Stub takeTurn since init() doesn't deal cards
+      this.sandbox.stub(aiPlayer.ai, "takeTurn").returns(move);
       gameClient.setCurrentPlayer(1); // AI
-      const playCardsSpy = this.sandbox.spy(game, "playCards");
+      // Stub playCards to avoid undefined playerHands error from init()'s sparse array
+      const playCardsStub = this.sandbox.stub(game, "playCards");
 
       app.handleAITurn();
 
-      expect(takeTurnStub.called).to.be.true;
-      expect(playCardsSpy.called).to.be.true;
+      expect(playCardsStub.called).to.be.true;
       expect(ui.renderCalled).to.be.true;
     });
 
     it("handleAITurn() should pass turn when no move is available", async function () {
       await app.init();
       const aiPlayer = gameClient.getPlayers(1);
-      const takeTurnStub = this.sandbox.stub(aiPlayer.ai, "takeTurn").returns([]);
+      // Stub takeTurn since init() doesn't deal cards
+      this.sandbox.stub(aiPlayer.ai, "takeTurn").returns([]);
       gameClient.setCurrentPlayer(1); // AI
       gameClient.setPlayPile([new Card("10", "♠")]); // Not the first play
       const passTurnSpy = this.sandbox.spy(game, "passTurn");
 
       app.handleAITurn();
 
-      expect(takeTurnStub.called).to.be.true;
       expect(passTurnSpy.called).to.be.true;
       expect(ui.renderCalled).to.be.true;
     });

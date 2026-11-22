@@ -1,7 +1,9 @@
+import { beforeEach, describe, it } from "mocha";
+import { expect } from "chai";
 import { Card, Rules, COMBINATION_TYPES } from "../../src/app/game/index.js";
 
 describe("Rules", () => {
-  let rules;
+  let rules: Rules;
 
   beforeEach(() => {
     rules = new Rules();
@@ -103,10 +105,19 @@ describe("Rules", () => {
         new Card("5", "♦"),
       ];
       const nonConsecutive = [new Card("3", "♠"), new Card("3", "♦"), new Card("5", "♣"), new Card("5", "♥")];
+      const nonConsecutive6 = [
+        new Card("3", "♠"),
+        new Card("3", "♦"),
+        new Card("5", "♣"),
+        new Card("5", "♥"),
+        new Card("7", "♠"),
+        new Card("7", "♦"),
+      ];
       const withTwos = [new Card("A", "♠"), new Card("A", "♦"), new Card("2", "♣"), new Card("2", "♥")];
       expect(rules.isConsecutivePairs(validPairs)).to.be.true;
       expect(rules.isConsecutivePairs(invalidPairs)).to.be.false;
       expect(rules.isConsecutivePairs(nonConsecutive)).to.be.false;
+      expect(rules.isConsecutivePairs(nonConsecutive6)).to.be.false;
       expect(rules.isConsecutivePairs(withTwos)).to.be.false;
     });
 

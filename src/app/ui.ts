@@ -396,7 +396,10 @@ export class UI {
 
           const player = this.gameClient.getPlayers(i) as Player;
           playerHandDiv.classList.add(player.type);
-          if (i === this.gameClient.getCurrentPlayerIndex()) {
+          if (
+            i === this.gameClient.getCurrentPlayerIndex() &&
+            this.gameClient.isGameStarted()
+          ) {
             playerHandDiv.classList.add("current");
           } else {
             playerHandDiv.classList.remove("current");
