@@ -1,7 +1,9 @@
+import { beforeEach, describe, it } from "mocha";
+import { expect } from "chai";
 import { Card, Rules, COMBINATION_TYPES } from "../../src/app/game/index.js";
 
 describe("Rules", () => {
-  let rules;
+  let rules: Rules;
 
   beforeEach(() => {
     rules = new Rules();

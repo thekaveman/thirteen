@@ -1,3 +1,6 @@
+import { expect } from "chai";
+import { afterEach, beforeEach, describe } from "mocha";
+import * as sinon from "sinon";
 import { App } from "../src/app/app.js";
 import { Card } from "../src/app/game/index.js";
 import { PLAYER_TYPES } from "../src/app/player/index.js";
@@ -5,7 +8,7 @@ import { MockAI, MockDeck, MockGame, MockUI, MockAnalytics } from "./mocks.ts";
 import { GameClient } from "../src/app/game/index.js";
 
 describe("App", function () {
-  let app, game, gameClient, ai, ui, analytics, container, clock;
+  let app: App, game: MockGame, gameClient: GameClient, ai: MockAI, ui: MockUI, analytics: MockAnalytics, container, clock;
 
   beforeEach(function () {
     this.sandbox = sinon.createSandbox();

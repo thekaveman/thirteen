@@ -1,10 +1,12 @@
+import { afterEach, beforeEach, describe, it } from "mocha";
+import { expect } from "chai";
 import { Card, Game } from "../../src/app/game/index.js";
 import { HumanPlayer, AIPlayer } from "../../src/app/player/index.js";
 import { MockAI, MockDeck, MockUI } from "../mocks.ts";
 import { GameClient } from "../../src/app/game/index.js";
 
 describe("Game", () => {
-  let game;
+  let game: Game;
 
   beforeEach(() => {
     localStorage.clear();

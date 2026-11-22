@@ -43,6 +43,10 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.65.1",
+    "@types/chai": "^5.2.3",
+    "@types/jsdom": "^30.0.0",
+    "@types/mocha": "^10.0.10",
+    "@types/sinon": "^22.0.2",
     "@typescript-eslint/eslint-plugin": "^8.72.2",
     "@typescript-eslint/parser": "^8.72.2",
     "c8": "^12.0.0",
