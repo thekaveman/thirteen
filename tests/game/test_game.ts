@@ -279,6 +279,28 @@ describe("Game", () => {
       expect(newGame.gameState.selectedCards[0].rank).to.equal("A");
       expect(newGame.gameState.selectedCards[0].suit).to.equal("♠");
     });
+
+    it("load() should initialize playerPassed if missing (backward compat)", async () => {
+      game.gameState.numPlayers = 3;
+      game.gameState.players = [
+        new HumanPlayer(new GameClient(game), 0),
+        new HumanPlayer(new GameClient(game), 1),
+        new HumanPlayer(new GameClient(game), 2),
+      ];
+      game.gameState.playerPassed = [true, false, false];
+      game.save();
+
+      // Manually remove playerPassed from saved state to simulate old save format
+      const saved = localStorage.getItem(game.stateKey);
+      const parsed = JSON.parse(saved);
+      delete parsed.gameState.playerPassed;
+      localStorage.setItem(game.stateKey, JSON.stringify(parsed));
+
+      const newGame = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
+      const loaded = await newGame.load(new MockUI(new GameClient(newGame)));
+      expect(loaded.loaded).to.be.true;
+      expect(newGame.gameState.playerPassed).to.deep.equal([false, false, false]);
+    });
   });
 
   describe("Player Passed Tracking", () => {
@@ -437,6 +459,295 @@ describe("Game", () => {
       expect(game.gameState.roundNumber).to.equal(2);
       expect(game.gameState.currentPlayer).to.equal(0);
       expect(game.gameState.playerPassed).to.deep.equal([false, false]);
+    });
+
+    it("should end round with 3 players: P1 plays, P2 passes, P3 passes", () => {
+      game.gameState.numPlayers = 3;
+      game.gameState.players = [
+        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 2, new MockUI(new GameClient(game))),
+      ];
+      game.init();
+
+      // P1 (index 0) plays first
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.currentPlayer = 0;
+      game.gameState.playPile = [new Card("3", "♠")];
+
+      // P2 (index 1) passes
+      game.gameState.currentPlayer = 1;
+      game.gameState.playerPassed = [false, true, false];
+      game.passTurn();
+      expect(game.gameState.roundNumber).to.equal(1); // Round not ended yet, P3 still active
+
+      // P3 (index 2) passes → round ends
+      game.gameState.currentPlayer = 2;
+      game.passTurn();
+
+      expect(game.gameState.playPile).to.be.empty;
+      expect(game.gameState.roundNumber).to.equal(2);
+      expect(game.gameState.roundsWon[0]).to.equal(1);
+      expect(game.gameState.currentPlayer).to.equal(0);
+    });
+
+    it("should end round with 4 players: all pass after first play", () => {
+      game.gameState.numPlayers = 4;
+      game.gameState.players = [
+        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 2, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 3, new MockUI(new GameClient(game))),
+      ];
+      game.init();
+
+      // P1 plays first
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.playPile = [new Card("3", "♠")];
+
+      // P2, P3, P4 all pass
+      game.gameState.playerPassed = [false, true, true, true];
+      game.gameState.currentPlayer = 3;
+      game.passTurn();
+
+      expect(game.gameState.playPile).to.be.empty;
+      expect(game.gameState.roundNumber).to.equal(2);
+      expect(game.gameState.currentPlayer).to.equal(0);
+    });
+
+    it("should handle multiple plays in a round", () => {
+      game.gameState.numPlayers = 3;
+      game.gameState.players = [
+        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 2, new MockUI(new GameClient(game))),
+      ];
+      game.init();
+
+      // P1 plays → becomes lastPlayerToPlay
+      game.gameState.currentPlayer = 0;
+      game.gameState.playPile = [];
+      game.gameState.selectedCards = [new Card("3", "♠")];
+      game.gameState.playerHands = [[new Card("3", "♠"), new Card("4", "♠")], [], []];
+      game.playCards();
+      expect(game.gameState.lastPlayerToPlay).to.equal(0);
+      expect(game.gameState.roundNumber).to.equal(1); // Round still ongoing
+
+      // P2 passes
+      game.gameState.currentPlayer = 1;
+      game.passTurn();
+      expect(game.gameState.playerPassed[1]).to.be.true;
+
+      // P3 plays → becomes lastPlayerToPlay
+      game.gameState.currentPlayer = 2;
+      game.gameState.selectedCards = [new Card("4", "♠")];
+      game.gameState.playerHands = [[new Card("4", "♠")], [], [new Card("4", "♠"), new Card("5", "♠")]];
+      game.playCards();
+      expect(game.gameState.lastPlayerToPlay).to.equal(2);
+      expect(game.gameState.roundNumber).to.equal(1); // Round still ongoing
+
+      // P2 tries to play but has passed → rejected
+      game.gameState.currentPlayer = 1;
+      const card = new Card("5", "♠");
+      game.gameState.selectedCards = [card];
+      game.gameState.playerHands = [[], [], [card]];
+      game.playCards();
+      // Cards should NOT have been played (selectedCards still has the card)
+      expect(game.gameState.selectedCards).to.have.lengthOf(1);
+    });
+
+    it("should skip passed players in turn order", () => {
+      game.gameState.numPlayers = 4;
+      game.gameState.players = [
+        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 2, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 3, new MockUI(new GameClient(game))),
+      ];
+      game.init();
+
+      // === First phase of round ===
+      // P1 plays 3♠ (starting card)
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.playPile = [new Card("3", "♠")];
+
+      // P2 passes → turn skips to P3
+      game.gameState.currentPlayer = 1;
+      game.passTurn();
+      expect(game.gameState.currentPlayer).to.equal(2);
+
+      // P3 passes → turn skips to P4
+      game.gameState.currentPlayer = 2;
+      game.passTurn();
+      expect(game.gameState.currentPlayer).to.equal(3);
+
+      // P4 passes → all others passed, round ends
+      game.gameState.currentPlayer = 3;
+      game.passTurn();
+      expect(game.gameState.playPile).to.be.empty;
+      expect(game.gameState.roundNumber).to.equal(2);
+
+      // === Second phase of new round ===
+      // P1 now leads with a new play
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.playPile = [new Card("4", "♠")];
+      // Reset passed state for new round
+      game.gameState.playerPassed = [false, false, false, false];
+
+      // P2 passes → turn skips to P3
+      game.gameState.currentPlayer = 1;
+      game.passTurn();
+      expect(game.gameState.currentPlayer).to.equal(2);
+
+      // P3 passes → turn skips to P4
+      game.gameState.currentPlayer = 2;
+      game.passTurn();
+      expect(game.gameState.currentPlayer).to.equal(3);
+
+      // P4 passes → round ends
+      game.gameState.currentPlayer = 3;
+      game.passTurn();
+      expect(game.gameState.playPile).to.be.empty;
+      expect(game.gameState.roundNumber).to.equal(3);
+    });
+
+    it("should skip multiple consecutive passed players and end round when all have passed", () => {
+      game.gameState.numPlayers = 3;
+      game.gameState.players = [
+        new HumanPlayer(new GameClient(game), 0),
+        new HumanPlayer(new GameClient(game), 1),
+        new HumanPlayer(new GameClient(game), 2),
+      ];
+      game.init();
+
+      // P1 plays the first card
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.playPile = [new Card("3", "♠")];
+
+      // P2 passes (playerPassed[1] is set to true by passTurn)
+      game.gameState.currentPlayer = 1;
+      game.passTurn();
+      expect(game.gameState.currentPlayer).to.equal(2);
+
+      // P3 passes (playerPassed[2] is set to true by passTurn)
+      game.gameState.currentPlayer = 2;
+      game.passTurn();
+      // Both P2 and P3 have passed, round should end
+      expect(game.gameState.playPile).to.be.empty;
+      expect(game.gameState.roundNumber).to.equal(2);
+    });
+
+    it("should cycle through passed players and end round when lastPlayerToPlay is reached", () => {
+      game.gameState.numPlayers = 4;
+      game.gameState.players = [
+        new HumanPlayer(new GameClient(game), 0),
+        new HumanPlayer(new GameClient(game), 1),
+        new HumanPlayer(new GameClient(game), 2),
+        new HumanPlayer(new GameClient(game), 3),
+      ];
+      game.init();
+
+      // P1 plays the first card
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.playPile = [new Card("3", "♠")];
+
+      // P4 has passed; P2 and P3 have not
+      game.gameState.playerPassed = [false, false, false, true];
+
+      // P3 passes → shouldEndRound() returns FALSE (P2 hasn't passed)
+      // nextPlayer = 3 (passed) → while loop body executes (line 242-243)
+      // nextPlayer = 0 (lastPlayerToPlay) → while loop exits
+      // shouldEndRound() returns FALSE (P2 hasn't passed) → skip if block
+      // currentPlayer = 0
+      game.gameState.currentPlayer = 2;
+      game.passTurn();
+      expect(game.gameState.currentPlayer).to.equal(0);
+    });
+  });
+
+  describe("gamesWon multi-player", () => {
+    beforeEach(() => {
+      game.gameState.numPlayers = 2;
+      game.gameState.players = [
+        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
+      ];
+    });
+
+    it("should preserve gamesWon when setPlayers is called with same player count", () => {
+      const originalGamesWon = [3, 2];
+      game.gameState.gamesWon = originalGamesWon;
+
+      const players = [
+        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
+      ];
+      game.setPlayers(players);
+
+      // gamesWon should be preserved (same count)
+      expect(game.gameState.gamesWon).to.deep.equal(originalGamesWon);
+    });
+
+    it("should reset gamesWon when setPlayers is called with different player count", () => {
+      game.gameState.gamesWon = [3, 2];
+      game.gameState.numPlayers = 2;
+
+      const players = [
+        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 2, new MockUI(new GameClient(game))),
+      ];
+      game.setPlayers(players);
+
+      // gamesWon should be reset (different count)
+      expect(game.gameState.gamesWon).to.deep.equal([0, 0, 0]);
+    });
+
+    it("should initialize gamesWon with correct size for 4 players", () => {
+      const players = [
+        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 2, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 3, new MockUI(new GameClient(game))),
+      ];
+      game.setPlayers(players);
+
+      expect(game.gameState.gamesWon).to.have.lengthOf(4);
+      expect(game.gameState.gamesWon).to.deep.equal([0, 0, 0, 0]);
+    });
+  });
+
+  describe("AI configuration", () => {
+    beforeEach(() => {
+      game.gameState.numPlayers = 2;
+      game.gameState.players = [
+        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "random")),
+      ];
+    });
+
+    it("should save numAIPlayers and aiPersonas in setPlayers()", () => {
+      game.setPlayers(game.gameState.players);
+
+      expect(game.gameState.numAIPlayers).to.equal(1);
+      expect(game.gameState.aiPersonas).to.have.lengthOf(1);
+      expect(game.gameState.aiPersonas[0]).to.equal("random");
+    });
+
+    it("should save multiple AI personas in setPlayers()", () => {
+      const aiPlayers = [
+        new AIPlayer(new GameClient(game), 0, new MockAI(new GameClient(game), [], "random")),
+        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "aggressive")),
+        new AIPlayer(new GameClient(game), 2, new MockAI(new GameClient(game), [], "cautious")),
+      ];
+      const players = [
+        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        ...aiPlayers,
+      ];
+      game.setPlayers(players);
+
+      expect(game.gameState.numAIPlayers).to.equal(3);
+      expect(game.gameState.aiPersonas).to.deep.equal(["random", "aggressive", "cautious"]);
     });
   });
 });
