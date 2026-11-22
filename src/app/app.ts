@@ -230,7 +230,7 @@ export class App {
         this.aiPlayers.push(aiPlayer);
       }
 
-      this.gameClient.setPlayers([this.humanPlayer, ...this.aiPlayers]);
+      this.gameClient.setPlayers([this.humanPlayer, ...this.aiPlayers], { skipDeal: true });
       this.ui.render();
       return;
     }

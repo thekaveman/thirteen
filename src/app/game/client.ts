@@ -396,9 +396,11 @@ export class GameClient {
   /**
    * Initializes the game's players.
    * @param players The list of players to initialize into the game.
+   * @param options Optional configuration.
+   * @param options.skipDeal If true, skip re-dealing cards (used when restoring state from save).
    */
-  setPlayers(players: Player[]): void {
-    this.game.setPlayers(players);
+  setPlayers(players: Player[], options?: { skipDeal?: boolean }): void {
+    this.game.setPlayers(players, options);
   }
 
   /**

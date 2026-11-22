@@ -110,6 +110,53 @@ describe("Game", () => {
       expect(game.gameState.roundsWon).to.deep.equal([0, 0]);
       expect(game.gameState.gamesWon).to.deep.equal(originalGamesWon);
     });
+
+    it("setPlayers() with skipDeal should not re-deal cards", () => {
+      const players = [
+        new HumanPlayer(new GameClient(game), 0),
+        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
+      ];
+
+      // Pre-set player hands to simulate a saved state
+      game.gameState.numPlayers = 2;
+      game.gameState.playerHands = [
+        [new Card("A", "♠"), new Card("K", "♠")],
+        [new Card("Q", "♠"), new Card("J", "♠")],
+      ];
+      game.gameState.playPile = [new Card("3", "♠")];
+
+      game.setPlayers(players, { skipDeal: true });
+
+      // Hands should be preserved (not re-dealt)
+      expect(game.gameState.playerHands[0][0].rank).to.equal("A");
+      expect(game.gameState.playerHands[0][0].suit).to.equal("♠");
+      expect(game.gameState.playerHands[1][0].rank).to.equal("Q");
+      expect(game.gameState.playerHands[1][0].suit).to.equal("♠");
+
+      // Player metadata should still be set
+      expect(game.gameState.numPlayers).to.equal(2);
+      expect(game.gameState.playerTypes).to.deep.equal(["human", "ai"]);
+      expect(game.gameState.numAIPlayers).to.equal(1);
+      expect(game.gameState.aiPersonas).to.have.lengthOf(1);
+      expect(game.gameState.roundsWon).to.have.lengthOf(2);
+      expect(game.gameState.playerPassed).to.have.lengthOf(2);
+      expect(game.gameState.lastPlayerToPlay).to.equal(-1);
+    });
+
+    it("setPlayers() without skipDeal should still deal cards normally", () => {
+      const players = [
+        new HumanPlayer(new GameClient(game), 0),
+        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
+      ];
+
+      game.setPlayers(players);
+
+      // Should have dealt cards (13 each for 2 players from the MockDeck)
+      expect(game.gameState.playerHands[0]).to.have.lengthOf(13);
+      expect(game.gameState.playerHands[1]).to.have.lengthOf(13);
+      expect(game.gameState.currentPlayer).to.be.a("number");
+      expect(game.gameState.lastPlayerToPlay).to.equal(game.gameState.currentPlayer);
+    });
   });
 
   describe("Gameplay Logic", () => {
@@ -277,6 +324,48 @@ describe("Game", () => {
       expect(newGame.gameState.playPile[0].suit).to.equal("♠");
       expect(newGame.gameState.selectedCards[0].rank).to.equal("A");
       expect(newGame.gameState.selectedCards[0].suit).to.equal("♠");
+    });
+
+    it("load() should preserve both player hands and playPile (full mid-game reload simulation)", async () => {
+      const mockUI = new MockUI(new GameClient(game));
+      const mockAI = new MockAI(new GameClient(game), [new Card("3", "♠")], "random");
+      const mockPlayers = [new AIPlayer(new GameClient(game), 0, mockAI), new HumanPlayer(new GameClient(game), 1)];
+
+      game.setPlayers(mockPlayers);
+      game.gameState.gameStarted = true;
+
+      // Simulate mid-game: player 0 has 5 cards, player 1 has 8 cards, playPile has 2 cards
+      game.gameState.playerHands[0] = [new Card("K", "♠"), new Card("Q", "♦"), new Card("J", "♣"), new Card("10", "♥"), new Card("9", "♠")];
+      game.gameState.playerHands[1] = [new Card("A", "♠"), new Card("2", "♦"), new Card("3", "♥"), new Card("4", "♣"), new Card("5", "♠"), new Card("6", "♦"), new Card("7", "♥"), new Card("8", "♣")];
+      game.gameState.playPile = [new Card("3", "♠"), new Card("3", "♦")];
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.currentPlayer = 1;
+      game.gameState.consecutivePasses = 0;
+      game.gameState.roundNumber = 2;
+      game.save();
+
+      // Simulate loading from a fresh game instance (like a browser refresh)
+      const newGame = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
+      const loadedGameState = await newGame.load(mockUI);
+
+      expect(loadedGameState.loaded).to.be.true;
+
+      // Both hands should be preserved exactly
+      expect(newGame.gameState.playerHands[0]).to.have.lengthOf(5);
+      expect(newGame.gameState.playerHands[0][0].rank).to.equal("K");
+      expect(newGame.gameState.playerHands[1]).to.have.lengthOf(8);
+      expect(newGame.gameState.playerHands[1][0].rank).to.equal("A");
+
+      // PlayPile should also be preserved
+      expect(newGame.gameState.playPile).to.have.lengthOf(2);
+      expect(newGame.gameState.playPile[0].rank).to.equal("3");
+      expect(newGame.gameState.playPile[0].suit).to.equal("♠");
+
+      // Other state should be preserved too
+      expect(newGame.gameState.currentPlayer).to.equal(1);
+      expect(newGame.gameState.lastPlayerToPlay).to.equal(0);
+      expect(newGame.gameState.roundNumber).to.equal(2);
+      expect(newGame.gameState.gameStarted).to.be.true;
     });
 
     it("load() should initialize playerPassed if missing (backward compat)", async () => {

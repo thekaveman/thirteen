@@ -334,8 +334,10 @@ export class Game {
   /**
    * Initializes the game's players.
    * @param players The list of players to initialize into the game.
+   * @param options Optional configuration.
+   * @param options.skipDeal If true, skip re-dealing cards (used when restoring state from save).
    */
-  setPlayers(players: Player[]): void {
+  setPlayers(players: Player[], options?: { skipDeal?: boolean }): void {
     if (players) {
       this.gameState.players = players;
       this.gameState.numPlayers = players.length;
@@ -348,9 +350,12 @@ export class Game {
       if (this.gameState.gamesWon.length !== players.length) {
         this.gameState.gamesWon = new Array(players.length).fill(0);
       }
-      this.deal();
-      this.gameState.currentPlayer = this.rules.findStartingPlayer(this.gameState.playerHands);
-      this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
+      const skipDeal = options?.skipDeal ?? false;
+      if (!skipDeal) {
+        this.deal();
+        this.gameState.currentPlayer = this.rules.findStartingPlayer(this.gameState.playerHands);
+        this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
+      }
       this.save();
     }
   }
