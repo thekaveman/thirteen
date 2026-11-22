@@ -162,8 +162,6 @@ export class App {
     const humanPlayer = this.gameClient.getFirstHumanPlayer();
     if (!humanPlayer) return;
 
-    const players = [humanPlayer, ...this.aiPlayers];
-    this.gameClient.setPlayers(players);
     this.gameClient.start();
     this.ui.render();
     this.nextTurn();

@@ -261,6 +261,9 @@ describe("GameClient", () => {
 
     it("isValidPlay() should call game.rules.isValidPlay", () => {
       const spy = sinon.spy(game.rules, "isValidPlay");
+      // Set up playerHands since isValidPlay checks it
+      game.gameState.numPlayers = 2;
+      game.gameState.playerHands = [[], []];
       const cards = [new Card("A", "♠")];
       gameClient.isValidPlay(cards);
       sinon.assert.calledOnce(spy);
@@ -289,6 +292,9 @@ describe("GameClient", () => {
     });
 
     it("play() should call game.playCards", () => {
+      // Set up playerHands since playCards accesses it
+      game.gameState.numPlayers = 2;
+      game.gameState.playerHands = [[], []];
       const spy = sinon.spy(game, "playCards");
       const move = [new Card("3", "♠")];
       gameClient.play(move);

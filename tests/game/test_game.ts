@@ -105,27 +105,40 @@ describe("Game", () => {
 
       expect(game.gameState.numPlayers).to.equal(players.length);
       expect(game.gameState.players).to.have.lengthOf(players.length);
-      expect(game.gameState.playerHands).to.have.lengthOf(players.length);
+      expect(game.gameState.playerTypes).to.deep.equal(["human", "ai"]);
+      expect(game.gameState.numAIPlayers).to.equal(1);
+      expect(game.gameState.aiPersonas).to.have.lengthOf(1);
       expect(game.gameState.roundsWon).to.have.lengthOf(players.length);
       expect(game.gameState.roundsWon).to.deep.equal([0, 0]);
       expect(game.gameState.gamesWon).to.deep.equal(originalGamesWon);
     });
 
-    it("setPlayers() with skipDeal should not re-deal cards", () => {
+    it("setPlayers() with skipDeal should not re-deal or reset game state", () => {
       const players = [
         new HumanPlayer(new GameClient(game), 0),
         new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
       ];
 
-      // Pre-set player hands to simulate a saved state
+      // Pre-set game state to simulate a fully restored saved state
       game.gameState.numPlayers = 2;
       game.gameState.playerHands = [
         [new Card("A", "♠"), new Card("K", "♠")],
         [new Card("Q", "♠"), new Card("J", "♠")],
       ];
       game.gameState.playPile = [new Card("3", "♠")];
+      game.gameState.roundsWon = [1, 0];
+      game.gameState.playerPassed = [false, true];
+      game.gameState.currentPlayer = 1;
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.consecutivePasses = 1;
 
       game.setPlayers(players, { skipDeal: true });
+
+      // Player metadata should be set
+      expect(game.gameState.numPlayers).to.equal(2);
+      expect(game.gameState.playerTypes).to.deep.equal(["human", "ai"]);
+      expect(game.gameState.numAIPlayers).to.equal(1);
+      expect(game.gameState.aiPersonas).to.have.lengthOf(1);
 
       // Hands should be preserved (not re-dealt)
       expect(game.gameState.playerHands[0][0].rank).to.equal("A");
@@ -133,29 +146,31 @@ describe("Game", () => {
       expect(game.gameState.playerHands[1][0].rank).to.equal("Q");
       expect(game.gameState.playerHands[1][0].suit).to.equal("♠");
 
-      // Player metadata should still be set
-      expect(game.gameState.numPlayers).to.equal(2);
-      expect(game.gameState.playerTypes).to.deep.equal(["human", "ai"]);
-      expect(game.gameState.numAIPlayers).to.equal(1);
-      expect(game.gameState.aiPersonas).to.have.lengthOf(1);
-      expect(game.gameState.roundsWon).to.have.lengthOf(2);
-      expect(game.gameState.playerPassed).to.have.lengthOf(2);
-      expect(game.gameState.lastPlayerToPlay).to.equal(-1);
+      // Restored game state fields should NOT be overwritten
+      expect(game.gameState.roundsWon).to.deep.equal([1, 0]);
+      expect(game.gameState.playerPassed).to.deep.equal([false, true]);
+      expect(game.gameState.currentPlayer).to.equal(1);
+      expect(game.gameState.lastPlayerToPlay).to.equal(0);
+      expect(game.gameState.consecutivePasses).to.equal(1);
+      // playPile should be preserved (not touched)
+      expect(game.gameState.playPile).to.have.lengthOf(1);
     });
 
-    it("setPlayers() without skipDeal should still deal cards normally", () => {
+    it("start() should deal cards and find starting player", () => {
       const players = [
         new HumanPlayer(new GameClient(game), 0),
         new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
       ];
 
       game.setPlayers(players);
+      game.start();
 
       // Should have dealt cards (13 each for 2 players from the MockDeck)
       expect(game.gameState.playerHands[0]).to.have.lengthOf(13);
       expect(game.gameState.playerHands[1]).to.have.lengthOf(13);
       expect(game.gameState.currentPlayer).to.be.a("number");
       expect(game.gameState.lastPlayerToPlay).to.equal(game.gameState.currentPlayer);
+      expect(game.gameState.gameStarted).to.be.true;
     });
   });
 
@@ -302,9 +317,15 @@ describe("Game", () => {
       const mockPlayers = [new AIPlayer(new GameClient(game), 0, mockAI), new HumanPlayer(new GameClient(game), 1)];
 
       game.setPlayers(mockPlayers);
-      game.gameState.gameStarted = true;
+      // setPlayers() doesn't deal cards; manually set up playerHands for the test
+      game.gameState.numPlayers = 2;
+      game.gameState.playerHands = [
+        [new Card("K", "♠"), new Card("Q", "♠")],
+        [new Card("J", "♠"), new Card("10", "♠")],
+      ];
       game.gameState.playPile = [new Card("K", "♠"), new Card("K", "♦")];
       game.gameState.selectedCards = [new Card("A", "♠")];
+      game.gameState.playerTypes = ["ai", "human"];
       game.save();
 
       const newGame = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);

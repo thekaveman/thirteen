@@ -335,7 +335,7 @@ export class Game {
    * Initializes the game's players.
    * @param players The list of players to initialize into the game.
    * @param options Optional configuration.
-   * @param options.skipDeal If true, skip re-dealing cards (used when restoring state from save).
+   * @param options.skipDeal If true, skip resetting game state fields (used when restoring state from save).
    */
   setPlayers(players: Player[], options?: { skipDeal?: boolean }): void {
     if (players) {
@@ -345,28 +345,33 @@ export class Game {
       // Count AI players and save their personas (player 0 is human, rest are AI)
       this.gameState.numAIPlayers = players.length - 1;
       this.gameState.aiPersonas = players.slice(1).map((p) => p.persona);
-      this.gameState.roundsWon = new Array(players.length).fill(0);
-      this.gameState.playerPassed = new Array(players.length).fill(false);
-      if (this.gameState.gamesWon.length !== players.length) {
-        this.gameState.gamesWon = new Array(players.length).fill(0);
-      }
+
       const skipDeal = options?.skipDeal ?? false;
       if (!skipDeal) {
-        this.deal();
-        this.gameState.currentPlayer = this.rules.findStartingPlayer(this.gameState.playerHands);
-        this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
+        // For a fresh game, initialize game state fields including empty hands for rendering
+        this.gameState.playerHands = players.map(() => []);
+        this.gameState.roundsWon = new Array(players.length).fill(0);
+        this.gameState.playerPassed = new Array(players.length).fill(false);
+        if (this.gameState.gamesWon.length !== players.length) {
+          this.gameState.gamesWon = new Array(players.length).fill(0);
+        }
       }
       this.save();
     }
   }
 
   /**
-   * Marks the game as started.
+   * Marks the game as started. If not already started, deals cards and finds the starting player.
    */
   start(): void {
-    this.gameState.gameStarted = true;
-    this.save();
-    this.hooks.onGameStarted(new GameClient(this));
+    if (!this.gameState.gameStarted) {
+      this.deal();
+      this.gameState.currentPlayer = this.rules.findStartingPlayer(this.gameState.playerHands);
+      this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
+      this.gameState.gameStarted = true;
+      this.save();
+      this.hooks.onGameStarted(new GameClient(this));
+    }
   }
 
   /**
