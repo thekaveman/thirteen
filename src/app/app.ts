@@ -100,10 +100,15 @@ export class App {
 
   handleAISelection(selectedAI: string): void {
     this.selectedAI = selectedAI;
-    this.gameClient.setAIPersona(1, this.selectedAI);
-    if (!this.humanPlayer) return;
-    this.gameClient.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
-    this.ui.render();
+    // Update AI player persona if it exists
+    const ai = this.aiPlayers[0];
+    if (ai && ai.type === PLAYER_TYPES.AI) {
+      this.gameClient.setAIPersona(1, selectedAI);
+    }
+    if (this.humanPlayer && this.aiPlayers.length > 0) {
+      this.gameClient.setPlayers([this.humanPlayer, ...this.aiPlayers]);
+      this.ui.render();
+    }
   }
 
   handleAITurn(): void {
