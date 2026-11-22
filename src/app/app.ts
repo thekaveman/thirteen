@@ -153,6 +153,12 @@ export class App {
 
   handleStartGameClick(): void {
     log("Game started");
+    // Set up all players (human + AI) and start the game
+    const humanPlayer = this.gameClient.getFirstHumanPlayer();
+    if (!humanPlayer) return;
+
+    const players = [humanPlayer, ...this.aiPlayers];
+    this.gameClient.setPlayers(players);
     this.gameClient.start();
     this.ui.render();
     this.nextTurn();
