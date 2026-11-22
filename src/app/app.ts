@@ -27,7 +27,8 @@ export class App {
   setTimeout: ((_fn: () => void, _ms: number) => number) | undefined;
   humanPlayer!: Player | null;
   selectedAI: string;
-  aiPlayers: Record<string, Player>;
+  aiPlayers: Player[];
+  numAIPlayers: number;
 
   /**
    * Creates a new app instance with dependencies.
@@ -54,8 +55,9 @@ export class App {
     this.ui.on("aiChanged", (selectedAI: unknown) => this.handleAISelection(selectedAI as string));
     this.ui.on("cardClicked", (card: unknown) => this.handleCardClick(card as Card));
 
-    this.selectedAI = "random"; // Default AI persona
-    this.aiPlayers = {};
+    this.selectedAI = "random";
+    this.aiPlayers = [];
+    this.numAIPlayers = 1;
   }
 
   attachHooks(): void {
@@ -67,6 +69,33 @@ export class App {
    */
   clearStorage(): void {
     localStorage.clear();
+  }
+
+  /**
+   * Creates a new AI player with the "Random" persona.
+   * @returns The created AI player.
+   */
+  async addAIPlayer(): Promise<Player> {
+    const aiPlayer = await createPlayer({
+      gameClient: this.gameClient,
+      type: PLAYER_TYPES.AI,
+      number: this.numAIPlayers,
+      persona: "random",
+      id: crypto.randomUUID(),
+    });
+    this.aiPlayers.push(aiPlayer);
+    this.numAIPlayers++;
+    return aiPlayer;
+  }
+
+  /**
+   * Removes the last AI player.
+   */
+  removeAIPlayer(): void {
+    if (this.aiPlayers.length > 0) {
+      this.aiPlayers.pop();
+      this.numAIPlayers--;
+    }
   }
 
   handleAISelection(selectedAI: string): void {
