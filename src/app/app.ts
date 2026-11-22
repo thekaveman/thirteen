@@ -112,11 +112,6 @@ export class App {
       return;
     }
 
-    if (!this.gameClient.isGameStarted()) {
-      this.gameClient.start();
-      this.ui.render();
-    }
-
     log(`handleAITurn: Calling takeTurn() for ${aiPlayer.ai.persona}`);
     const move = aiPlayer.takeTurn();
     log(`handleAITurn: takeTurn() for ${aiPlayer.ai.persona} returned: ${JSON.stringify(move)}`);
