@@ -105,10 +105,19 @@ describe("Rules", () => {
         new Card("5", "♦"),
       ];
       const nonConsecutive = [new Card("3", "♠"), new Card("3", "♦"), new Card("5", "♣"), new Card("5", "♥")];
+      const nonConsecutive6 = [
+        new Card("3", "♠"),
+        new Card("3", "♦"),
+        new Card("5", "♣"),
+        new Card("5", "♥"),
+        new Card("7", "♠"),
+        new Card("7", "♦"),
+      ];
       const withTwos = [new Card("A", "♠"), new Card("A", "♦"), new Card("2", "♣"), new Card("2", "♥")];
       expect(rules.isConsecutivePairs(validPairs)).to.be.true;
       expect(rules.isConsecutivePairs(invalidPairs)).to.be.false;
       expect(rules.isConsecutivePairs(nonConsecutive)).to.be.false;
+      expect(rules.isConsecutivePairs(nonConsecutive6)).to.be.false;
       expect(rules.isConsecutivePairs(withTwos)).to.be.false;
     });
 
