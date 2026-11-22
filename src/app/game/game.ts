@@ -8,6 +8,7 @@ import { log } from "../utils.js";
 
 export interface GameState {
   numPlayers: number;
+  numAIPlayers: number;
   players: Player[];
   playerHands: Card[][];
   playerTurns: number[];
@@ -20,6 +21,7 @@ export interface GameState {
   roundNumber: number;
   roundsWon: number[];
   gamesWon: number[];
+  aiPersonas: (string | null)[];
   gameOver: boolean;
   gameStarted: boolean;
   playerTypes: string[];
@@ -70,6 +72,7 @@ export class Game {
     };
     this.gameState = {
       numPlayers: 0,
+      numAIPlayers: 0,
       players: [],
       playerHands: [],
       playerTurns: [],
@@ -82,6 +85,7 @@ export class Game {
       roundNumber: 1,
       roundsWon: [],
       gamesWon: [],
+      aiPersonas: [],
       gameOver: false,
       gameStarted: false,
       playerTypes: [],
@@ -342,6 +346,9 @@ export class Game {
       this.gameState.players = players;
       this.gameState.numPlayers = players.length;
       this.gameState.playerTypes = players.map((p) => p.type);
+      // Count AI players and save their personas (player 0 is human, rest are AI)
+      this.gameState.numAIPlayers = players.length - 1;
+      this.gameState.aiPersonas = players.slice(1).map((p) => p.persona);
       this.gameState.roundsWon = new Array(players.length).fill(0);
       this.gameState.playerPassed = new Array(players.length).fill(false);
       if (this.gameState.gamesWon.length !== players.length) {
