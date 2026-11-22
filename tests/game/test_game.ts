@@ -68,7 +68,7 @@ describe("Game", () => {
 
     it("start() should initialize the game state for starting", () => {
       const players = [
-        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 0),
         new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
       ];
       game.setPlayers(players);
@@ -95,7 +95,7 @@ describe("Game", () => {
   describe("Player Management", () => {
     it("setPlayers() should initialize players and associated game state", () => {
       const players = [
-        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 0),
         new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
       ];
       const originalGamesWon = [2, 1];
@@ -252,10 +252,7 @@ describe("Game", () => {
     it("load() should correctly rehydrate game data", async () => {
       const mockUI = new MockUI(new GameClient(game));
       const mockAI = new MockAI(new GameClient(game), [new Card("3", "♠")], "random");
-      const mockPlayers = [
-        new AIPlayer(new GameClient(game), 0, mockAI),
-        new HumanPlayer(new GameClient(game), 1, mockUI),
-      ];
+      const mockPlayers = [new AIPlayer(new GameClient(game), 0, mockAI), new HumanPlayer(new GameClient(game), 1)];
 
       game.setPlayers(mockPlayers);
       game.gameState.gameStarted = true;
@@ -309,9 +306,9 @@ describe("Game", () => {
     beforeEach(() => {
       game.gameState.numPlayers = 3;
       game.gameState.players = [
-        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 2, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 0),
+        new HumanPlayer(new GameClient(game), 1),
+        new HumanPlayer(new GameClient(game), 2),
       ];
     });
 
@@ -439,10 +436,7 @@ describe("Game", () => {
 
     it("should work correctly with 2 players (1+1 mode)", () => {
       game.gameState.numPlayers = 2;
-      game.gameState.players = [
-        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
-      ];
+      game.gameState.players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
       game.init();
 
       // Player 0 starts and plays
@@ -466,9 +460,9 @@ describe("Game", () => {
     it("should end round with 3 players: P1 plays, P2 passes, P3 passes", () => {
       game.gameState.numPlayers = 3;
       game.gameState.players = [
-        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 2, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 0),
+        new HumanPlayer(new GameClient(game), 1),
+        new HumanPlayer(new GameClient(game), 2),
       ];
       game.init();
 
@@ -496,10 +490,10 @@ describe("Game", () => {
     it("should end round with 4 players: all pass after first play", () => {
       game.gameState.numPlayers = 4;
       game.gameState.players = [
-        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 2, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 3, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 0),
+        new HumanPlayer(new GameClient(game), 1),
+        new HumanPlayer(new GameClient(game), 2),
+        new HumanPlayer(new GameClient(game), 3),
       ];
       game.init();
 
@@ -520,9 +514,9 @@ describe("Game", () => {
     it("should handle multiple plays in a round", () => {
       game.gameState.numPlayers = 3;
       game.gameState.players = [
-        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 2, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 0),
+        new HumanPlayer(new GameClient(game), 1),
+        new HumanPlayer(new GameClient(game), 2),
       ];
       game.init();
 
@@ -561,10 +555,10 @@ describe("Game", () => {
     it("should skip passed players in turn order", () => {
       game.gameState.numPlayers = 4;
       game.gameState.players = [
-        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 2, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 3, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 0),
+        new HumanPlayer(new GameClient(game), 1),
+        new HumanPlayer(new GameClient(game), 2),
+        new HumanPlayer(new GameClient(game), 3),
       ];
       game.init();
 
@@ -670,20 +664,14 @@ describe("Game", () => {
   describe("gamesWon multi-player", () => {
     beforeEach(() => {
       game.gameState.numPlayers = 2;
-      game.gameState.players = [
-        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
-      ];
+      game.gameState.players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
     });
 
     it("should preserve gamesWon when setPlayers is called with same player count", () => {
       const originalGamesWon = [3, 2];
       game.gameState.gamesWon = originalGamesWon;
 
-      const players = [
-        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
-      ];
+      const players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
       game.setPlayers(players);
 
       // gamesWon should be preserved (same count)
@@ -695,9 +683,9 @@ describe("Game", () => {
       game.gameState.numPlayers = 2;
 
       const players = [
-        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 2, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 0),
+        new HumanPlayer(new GameClient(game), 1),
+        new HumanPlayer(new GameClient(game), 2),
       ];
       game.setPlayers(players);
 
@@ -707,10 +695,10 @@ describe("Game", () => {
 
     it("should initialize gamesWon with correct size for 4 players", () => {
       const players = [
-        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 1, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 2, new MockUI(new GameClient(game))),
-        new HumanPlayer(new GameClient(game), 3, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 0),
+        new HumanPlayer(new GameClient(game), 1),
+        new HumanPlayer(new GameClient(game), 2),
+        new HumanPlayer(new GameClient(game), 3),
       ];
       game.setPlayers(players);
 
@@ -723,7 +711,7 @@ describe("Game", () => {
     beforeEach(() => {
       game.gameState.numPlayers = 2;
       game.gameState.players = [
-        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
+        new HumanPlayer(new GameClient(game), 0),
         new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "random")),
       ];
     });
@@ -742,10 +730,7 @@ describe("Game", () => {
         new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "aggressive")),
         new AIPlayer(new GameClient(game), 2, new MockAI(new GameClient(game), [], "cautious")),
       ];
-      const players = [
-        new HumanPlayer(new GameClient(game), 0, new MockUI(new GameClient(game))),
-        ...aiPlayers,
-      ];
+      const players = [new HumanPlayer(new GameClient(game), 0), ...aiPlayers];
       game.setPlayers(players);
 
       expect(game.gameState.numAIPlayers).to.equal(3);

@@ -25,10 +25,7 @@ describe("GameClient", () => {
 
   describe("Getters", () => {
     it("getAnalyticsData() should return a comprehensive analytics object", () => {
-      const players = [
-        new HumanPlayer(gameClient, 0, new MockUI(gameClient)),
-        new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random")),
-      ];
+      const players = [new HumanPlayer(gameClient, 0), new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random"))];
       gameClient.setPlayers(players);
       game.gameState.gameOver = true;
       const data = gameClient.getAnalyticsData();
@@ -53,7 +50,7 @@ describe("GameClient", () => {
     });
 
     it("getCurrentPlayer() should return the current player", () => {
-      const players = [new HumanPlayer(gameClient, 0, new MockUI(gameClient))];
+      const players = [new HumanPlayer(gameClient, 0)];
       gameClient.setPlayers(players);
       expect(gameClient.getCurrentPlayer()).to.equal(players[0]);
     });
@@ -70,7 +67,7 @@ describe("GameClient", () => {
 
     it("getFirstAIPlayer() should return the first AI player", () => {
       const players = [
-        new HumanPlayer(gameClient, 0, new MockUI(gameClient)),
+        new HumanPlayer(gameClient, 0),
         new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "mock")),
         new AIPlayer(gameClient, 2, new MockAI(gameClient, [], "mock2")),
       ];
@@ -84,8 +81,8 @@ describe("GameClient", () => {
     it("getFirstHumanPlayer() should return the first human player", () => {
       const players = [
         new AIPlayer(gameClient, 0, new MockAI(gameClient, [], "mock")),
-        new HumanPlayer(gameClient, 1, new MockUI(gameClient)),
-        new HumanPlayer(gameClient, 2, new MockUI(gameClient)),
+        new HumanPlayer(gameClient, 1),
+        new HumanPlayer(gameClient, 2),
       ];
       gameClient.setPlayers(players);
       const humanPlayer = gameClient.getFirstHumanPlayer();
@@ -113,7 +110,7 @@ describe("GameClient", () => {
     });
 
     it("getPlayers() should return the list of players", () => {
-      const players = [new HumanPlayer(gameClient, 0, new MockUI(gameClient))];
+      const players = [new HumanPlayer(gameClient, 0)];
       game.gameState.players = players;
       expect(gameClient.getPlayers()).to.equal(players);
     });
@@ -137,10 +134,7 @@ describe("GameClient", () => {
 
   describe("Actions", () => {
     beforeEach(() => {
-      const players = [
-        new HumanPlayer(gameClient, 0, new MockUI(gameClient)),
-        new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random")),
-      ];
+      const players = [new HumanPlayer(gameClient, 0), new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "random"))];
       gameClient.setPlayers(players);
     });
 
@@ -191,27 +185,21 @@ describe("GameClient", () => {
     });
 
     it("setAIPersona() should update the persona for an AI player", () => {
-      const players = [
-        new HumanPlayer(gameClient, 0, new MockUI(gameClient)),
-        new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "mock")),
-      ];
+      const players = [new HumanPlayer(gameClient, 0), new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "mock"))];
       gameClient.setPlayers(players);
       gameClient.setAIPersona(1, "new_persona");
       expect(gameClient.getPlayerPersonas(1)).to.equal("new_persona");
     });
 
     it("setAIPersona() should not update the persona for a human player", () => {
-      const players = [
-        new HumanPlayer(gameClient, 0, new MockUI(gameClient)),
-        new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "mock")),
-      ];
+      const players = [new HumanPlayer(gameClient, 0), new AIPlayer(gameClient, 1, new MockAI(gameClient, [], "mock"))];
       gameClient.setPlayers(players);
       gameClient.setAIPersona(0, "new_persona");
       expect(gameClient.getPlayerPersonas(0)).to.not.equal("new_persona");
     });
 
     it("setPlayerHand() should replace a player's hand", () => {
-      const players = [new HumanPlayer(gameClient, 0, new MockUI(gameClient))];
+      const players = [new HumanPlayer(gameClient, 0)];
       gameClient.setPlayers(players);
       const newHand = [new Card("A", "♠"), new Card("K", "♣")];
       gameClient.setPlayerHand(0, newHand);
@@ -226,7 +214,7 @@ describe("GameClient", () => {
 
     it("setPlayers() should call game.setPlayers", () => {
       const spy = sinon.spy(game, "setPlayers");
-      const players = [new HumanPlayer(gameClient, 0, new MockUI(gameClient))];
+      const players = [new HumanPlayer(gameClient, 0)];
       gameClient.setPlayers(players);
       sinon.assert.calledWith(spy, players);
     });
