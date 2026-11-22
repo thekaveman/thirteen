@@ -190,45 +190,74 @@ export class App {
   }
 
   async init(): Promise<void> {
-    // Create players asynchronously (due to dynamic AI persona loading)
-    this.humanPlayer = await createPlayer({ gameClient: this.gameClient, type: PLAYER_TYPES.HUMAN, number: 0, id: crypto.randomUUID() });
-    // Populate aiPlayers asynchronously
-    const aiPlayerPromises: Promise<Player>[] = [];
-    for (const personaKey of Object.keys(AI_PERSONAS)) {
-      aiPlayerPromises.push(
-        createPlayer({
-          gameClient: this.gameClient,
-          type: PLAYER_TYPES.AI,
-          number: 1, // Assuming AI is always player 1
-          persona: personaKey,
-          id: crypto.randomUUID(),
-        }),
-      );
-    }
-    const aiPlayers = await Promise.all(aiPlayerPromises);
-    const personaKeys = Object.keys(AI_PERSONAS);
-    for (let i = 0; i < personaKeys.length; i++) {
-      this.aiPlayers[personaKeys[i]] = aiPlayers[i];
-    }
+    // Create human player
+    this.humanPlayer = await createPlayer({
+      gameClient: this.gameClient,
+      type: PLAYER_TYPES.HUMAN,
+      number: 0,
+      id: crypto.randomUUID(),
+    });
 
     // Attempt to load game state
     const loadedGameState = await this.gameClient.load(this.ui);
     if (loadedGameState.loaded && !loadedGameState.gameOver) {
-      // If game loaded, update selectedAI from loaded state
-      const loadedPersona = this.gameClient.getPlayerPersonas(1);
-      if (typeof loadedPersona === "string" && loadedPersona) {
-        this.selectedAI = loadedPersona;
+      // Restore AI configuration from saved state
+      this.numAIPlayers = this.gameClient.getNumAIPlayers();
+      const aiPersonas = this.gameClient.getAIPersonas();
+
+      // Create AI players with saved personas
+      this.aiPlayers = [];
+      for (let i = 0; i < this.numAIPlayers; i++) {
+        const persona = aiPersonas[i];
+        const aiPlayer = await createPlayer({
+          gameClient: this.gameClient,
+          type: PLAYER_TYPES.AI,
+          number: i + 1,
+          persona: persona || "random",
+          id: crypto.randomUUID(),
+        });
+        this.aiPlayers.push(aiPlayer);
       }
-      this.gameClient.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
+
+      this.gameClient.setPlayers([this.humanPlayer, ...this.aiPlayers]);
       this.ui.render();
       return;
     }
 
-    // If no game loaded, or game was over, start a new one.
+    // No saved game, or game is over: start a new one
     this.gameClient.init();
 
-    // Initial game setup for display (hands dealt, starting player determined)
-    this.gameClient.setPlayers([this.humanPlayer, this.aiPlayers[this.selectedAI]]);
+    // Use saved AI configuration if available, otherwise create a default one
+    const savedNumAIPlayers = this.gameClient.getNumAIPlayers();
+    if (savedNumAIPlayers > 0) {
+      this.numAIPlayers = savedNumAIPlayers;
+      const aiPersonas = this.gameClient.getAIPersonas();
+
+      this.aiPlayers = [];
+      for (let i = 0; i < this.numAIPlayers; i++) {
+        const persona = aiPersonas[i] || "random";
+        const aiPlayer = await createPlayer({
+          gameClient: this.gameClient,
+          type: PLAYER_TYPES.AI,
+          number: i + 1,
+          persona,
+          id: crypto.randomUUID(),
+        });
+        this.aiPlayers.push(aiPlayer);
+      }
+    } else {
+      this.numAIPlayers = 1;
+      const aiPlayer = await createPlayer({
+        gameClient: this.gameClient,
+        type: PLAYER_TYPES.AI,
+        number: 1,
+        persona: "random",
+        id: crypto.randomUUID(),
+      });
+      this.aiPlayers = [aiPlayer];
+    }
+
+    this.gameClient.setPlayers([this.humanPlayer, ...this.aiPlayers]);
 
     // Render initial UI with dealt hands and start button
     this.ui.render();
