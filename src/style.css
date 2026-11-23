@@ -732,6 +732,7 @@ button:disabled,
   #game-board {
     flex-grow: 1;
     overflow-y: auto;
+    padding-bottom: 128px;
   }
 
   #players-hands {
