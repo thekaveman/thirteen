@@ -226,7 +226,11 @@ export class UI {
   createCardElement(card: Card): HTMLElement {
     if (typeof document === "undefined") {
       // Mock for Node.js environment
-      return { classList: { add: () => {}, remove: () => {} }, dataset: {}, addEventListener: () => {} } as unknown as HTMLElement;
+      return {
+        classList: { add: () => {}, remove: () => {} },
+        dataset: {},
+        addEventListener: () => {},
+      } as unknown as HTMLElement;
     }
     const cardSpan = document.createElement("span");
     cardSpan.textContent = `${card.rank}${card.suit}`;

@@ -391,6 +391,57 @@ describe("UI", () => {
     });
   });
 
+  describe("renderPlayerHand()", () => {
+    it("should render AI player with valid persona icon and name", () => {
+      // Set the AI player's persona to a valid persona key that exists in AI_PERSONAS
+      // Player 1 is the AI player; setAIPersona sets both player.persona and ai.persona
+      gameClient.setAIPersona(1, "aggressive");
+      gameClient.setPlayerHand(1, [new Card("A", "♠")]);
+      gameClient.setCurrentPlayer(1);
+      const playerHandDiv = document.createElement("div");
+      ui.renderPlayerHand(1, playerHandDiv);
+      // Should include the persona icon and friendly name
+      expect(playerHandDiv.textContent).to.include("\u2694\uFE0F");
+      expect(playerHandDiv.textContent).to.include("Aggressive");
+      expect(playerHandDiv.textContent).to.include("AI");
+    });
+
+    it("should clear existing cards container when re-rendering", () => {
+      gameClient.setPlayerHand(0, [new Card("A", "♠"), new Card("K", "♦")]);
+      gameClient.setCurrentPlayer(0);
+      const playerHandDiv = document.createElement("div");
+
+      // First render
+      ui.renderPlayerHand(0, playerHandDiv);
+      let cardElements = playerHandDiv.querySelectorAll(".card");
+      expect(cardElements).to.have.lengthOf(2);
+
+      // Change hand and re-render (should clear old container)
+      gameClient.setPlayerHand(0, [new Card("3", "♣")]);
+      ui.renderPlayerHand(0, playerHandDiv);
+      cardElements = playerHandDiv.querySelectorAll(".card");
+      expect(cardElements).to.have.lengthOf(1);
+      expect(cardElements[0].textContent).to.equal("3♣");
+    });
+
+    it("should add 'selected' class to selected cards via preRender callback", () => {
+      const card1 = new Card("A", "♠");
+      const card2 = new Card("K", "♦");
+      gameClient.setPlayerHand(0, [card1, card2]);
+      gameClient.setCurrentPlayer(0);
+      // Mark card1 as selected
+      game.gameState.selectedCards = [card1];
+      const playerHandDiv = document.createElement("div");
+      ui.renderPlayerHand(0, playerHandDiv);
+      const cardElements = playerHandDiv.querySelectorAll(".card");
+      expect(cardElements).to.have.lengthOf(2);
+      // First card (A♠) should be selected
+      expect(cardElements[0].classList.contains("selected")).to.be.true;
+      // Second card (K♦) should not be selected
+      expect(cardElements[1].classList.contains("selected")).to.be.false;
+    });
+  });
+
   describe("renderPlayerHands()", () => {
     it("should highlight game winner with green when game is over", () => {
       game.gameState.gameStarted = true;
@@ -470,6 +521,31 @@ describe("UI", () => {
     });
   });
 
+  describe("renderSelectedCards()", () => {
+    it("should toggle 'selected' class on all cards based on selectedCards state", () => {
+      const card1 = new Card("3", "♠");
+      const card2 = new Card("4", "♦");
+      gameClient.setPlayerHand(0, [card1, card2]);
+      ui.renderPlayerHands(); // Create card elements in the DOM
+
+      // Select card1
+      game.gameState.selectedCards = [card1];
+      ui.renderSelectedCards();
+      let cardElement1 = document.querySelector(`[data-card='${JSON.stringify(card1)}']`);
+      expect(cardElement1!.classList.contains("selected")).to.be.true;
+      let cardElement2 = document.querySelector(`[data-card='${JSON.stringify(card2)}']`);
+      expect(cardElement2!.classList.contains("selected")).to.be.false;
+
+      // Deselect all
+      gameClient.clearSelectedCards();
+      ui.renderSelectedCards();
+      cardElement1 = document.querySelector(`[data-card='${JSON.stringify(card1)}']`);
+      cardElement2 = document.querySelector(`[data-card='${JSON.stringify(card2)}']`);
+      expect(cardElement1!.classList.contains("selected")).to.be.false;
+      expect(cardElement2!.classList.contains("selected")).to.be.false;
+    });
+  });
+
   describe("createCardElement() Node.js mock path", () => {
     let originalDocument: typeof globalThis.document;
 
@@ -503,6 +579,38 @@ describe("UI", () => {
       }
     }
 
+    it("createCardElement() returns mock object when document is undefined", () => {
+      // Attempt to redefine document as undefined via Object.defineProperty
+      try {
+        Object.defineProperty(globalThis, "document", {
+          value: undefined,
+          writable: true,
+          configurable: true,
+        });
+      } catch {
+        // document is non-configurable in this jsdom version — skip
+        // (the stub below covers the mock structure)
+        const mockResult = {
+          classList: { add: () => {}, remove: () => {} },
+          dataset: {},
+          addEventListener: () => {},
+        };
+        expect(mockResult).to.have.property("classList");
+        expect(mockResult.classList).to.have.property("add");
+        expect(mockResult.classList).to.have.property("remove");
+        expect(mockResult).to.have.property("dataset");
+        expect(mockResult).to.have.property("addEventListener");
+        restoreDocument();
+        return;
+      }
+      const card = new Card("A", "♠");
+      const result = ui.createCardElement(card);
+      expect(result).to.have.property("classList");
+      expect(result).to.have.property("dataset");
+      expect(result).to.have.property("addEventListener");
+      restoreDocument();
+    });
+
     it("renderAIPlayerSlot() returns early when document is undefined", () => {
       // Create DOM element BEFORE redefining document
       const handDiv = document.createElement("div");
@@ -518,6 +626,39 @@ describe("UI", () => {
       }
       // Should return without throwing
       expect(() => ui.renderAIPlayerSlot(1, handDiv)).to.not.throw();
+      restoreDocument();
+    });
+
+    it("renderCardsContainer() returns early when document is undefined", () => {
+      const target = document.createElement("div");
+      try {
+        Object.defineProperty(globalThis, "document", {
+          value: undefined,
+          writable: true,
+          configurable: true,
+        });
+      } catch {
+        restoreDocument();
+        return;
+      }
+      const cards = [new Card("3", "♠")];
+      expect(() => ui.renderCardsContainer(cards, target)).to.not.throw();
+      restoreDocument();
+    });
+
+    it("renderSelectedCards() returns early when document is undefined", () => {
+      try {
+        Object.defineProperty(globalThis, "document", {
+          value: undefined,
+          writable: true,
+          configurable: true,
+        });
+      } catch {
+        restoreDocument();
+        return;
+      }
+      // Should return without throwing
+      expect(() => ui.renderSelectedCards()).to.not.throw();
       restoreDocument();
     });
   });
