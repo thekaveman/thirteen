@@ -251,6 +251,18 @@ export class UI {
     this.renderPlayArea();
     this.renderPlayerHands();
     this.updateButtonStates();
+    this.updateFooterVersion();
+  }
+
+  /**
+   * Updates the version number in the footer.
+   */
+  private updateFooterVersion(): void {
+    if (typeof document === "undefined") return;
+    const versionSpan = document.querySelector(".game-footer .version") as HTMLElement | null;
+    if (versionSpan) {
+      versionSpan.textContent = `v${this.gameClient.game?.gameState?.version ?? "0.0.0"}`;
+    }
   }
 
   /**
