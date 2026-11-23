@@ -54,7 +54,7 @@
     "mocha": "^12.0.3",
     "sinon": "^21.0.0",
     "tsm": "^2.3.0",
-    "typescript": "^6.0.3"
+    "typescript": "^7.0.2"
   },
   "overrides": {
     "glob": "^14.0.6",
