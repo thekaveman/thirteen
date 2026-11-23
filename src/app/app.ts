@@ -52,7 +52,8 @@ export class App {
     this.ui.on("cancelClicked", () => this.handleCancelClick());
     this.ui.on("resetClicked", () => this.handleResetButtonClick());
     this.ui.on("startClicked", () => this.handleStartGameClick());
-    this.ui.on("aiChanged", (selectedAI: unknown) => this.handleAISelection(selectedAI as string));
+    this.ui.on("addAIPlayerClicked", () => this.handleAddAIPlayerClick());
+    this.ui.on("removeAIPlayerClicked", () => this.handleRemoveAIPlayerClick());
     this.ui.on("cardClicked", (card: unknown) => this.handleCardClick(card as Card));
 
     this.selectedAI = "random";
@@ -111,6 +112,24 @@ export class App {
     }
   }
 
+  async handleAddAIPlayerClick(): Promise<void> {
+    const aiPlayer = await this.addAIPlayer();
+    // Update game client with the new player list
+    if (this.humanPlayer) {
+      this.gameClient.setPlayers([this.humanPlayer, ...this.aiPlayers]);
+    }
+    this.ui.render();
+  }
+
+  handleRemoveAIPlayerClick(): void {
+    this.removeAIPlayer();
+    // Update game client with the new player list
+    if (this.humanPlayer) {
+      this.gameClient.setPlayers([this.humanPlayer, ...this.aiPlayers]);
+    }
+    this.ui.render();
+  }
+
   handleAITurn(): void {
     const aiPlayer = this.gameClient.getCurrentPlayer() as AIPlayer;
     if (aiPlayer.type !== PLAYER_TYPES.AI) {
@@ -152,6 +171,9 @@ export class App {
   handleResetButtonClick(): void {
     log("Game reset");
     this.clearStorage();
+    // Reset AI state before calling gameClient.reset() so init() starts fresh
+    this.numAIPlayers = 1;
+    this.aiPlayers = [];
     this.gameClient.reset();
     this.init();
   }

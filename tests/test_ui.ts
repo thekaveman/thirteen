@@ -200,19 +200,39 @@ describe("UI", () => {
       expect(ui.passButton.style.display).to.equal("none");
       expect(ui.newGameButton.style.display).to.equal("block");
       expect(ui.startGameButton.style.display).to.equal("none");
+      expect(ui.addAIPlayerButton.style.display).to.equal("none");
+      expect(ui.removeAIPlayerButton.style.display).to.equal("none");
       expect(ui.resetButton.style.display).to.equal("block");
       expect(ui.resetButton.disabled).to.be.false;
     });
 
-    it("should show only Start Game and Reset when game has not started", () => {
+    it("should show Start Game, Reset, and AI buttons when game has not started", () => {
       game.gameState.gameStarted = false;
       ui.updateButtonStates();
       expect(ui.playButton.style.display).to.equal("none");
       expect(ui.passButton.style.display).to.equal("none");
       expect(ui.newGameButton.style.display).to.equal("none");
       expect(ui.startGameButton.style.display).to.equal("block");
+      expect(ui.addAIPlayerButton.style.display).to.equal("block");
+      expect(ui.removeAIPlayerButton.style.display).to.equal("block");
       expect(ui.resetButton.style.display).to.equal("block");
       expect(ui.resetButton.disabled).to.be.false;
+    });
+
+    it("should disable Add AI button when 3 AI players exist", () => {
+      game.gameState.gameStarted = false;
+      game.gameState.numAIPlayers = 3;
+      ui.updateButtonStates();
+      expect(ui.addAIPlayerButton.disabled).to.be.true;
+      expect(ui.removeAIPlayerButton.disabled).to.be.false;
+    });
+
+    it("should disable Remove AI button when 1 AI player exists", () => {
+      game.gameState.gameStarted = false;
+      game.gameState.numAIPlayers = 1;
+      ui.updateButtonStates();
+      expect(ui.addAIPlayerButton.disabled).to.be.false;
+      expect(ui.removeAIPlayerButton.disabled).to.be.true;
     });
 
     it("should enable Play/Pass for human player's turn", () => {
@@ -233,7 +253,7 @@ describe("UI", () => {
       expect(ui.cancelButton.disabled).to.be.true;
     });
 
-    it("should show Play/Pass/Cancel during an active game", () => {
+    it("should show Play/Pass/Cancel during an active game and hide others", () => {
       game.gameState.gameStarted = true;
       gameClient.setCurrentPlayer(0);
       ui.updateButtonStates();
@@ -242,6 +262,8 @@ describe("UI", () => {
       expect(ui.cancelButton.style.display).to.equal("block");
       expect(ui.newGameButton.style.display).to.equal("none");
       expect(ui.startGameButton.style.display).to.equal("none");
+      expect(ui.addAIPlayerButton.style.display).to.equal("none");
+      expect(ui.removeAIPlayerButton.style.display).to.equal("none");
       expect(ui.resetButton.style.display).to.equal("none");
     });
   });

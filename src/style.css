@@ -366,6 +366,30 @@ button:hover {
   border-color: var(--color-start-button);
 }
 
+#add-ai-player-button {
+  background-color: var(--color-play-button);
+  color: var(--color-white);
+  border-color: var(--color-play-button);
+}
+
+#add-ai-player-button:disabled {
+  background-color: var(--color-play-button);
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+#remove-ai-player-button {
+  background-color: var(--color-pass-button);
+  color: var(--color-white);
+  border-color: var(--color-pass-button);
+}
+
+#remove-ai-player-button:disabled {
+  background-color: var(--color-pass-button);
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 button:disabled,
 #play-button:disabled,
 #pass-button:disabled,

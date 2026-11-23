@@ -337,6 +337,8 @@ export class MockUI {
     this.startGameButton = { style: { display: "" } };
     this.cancelButton = { style: { display: "" } };
     this.resetButton = { style: { display: "" } };
+    this.addAIPlayerButton = { style: { display: "block" } };
+    this.removeAIPlayerButton = { style: { display: "block" } };
     this.aiDropdown = { value: "random" };
     this.gameMessages = { textContent: "", classList: { add: () => {}, remove: () => {} } };
     this.playersHands = { innerHTML: "", appendChild: () => {} };

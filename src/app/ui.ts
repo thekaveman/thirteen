@@ -21,6 +21,8 @@ export interface UIId {
   aiSelection: string;
   aiDropdown: string;
   aiDescription: string;
+  addAIPlayerButton: string;
+  removeAIPlayerButton: string;
 }
 
 type EventListener = (_data: unknown) => void;
@@ -47,6 +49,8 @@ export class UI {
   aiSelection: HTMLElement | null;
   aiDropdown: HTMLSelectElement | null;
   aiDescription: HTMLElement | null;
+  addAIPlayerButton: HTMLElement | null;
+  removeAIPlayerButton: HTMLElement | null;
 
   /**
    * Initialize a new UI instance.
@@ -68,6 +72,8 @@ export class UI {
       aiSelection: "ai-selection",
       aiDropdown: "ai-dropdown",
       aiDescription: "ai-description",
+      addAIPlayerButton: "add-ai-player-button",
+      removeAIPlayerButton: "remove-ai-player-button",
     };
     this.messageTimeout = null;
     this._listeners = {};
@@ -86,6 +92,8 @@ export class UI {
     this.aiSelection = null;
     this.aiDropdown = null;
     this.aiDescription = null;
+    this.addAIPlayerButton = null;
+    this.removeAIPlayerButton = null;
   }
 
   on(eventName: string, listener: EventListener): void {
@@ -122,6 +130,8 @@ export class UI {
       this.aiDropdown.id = this.id.aiDropdown;
       this.aiDescription = document.createElement("p");
       this.aiDescription.id = this.id.aiDescription;
+      this.addAIPlayerButton = document.getElementById(this.id.addAIPlayerButton);
+      this.removeAIPlayerButton = document.getElementById(this.id.removeAIPlayerButton);
 
       // Add event listeners that emit events
       if (this.playButton) this.playButton.addEventListener("click", () => this.emit("playClicked", undefined));
@@ -131,10 +141,10 @@ export class UI {
       if (this.startGameButton) this.startGameButton.addEventListener("click", () => this.emit("startClicked", undefined));
       if (this.cancelButton) this.cancelButton.addEventListener("click", () => this.emit("cancelClicked", undefined));
       if (this.resetButton) this.resetButton.addEventListener("click", () => this.emit("resetClicked", undefined));
-      if (this.aiDropdown)
-        this.aiDropdown.addEventListener("change", (event: Event) =>
-          this.emit("aiChanged", (event.target as HTMLSelectElement).value),
-        );
+      if (this.addAIPlayerButton)
+        this.addAIPlayerButton.addEventListener("click", () => this.emit("addAIPlayerClicked", undefined));
+      if (this.removeAIPlayerButton)
+        this.removeAIPlayerButton.addEventListener("click", () => this.emit("removeAIPlayerClicked", undefined));
     }
   }
 
@@ -439,12 +449,13 @@ export class UI {
   }
 
   /**
-   * Updates the state of the play, pass, cancel, and reset buttons.
+   * Updates the state of the play, pass, cancel, reset, and AI management buttons.
    */
   updateButtonStates(): void {
     const currentPlayer = this.gameClient.getCurrentPlayer() as Player | undefined;
     if (!currentPlayer) return;
     const isHumanPlayerTurn = currentPlayer.type === PLAYER_TYPES.HUMAN;
+    const numAIPlayers = this.gameClient.getNumAIPlayers();
 
     if (this.gameClient.isGameOver()) {
       this.#setButtonDisplay(this.playButton, "none");
@@ -452,6 +463,8 @@ export class UI {
       this.#setButtonDisplay(this.cancelButton, "none");
       this.#setButtonDisplay(this.newGameButton, "block");
       this.#setButtonDisplay(this.startGameButton, "none");
+      this.#setButtonDisplay(this.addAIPlayerButton, "none");
+      this.#setButtonDisplay(this.removeAIPlayerButton, "none");
       if (this.resetButton) {
         this.#setButtonDisplay(this.resetButton, "block");
         (this.resetButton as HTMLButtonElement).disabled = false;
@@ -462,9 +475,18 @@ export class UI {
       this.#setButtonDisplay(this.cancelButton, "none");
       this.#setButtonDisplay(this.newGameButton, "none");
       this.#setButtonDisplay(this.startGameButton, "block");
+      this.#setButtonDisplay(this.addAIPlayerButton, "block");
+      this.#setButtonDisplay(this.removeAIPlayerButton, "block");
       if (this.resetButton) {
         this.#setButtonDisplay(this.resetButton, "block");
         (this.resetButton as HTMLButtonElement).disabled = false;
+      }
+      // Enable/disable add/remove buttons based on AI count
+      if (this.addAIPlayerButton) {
+        (this.addAIPlayerButton as HTMLButtonElement).disabled = numAIPlayers >= 3;
+      }
+      if (this.removeAIPlayerButton) {
+        (this.removeAIPlayerButton as HTMLButtonElement).disabled = numAIPlayers <= 1;
       }
     } else {
       if (this.playButton) {
@@ -481,6 +503,8 @@ export class UI {
       }
       this.#setButtonDisplay(this.newGameButton, "none");
       this.#setButtonDisplay(this.startGameButton, "none");
+      this.#setButtonDisplay(this.addAIPlayerButton, "none");
+      this.#setButtonDisplay(this.removeAIPlayerButton, "none");
       this.#setButtonDisplay(this.resetButton, "none");
     }
   }
