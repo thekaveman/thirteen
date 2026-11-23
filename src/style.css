@@ -754,12 +754,17 @@ button:disabled,
   }
 
   #controls {
-    position: static;
+    position: fixed;
+    bottom: 32px;
+    left: 0;
+    right: 0;
     padding: var(--spacing-s) var(--spacing-xs);
-    box-shadow: none;
-    margin-top: var(--spacing-s);
-    z-index: auto;
-    bottom: auto;
+    box-shadow: 0 -2px 5px var(--color-shadow-light);
+    justify-content: center;
+    gap: var(--spacing-l);
+    width: auto;
+    margin-top: 0;
+    z-index: 1000;
   }
 
   #controls button {
@@ -832,7 +837,6 @@ button:disabled,
   font-size: var(--font-size-xxs);
   line-height: 32px;
   user-select: none;
-  z-index: 100;
   box-sizing: border-box;
 }
 
