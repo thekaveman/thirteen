@@ -21,11 +21,13 @@ export interface GameState {
   roundNumber: number;
   roundsWon: number[];
   gamesWon: number[];
+  gamesPlayed: number[];
   aiPersonas: (string | null)[];
   gameOver: boolean;
   gameStarted: boolean;
   playerTypes: string[];
   playerPassed: boolean[];
+  roundEnded: boolean;
 }
 
 export interface GameHooks {
@@ -85,11 +87,13 @@ export class Game {
       roundNumber: 1,
       roundsWon: [],
       gamesWon: [],
+      gamesPlayed: [],
       aiPersonas: [],
       gameOver: false,
       gameStarted: false,
       playerTypes: [],
       playerPassed: [],
+      roundEnded: false,
     };
     this.id = crypto.randomUUID();
     this.rules = new Rules();
@@ -120,6 +124,7 @@ export class Game {
     this.gameState.playerTurns = new Array(this.gameState.numPlayers).fill(0);
     this.gameState.selectedCards = [];
     this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
+    this.gameState.roundEnded = false;
     this.hooks.onGameInit(new GameClient(this));
   }
 
@@ -227,8 +232,10 @@ export class Game {
     this.hooks.onPlayerPassed(new GameClient(this));
 
     // Check if round should end (all non-last players have passed)
-    if (this.shouldEndRound()) {
+    // Only check when someone has actually played (lastPlayerToPlay !== -1)
+    if (this.gameState.lastPlayerToPlay !== -1 && this.shouldEndRound()) {
       log(`Player ${this.gameState.lastPlayerToPlay + 1} wins round ${this.gameState.roundNumber}.`);
+      this.gameState.roundEnded = true;
       this.nextRound();
       this.gameState.currentTurn++;
       this.save();
@@ -272,9 +279,11 @@ export class Game {
 
     this.hooks.onPlayerMoved(new GameClient(this));
 
-    // Check for win condition
+    // Check for win condition (must happen before round-end check)
     if (currentPlayerHand.length === 0) {
       log(`Player ${this.gameState.currentPlayer + 1} wins the game!`);
+      this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
+      this.gameState.roundEnded = true;
       this.win();
       // Clear selected cards
       this.gameState.selectedCards = [];
@@ -283,6 +292,7 @@ export class Game {
       return;
     }
 
+    // Reset consecutive passes — we're now in a new play cycle (consecutivePasses was incremented during pass sequence)
     this.gameState.consecutivePasses = 0;
     this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
 
@@ -290,17 +300,25 @@ export class Game {
     this.gameState.selectedCards = [];
 
     // Check if round should end (all other players have passed)
+    // This must happen AFTER consecutivePasses is reset (play cycle started) but BEFORE
+    // playerPassed is reset (so the check sees the original pass state from the previous cycle)
     if (this.shouldEndRound()) {
       log(`Player ${this.gameState.lastPlayerToPlay + 1} wins round ${this.gameState.roundNumber}.`);
+      this.gameState.roundEnded = true;
       this.nextRound();
       this.gameState.currentTurn++;
       this.save();
       return;
     }
 
-    // Switch to next player
+    // Switch to next non-passed player after the last player to play
     if (!this.gameState.gameOver) {
-      this.nextPlayer();
+      const numPlayers = this.gameState.numPlayers;
+      let next = (this.gameState.lastPlayerToPlay + 1) % numPlayers;
+      while (this.gameState.playerPassed[next]) {
+        next = (next + 1) % numPlayers;
+      }
+      this.gameState.currentPlayer = next;
     }
     this.gameState.currentTurn++;
     this.save();
@@ -311,6 +329,7 @@ export class Game {
    */
   reset(): void {
     this.id = crypto.randomUUID();
+    this.gameState.numAIPlayers = 0;
     this.gameState.gamesWon = new Array(this.gameState.numPlayers).fill(0);
     this.init();
     this.hooks.onGameReset(new GameClient(this));
@@ -352,8 +371,33 @@ export class Game {
         this.gameState.playerHands = players.map(() => []);
         this.gameState.roundsWon = new Array(players.length).fill(0);
         this.gameState.playerPassed = new Array(players.length).fill(false);
-        if (this.gameState.gamesWon.length !== players.length) {
+        // Preserve existing wins for current players, reset only for newly added players
+        if (this.gameState.gamesWon.length < players.length) {
+          while (this.gameState.gamesWon.length < players.length) {
+            this.gameState.gamesWon.push(0);
+          }
+        } else if (this.gameState.gamesWon.length > players.length) {
+          this.gameState.gamesWon.length = players.length;
+        } else if (
+          this.gameState.gamesWon.length === 0 &&
+          this.gameState.playerHands.length === 0
+        ) {
+          // Fresh game: gamesWon is empty (e.g., after init()), initialize to zeros
           this.gameState.gamesWon = new Array(players.length).fill(0);
+        }
+        // Preserve existing gamesPlayed for current players, reset only for newly added players
+        if (this.gameState.gamesPlayed.length < players.length) {
+          while (this.gameState.gamesPlayed.length < players.length) {
+            this.gameState.gamesPlayed.push(0);
+          }
+        } else if (this.gameState.gamesPlayed.length > players.length) {
+          this.gameState.gamesPlayed.length = players.length;
+        } else if (
+          this.gameState.gamesPlayed.length === 0 &&
+          this.gameState.playerHands.length === 0
+        ) {
+          // Fresh game: gamesPlayed is empty (e.g., after init()), initialize to zeros
+          this.gameState.gamesPlayed = new Array(players.length).fill(0);
         }
       }
       this.save();
@@ -382,6 +426,15 @@ export class Game {
     this.gameState.roundsWon[this.gameState.currentPlayer]++; // Increment roundsWon here too, for the current round
     this.gameState.gameOver = true;
     this.gameState.gameStarted = false;
+    // Increment games played for all participating players
+    const numPlayers = this.gameState.numPlayers;
+    if (this.gameState.gamesPlayed.length < numPlayers) {
+      this.gameState.gamesPlayed = new Array(numPlayers).fill(0);
+    }
+    for (let i = 0; i < numPlayers; i++) {
+      this.gameState.gamesPlayed[i]++;
+    }
+    this.save();
     this.hooks.onGameWon(new GameClient(this));
   }
 }

@@ -210,7 +210,7 @@ describe("App", function () {
       const setAIPersonaSpy = this.sandbox.spy(gameClient, "setAIPersona");
       const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
 
-      ui.emit("aiChanged", "aggressive");
+      ui.emit("aiChanged", { persona: "aggressive", playerIndex: 1 });
 
       expect(app.selectedAI).to.equal("aggressive");
       expect(setAIPersonaSpy.calledWith(1, "aggressive")).to.be.true;
@@ -395,10 +395,10 @@ describe("App", function () {
       const aiPlayer = gameClient.getPlayers(1);
       this.sandbox.stub(aiPlayer.ai, "takeTurn").returns([]);
       // Stub setTimeoutFn directly since the mock game doesn't have setTimeout
-      const setTimeoutFnStub = this.sandbox.stub(app, "setTimeout").callsFake((fn) => setTimeout(fn, 1000) as any);
+      const setTimeoutFnStub = this.sandbox.stub(app, "setTimeout").callsFake((fn) => setTimeout(fn, 2000) as any);
       app.nextTurn();
       expect(setTimeoutFnStub.calledOnce).to.be.true;
-      expect(setTimeoutFnStub.getCall(0).args[1]).to.equal(1000);
+      expect(setTimeoutFnStub.getCall(0).args[1]).to.equal(2000);
 
       // Manually trigger the callback passed to setTimeout
       const callback = setTimeoutFnStub.getCall(0).args[0];
@@ -456,6 +456,160 @@ describe("App", function () {
 
       expect(passTurnSpy.called).to.be.true;
       expect(ui.renderCalled).to.be.true;
+    });
+  });
+
+  describe("Round Winner Highlight", function () {
+    beforeEach(function () {
+      // Create real player-hand-X elements since MockUI.renderPlayerHands() is a no-op
+      const playersHandsEl = document.createElement("div");
+      playersHandsEl.id = ui.id.playersHands;
+      document.body.appendChild(playersHandsEl);
+      ui.playersHands = playersHandsEl;
+
+      for (let i = 0; i < 3; i++) {
+        const handDiv = document.createElement("div");
+        handDiv.id = `player-hand-${i}`;
+        handDiv.classList.add("player-hand");
+        playersHandsEl.appendChild(handDiv);
+      }
+    });
+
+    it("highlightRoundWinner() should not highlight when round has not ended", async function () {
+      await app.init();
+      app.highlightRoundWinner();
+      expect(app.lastRoundWinnerIndex).to.equal(null);
+    });
+
+    it("highlightRoundWinner() should highlight the last player to play when round ends", async function () {
+      await app.init();
+      // Simulate round ending: player 1 is last to play, others have passed
+      game.gameState.lastPlayerToPlay = 1;
+      game.gameState.playerPassed = [true, false, true];
+      game.gameState.numPlayers = 3;
+      game.gameState.roundEnded = true;
+
+      ui.renderPlayerHands();
+      app.highlightRoundWinner();
+
+      expect(app.lastRoundWinnerIndex).to.equal(1);
+      const handDiv = document.getElementById("player-hand-1");
+      expect(handDiv!.classList.contains("round-winner")).to.be.true;
+    });
+
+    it("highlightRoundWinner() should clear previous round winner and highlight new one", async function () {
+      await app.init();
+      ui.renderPlayerHands();
+
+      // First round: player 0 won
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.playerPassed = [false, true, true];
+      game.gameState.numPlayers = 3;
+      game.gameState.roundEnded = true;
+
+      app.highlightRoundWinner();
+      expect(app.lastRoundWinnerIndex).to.equal(0);
+      expect(document.getElementById("player-hand-0")!.classList.contains("round-winner")).to.be.true;
+
+      // Second round: player 2 won
+      game.gameState.lastPlayerToPlay = 2;
+      game.gameState.playerPassed = [true, true, false];
+      game.gameState.roundEnded = true;
+
+      app.highlightRoundWinner();
+      expect(app.lastRoundWinnerIndex).to.equal(2);
+      expect(document.getElementById("player-hand-0")!.classList.contains("round-winner")).to.be.false;
+      expect(document.getElementById("player-hand-2")!.classList.contains("round-winner")).to.be.true;
+    });
+
+    it("highlightRoundWinner() should not clear roundEnded flag", async function () {
+      await app.init();
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.playerPassed = [false, true, true];
+      game.gameState.numPlayers = 3;
+      game.gameState.roundEnded = true;
+
+      app.highlightRoundWinner();
+
+      expect(game.gameState.roundEnded).to.be.false; // cleared after first use
+    });
+
+    it("clearRoundWinnerHighlight() should remove green when the winner plays", async function () {
+      await app.init();
+      ui.renderPlayerHands();
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.playerPassed = [false, true, true];
+      game.gameState.numPlayers = 3;
+      game.gameState.roundEnded = true;
+
+      app.highlightRoundWinner();
+      expect(document.getElementById("player-hand-0")!.classList.contains("round-winner")).to.be.true;
+
+      // Winner plays their first card in next round
+      app.clearRoundWinnerHighlight();
+      expect(app.lastRoundWinnerIndex).to.equal(null);
+      expect(document.getElementById("player-hand-0")!.classList.contains("round-winner")).to.be.false;
+    });
+
+    it("clearRoundWinnerHighlight() should NOT clear when game is over (game winner stays green)", async function () {
+      await app.init();
+      ui.renderPlayerHands();
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.playerPassed = [false, true, true];
+      game.gameState.numPlayers = 3;
+      game.gameState.roundEnded = true;
+      game.gameState.gameOver = true;
+
+      app.highlightRoundWinner();
+      expect(document.getElementById("player-hand-0")!.classList.contains("round-winner")).to.be.true;
+
+      // Game over: clearRoundWinnerHighlight should NOT remove the green
+      app.clearRoundWinnerHighlight();
+      expect(app.lastRoundWinnerIndex).to.equal(0); // not cleared
+      expect(document.getElementById("player-hand-0")!.classList.contains("round-winner")).to.be.true;
+    });
+
+    it("handleHumanPlay() should keep game winner green when game is over", async function () {
+      await app.init();
+      ui.renderPlayerHands();
+      // Simulate game over
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.playerPassed = [false, true, true];
+      game.gameState.numPlayers = 3;
+      game.gameState.gameOver = true;
+      game.gameState.roundEnded = true;
+
+      app.highlightRoundWinner();
+      expect(document.getElementById("player-hand-0")!.classList.contains("round-winner")).to.be.true;
+    });
+
+    it("handleHumanPass() should keep game winner green when game is over", async function () {
+      await app.init();
+      ui.renderPlayerHands();
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.playerPassed = [false, true, true];
+      game.gameState.numPlayers = 3;
+      game.gameState.gameOver = true;
+      game.gameState.roundEnded = true;
+
+      app.highlightRoundWinner();
+      expect(document.getElementById("player-hand-0")!.classList.contains("round-winner")).to.be.true;
+    });
+
+    it("nextTurn() should skip passed AI players quickly (200ms instead of 2000ms)", async function () {
+      await app.init();
+      const aiPlayer = gameClient.getPlayers(1);
+      this.sandbox.stub(aiPlayer.ai, "takeTurn").returns([]);
+      const setTimeoutFnStub = this.sandbox.stub(app, "setTimeout").callsFake((fn) => setTimeout(fn, 1000) as any);
+
+      // Make the current player (AI at index 1) have passed
+      game.gameState.currentPlayer = 1;
+      game.gameState.playerPassed = [false, true, false];
+      game.gameState.gameStarted = true;
+
+      app.nextTurn();
+      expect(setTimeoutFnStub.calledOnce).to.be.true;
+      expect(setTimeoutFnStub.getCall(0).args[1]).to.equal(200); // 200ms for passed player
     });
   });
 });

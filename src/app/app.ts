@@ -29,6 +29,7 @@ export class App {
   selectedAI: string;
   aiPlayers: Player[];
   numAIPlayers: number;
+  lastRoundWinnerIndex: number | null = null;
 
   /**
    * Creates a new app instance with dependencies.
@@ -52,7 +53,12 @@ export class App {
     this.ui.on("cancelClicked", () => this.handleCancelClick());
     this.ui.on("resetClicked", () => this.handleResetButtonClick());
     this.ui.on("startClicked", () => this.handleStartGameClick());
-    this.ui.on("aiChanged", (selectedAI: unknown) => this.handleAISelection(selectedAI as string));
+    this.ui.on("aiChanged", (data: unknown) => {
+      const { persona, playerIndex } = data as { persona: string; playerIndex: number };
+      this.handleAISelection(persona, playerIndex);
+    });
+    this.ui.on("addAIPlayerClicked", () => this.handleAddAIPlayerClick());
+    this.ui.on("removeAIPlayerClicked", () => this.handleRemoveAIPlayerClick());
     this.ui.on("cardClicked", (card: unknown) => this.handleCardClick(card as Card));
 
     this.selectedAI = "random";
@@ -98,17 +104,80 @@ export class App {
     }
   }
 
-  handleAISelection(selectedAI: string): void {
+  handleAISelection(selectedAI: string, playerIndex?: number): void {
     this.selectedAI = selectedAI;
+    // Determine which AI player slot to update
+    const aiIndex = playerIndex !== undefined ? playerIndex : 1;
     // Update AI player persona if it exists
-    const ai = this.aiPlayers[0];
+    const ai = this.aiPlayers[aiIndex - 1];
     if (ai && ai.type === PLAYER_TYPES.AI) {
-      this.gameClient.setAIPersona(1, selectedAI);
+      this.gameClient.setAIPersona(aiIndex, selectedAI);
     }
     if (this.humanPlayer && this.aiPlayers.length > 0) {
       this.gameClient.setPlayers([this.humanPlayer, ...this.aiPlayers]);
       this.ui.render();
     }
+  }
+
+  async handleAddAIPlayerClick(): Promise<void> {
+    const aiPlayer = await this.addAIPlayer();
+    // Update game client with the new player list
+    if (this.humanPlayer) {
+      this.gameClient.setPlayers([this.humanPlayer, ...this.aiPlayers]);
+    }
+    this.ui.render();
+  }
+
+  handleRemoveAIPlayerClick(): void {
+    this.removeAIPlayer();
+    // Update game client with the new player list
+    if (this.humanPlayer) {
+      this.gameClient.setPlayers([this.humanPlayer, ...this.aiPlayers]);
+    }
+    this.ui.render();
+  }
+
+  /**
+   * Highlights the round winner with green. The green stays until they play their first card in the next round.
+   * Round winner gets green ONLY (no blue highlight).
+   */
+  highlightRoundWinner(): void {
+    // Only highlight when a round just ended
+    if (!this.gameClient.game?.gameState?.roundEnded) return;
+    // Clear the flag so we don't keep highlighting on subsequent renders
+    this.gameClient.game.gameState.roundEnded = false;
+
+    const winnerIndex = this.gameClient.getLastPlayerToPlay?.() ?? this.gameClient.getCurrentPlayerIndex();
+    // Save the old winner index before updating
+    const prevWinnerIndex = this.lastRoundWinnerIndex;
+    this.lastRoundWinnerIndex = winnerIndex;
+    const handDiv = document.getElementById(`player-hand-${winnerIndex}`);
+    if (!handDiv) return;
+
+    // Remove green from previous round winner
+    if (prevWinnerIndex !== null && prevWinnerIndex !== winnerIndex) {
+      const prevWinnerDiv = document.getElementById(`player-hand-${prevWinnerIndex}`);
+      if (prevWinnerDiv) {
+        prevWinnerDiv.classList.remove("round-winner");
+      }
+    }
+    // Add green to the new round winner (blue is handled separately by renderPlayerHands)
+    handDiv.classList.add("round-winner");
+  }
+
+  /**
+   * Clears the round winner green highlight when they make their first play.
+   * Does NOT clear the highlight when the game is over (game winner stays green).
+   */
+  clearRoundWinnerHighlight(): void {
+    if (this.lastRoundWinnerIndex === null) return;
+    // Don't clear the highlight when the game is over — game winner stays green
+    if (this.gameClient.isGameOver()) return;
+    const handDiv = document.getElementById(`player-hand-${this.lastRoundWinnerIndex}`);
+    if (handDiv) {
+      handDiv.classList.remove("round-winner");
+    }
+    this.lastRoundWinnerIndex = null;
   }
 
   handleAITurn(): void {
@@ -129,7 +198,9 @@ export class App {
       this.gameClient.pass();
     }
 
+    this.clearRoundWinnerHighlight();
     this.ui.render();
+    this.highlightRoundWinner();
     this.nextTurn();
   }
 
@@ -152,6 +223,10 @@ export class App {
   handleResetButtonClick(): void {
     log("Game reset");
     this.clearStorage();
+    // Reset AI state before calling gameClient.reset() so init() starts fresh
+    this.numAIPlayers = 1;
+    this.aiPlayers = [];
+    this.lastRoundWinnerIndex = null;
     this.gameClient.reset();
     this.init();
   }
@@ -180,7 +255,9 @@ export class App {
       log("Invalid play", selectedCards);
       this.ui.displayMessage("Invalid play", "error");
     }
+    this.clearRoundWinnerHighlight();
     this.ui.render();
+    this.highlightRoundWinner();
     this.nextTurn();
   }
 
@@ -194,7 +271,9 @@ export class App {
     if (!passSuccessful) {
       this.ui.displayMessage("You cannot pass on the first play of a round.", "error");
     }
+    this.clearRoundWinnerHighlight();
     this.ui.render();
+    this.highlightRoundWinner();
     this.nextTurn();
   }
 
@@ -282,9 +361,19 @@ export class App {
       return;
     }
     const currentPlayer = this.gameClient.getCurrentPlayer();
+    const playerPassed = this.gameClient.game?.gameState?.playerPassed?.[this.gameClient.getCurrentPlayerIndex()];
+
+    // If current player has passed, skip them quickly
+    if (playerPassed && currentPlayer.type === PLAYER_TYPES.AI) {
+      if (this.setTimeout) {
+        this.setTimeout(() => this.nextTurn(), 200);
+      }
+      return;
+    }
+
     if (currentPlayer.type === PLAYER_TYPES.AI) {
       if (this.setTimeout) {
-        this.setTimeout(() => this.handleAITurn(), 1000);
+        this.setTimeout(() => this.handleAITurn(), 2000);
       }
     } else {
       log("Human player's turn. Waiting for user input.");

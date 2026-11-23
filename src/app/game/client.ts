@@ -70,6 +70,7 @@ export class GameClient {
     player_rounds_won: number;
     player_turns: number;
     player_games_won: number;
+    player_games_played: number;
   } {
     return {
       id: this.getId(),
@@ -91,6 +92,7 @@ export class GameClient {
       player_rounds_won: this.getRoundsWon(this.getCurrentPlayerIndex()) as number,
       player_turns: this.getPlayerTurns(this.getCurrentPlayerIndex()) as number,
       player_games_won: this.getGamesWon(this.getCurrentPlayerIndex()) as number,
+      player_games_played: this.getGamesPlayed(this.getCurrentPlayerIndex()) as number,
     };
   }
 
@@ -108,6 +110,13 @@ export class GameClient {
    */
   getConsecutivePasses(): number {
     return this.game.gameState.consecutivePasses;
+  }
+
+  /**
+   * Gets the index of the last player to play.
+   */
+  getLastPlayerToPlay(): number {
+    return this.game.gameState.lastPlayerToPlay;
   }
 
   /**
@@ -159,6 +168,18 @@ export class GameClient {
       return gamesWon[playerIndex];
     }
     return gamesWon;
+  }
+
+  /**
+   * Gets the number of games played by each player.
+   * @param playerIndex Optional index of the player.
+   */
+  getGamesPlayed(playerIndex: number = -1): number | number[] {
+    const gamesPlayed = this.game.gameState.gamesPlayed;
+    if (playerIndex > -1) {
+      return gamesPlayed[playerIndex] ?? 0;
+    }
+    return gamesPlayed;
   }
 
   /**
@@ -346,6 +367,13 @@ export class GameClient {
    */
   nextRound(): void {
     this.game.nextRound();
+  }
+
+  /**
+   * Checks if the round should end: all players except lastPlayerToPlay have passed.
+   */
+  shouldEndRound(): boolean {
+    return this.game.shouldEndRound();
   }
 
   /**

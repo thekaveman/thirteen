@@ -21,6 +21,8 @@ export interface UIId {
   aiSelection: string;
   aiDropdown: string;
   aiDescription: string;
+  addAIPlayerButton: string;
+  removeAIPlayerButton: string;
 }
 
 type EventListener = (_data: unknown) => void;
@@ -47,6 +49,8 @@ export class UI {
   aiSelection: HTMLElement | null;
   aiDropdown: HTMLSelectElement | null;
   aiDescription: HTMLElement | null;
+  addAIPlayerButton: HTMLElement | null;
+  removeAIPlayerButton: HTMLElement | null;
 
   /**
    * Initialize a new UI instance.
@@ -68,6 +72,8 @@ export class UI {
       aiSelection: "ai-selection",
       aiDropdown: "ai-dropdown",
       aiDescription: "ai-description",
+      addAIPlayerButton: "add-ai-player-button",
+      removeAIPlayerButton: "remove-ai-player-button",
     };
     this.messageTimeout = null;
     this._listeners = {};
@@ -86,6 +92,8 @@ export class UI {
     this.aiSelection = null;
     this.aiDropdown = null;
     this.aiDescription = null;
+    this.addAIPlayerButton = null;
+    this.removeAIPlayerButton = null;
   }
 
   on(eventName: string, listener: EventListener): void {
@@ -122,6 +130,8 @@ export class UI {
       this.aiDropdown.id = this.id.aiDropdown;
       this.aiDescription = document.createElement("p");
       this.aiDescription.id = this.id.aiDescription;
+      this.addAIPlayerButton = document.getElementById(this.id.addAIPlayerButton);
+      this.removeAIPlayerButton = document.getElementById(this.id.removeAIPlayerButton);
 
       // Add event listeners that emit events
       if (this.playButton) this.playButton.addEventListener("click", () => this.emit("playClicked", undefined));
@@ -131,10 +141,10 @@ export class UI {
       if (this.startGameButton) this.startGameButton.addEventListener("click", () => this.emit("startClicked", undefined));
       if (this.cancelButton) this.cancelButton.addEventListener("click", () => this.emit("cancelClicked", undefined));
       if (this.resetButton) this.resetButton.addEventListener("click", () => this.emit("resetClicked", undefined));
-      if (this.aiDropdown)
-        this.aiDropdown.addEventListener("change", (event: Event) =>
-          this.emit("aiChanged", (event.target as HTMLSelectElement).value),
-        );
+      if (this.addAIPlayerButton)
+        this.addAIPlayerButton.addEventListener("click", () => this.emit("addAIPlayerClicked", undefined));
+      if (this.removeAIPlayerButton)
+        this.removeAIPlayerButton.addEventListener("click", () => this.emit("removeAIPlayerClicked", undefined));
     }
   }
 
@@ -181,13 +191,30 @@ export class UI {
       case COMBINATION_TYPES.TRIPLE:
         return "\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF";
       case COMBINATION_TYPES.STRAIGHT:
-        return "\uD83E\uDDDC";
+        return "\uD83E\uDE9C";
       case COMBINATION_TYPES.FOUR_OF_A_KIND:
         return "\uD83D\uDCA3"; // Bomb indicator for Four of a Kind
       case COMBINATION_TYPES.CONSECUTIVE_PAIRS:
         return "\uD83D\uDCA3"; // Bomb indicator for Consecutive Pairs
       default:
         return "\uD83D\uDFE2"; // Default for an open play pile
+    }
+  }
+
+  /**
+   * Renders the play area in the DOM.
+   */
+  renderPlayArea(): void {
+    if (this.gameContent) {
+      const combinationType = this.gameClient.getPlayPileCombinationType();
+      const playPile = this.gameClient.getPlayPile();
+      // For straights, show the card count next to the ladder emoji
+      let indicator = this.getCombinationTypeIndicator(combinationType);
+      if (combinationType === COMBINATION_TYPES.STRAIGHT && playPile.length > 0) {
+        indicator = `${indicator} <span class="straight-count">(${playPile.length})</span>`;
+      }
+      this.gameContent.innerHTML = `<h2>Play Area (Round ${this.gameClient.getRoundNumber()}) <span class="combination-type">${indicator}</span></h2>`;
+      this.renderCardsContainer(playPile, this.gameContent);
     }
   }
 
@@ -199,7 +226,11 @@ export class UI {
   createCardElement(card: Card): HTMLElement {
     if (typeof document === "undefined") {
       // Mock for Node.js environment
-      return { classList: { add: () => {}, remove: () => {} }, dataset: {}, addEventListener: () => {} } as unknown as HTMLElement;
+      return {
+        classList: { add: () => {}, remove: () => {} },
+        dataset: {},
+        addEventListener: () => {},
+      } as unknown as HTMLElement;
     }
     const cardSpan = document.createElement("span");
     cardSpan.textContent = `${card.rank}${card.suit}`;
@@ -223,42 +254,68 @@ export class UI {
   }
 
   /**
-   * Creates and renders the AI selection UI.
-   * @param parentElement The element to append the UI to.
+   * Creates and renders the AI persona dropdown for a specific AI player slot.
+   * Each call creates a unique dropdown for that slot.
+   * @param playerIndex The index of the AI player.
+   * @param parentElement The element to append the dropdown to.
    */
-  renderAISelection(parentElement: HTMLElement): void {
-    if (typeof document === "undefined" || !parentElement) {
+  renderAIPlayerSlot(playerIndex: number, parentElement: HTMLElement): void {
+    if (typeof document === "undefined") {
       return;
     }
-    this.aiSelection!.innerHTML = "";
-    this.aiDropdown!.innerHTML = "";
-    this.aiDescription!.innerHTML = "";
+
+    // Use unique IDs for this specific slot
+    const slotPrefix = `ai-slot-${playerIndex}`;
+    const dropdownId = `${slotPrefix}-dropdown`;
+    const labelId = `${slotPrefix}-label`;
+    const descriptionId = `${slotPrefix}-description`;
+
+    // Remove existing slot UI if re-rendering
+    const existingSlot = parentElement.querySelector(`[id="${dropdownId}"]`)?.parentElement;
+    if (existingSlot) existingSlot.remove();
+
+    const wrapper = document.createElement("div");
+    wrapper.id = `${slotPrefix}-wrapper`;
+    wrapper.classList.add("ai-selector");
 
     const label = document.createElement("label");
-    label.htmlFor = this.id.aiDropdown;
-    label.textContent = "Select AI opponent:";
-    this.aiSelection!.appendChild(label);
+    label.htmlFor = dropdownId;
+    label.id = labelId;
+    label.textContent = `Select AI ${playerIndex + 1}:`;
+    wrapper.appendChild(label);
+
+    const dropdown = document.createElement("select");
+    dropdown.id = dropdownId;
+    dropdown.dataset.playerIndex = String(playerIndex);
 
     for (const [key, persona] of Object.entries(AI_PERSONAS)) {
       const option = document.createElement("option");
       option.value = key;
       option.textContent = `${persona.icon} ${persona.friendly_name}`;
-      this.aiDropdown!.appendChild(option);
+      dropdown.appendChild(option);
     }
 
-    this.aiSelection!.appendChild(this.aiDropdown!);
-    this.aiSelection!.appendChild(this.aiDescription!);
-    parentElement.appendChild(this.aiSelection!);
+    // Register the change event listener on this specific dropdown
+    dropdown.addEventListener("change", () => {
+      this.emit("aiChanged", { persona: dropdown.value, playerIndex: playerIndex });
+    });
+
+    wrapper.appendChild(dropdown);
+
+    const description = document.createElement("p");
+    description.id = descriptionId;
+    wrapper.appendChild(description);
+
+    parentElement.appendChild(wrapper);
 
     // Set initial selection based on game state
-    const currentAIPersona = this.gameClient.getPlayerPersonas(1);
+    const currentAIPersona = this.gameClient.getAIPersona(playerIndex - 1);
     if (typeof currentAIPersona === "string" && currentAIPersona) {
-      this.aiDropdown!.value = currentAIPersona;
-      this.updateAIDescription(currentAIPersona);
+      dropdown.value = currentAIPersona;
+      description.textContent = AI_PERSONAS[currentAIPersona]?.description ?? "";
     } else {
-      // Default option if none is set
-      this.aiDropdown!.value = "random";
-      this.updateAIDescription("random");
+      dropdown.value = "random";
+      description.textContent = AI_PERSONAS.random.description;
     }
   }
 
@@ -287,18 +344,6 @@ export class UI {
   }
 
   /**
-   * Renders the play area in the DOM.
-   */
-  renderPlayArea(): void {
-    if (this.gameContent) {
-      const combinationType = this.gameClient.getPlayPileCombinationType();
-      const indicator = this.getCombinationTypeIndicator(combinationType);
-      this.gameContent.innerHTML = `<h2>Play Area (Round ${this.gameClient.getRoundNumber()}) <span class="combination-type">${indicator}</span></h2>`;
-      this.renderCardsContainer(this.gameClient.getPlayPile(), this.gameContent);
-    }
-  }
-
-  /**
    * Renders a single player's hand in the DOM.
    * @param playerIndex The index of the player.
    * @param handDiv The div element to render the hand in.
@@ -322,8 +367,6 @@ export class UI {
     if (this.gameClient.isGameOver() && this.gameClient.getPlayerHands(playerIndex).length === 0) {
       this.displayMessage(`${text} - wins in ${this.gameClient.getRoundNumber()} rounds!`, "info");
       text += " (Winner!)";
-    } else if (this.gameClient.getCurrentPlayerIndex() === playerIndex) {
-      text = `👉 ${text}`;
     }
 
     let h2 = handDiv.querySelector("h2") as HTMLElement | null;
@@ -333,13 +376,15 @@ export class UI {
     }
     h2.textContent = text;
 
-    let gamesWonEl = handDiv.querySelector(".games-won") as HTMLElement | null;
-    if (!gamesWonEl) {
-      gamesWonEl = document.createElement("p");
-      gamesWonEl.classList.add("games-won");
-      handDiv.appendChild(gamesWonEl);
+    let gamesCounterEl = handDiv.querySelector(".games-counter") as HTMLElement | null;
+    if (!gamesCounterEl) {
+      gamesCounterEl = document.createElement("p");
+      gamesCounterEl.classList.add("games-counter");
+      handDiv.appendChild(gamesCounterEl);
     }
-    gamesWonEl.textContent = `Games won: ${this.gameClient.getGamesWon(playerIndex)}`;
+    const gamesWon = this.gameClient.getGamesWon(playerIndex) as number;
+    const gamesPlayed = this.gameClient.getGamesPlayed(playerIndex) as number;
+    gamesCounterEl.textContent = `Played/Won: ${gamesPlayed}/${gamesWon}`;
 
     // Clear the cards container before rendering new cards
     let cardsContainer = handDiv.querySelector(".cards-container") as HTMLElement | null;
@@ -366,6 +411,24 @@ export class UI {
     };
     const playerHand = this.gameClient.getPlayerHands(playerIndex) as Card[];
     this.renderCardsContainer(playerHand, cardsContainer, preRender);
+
+    // Render passed badge for passed players
+    const playerPassed = this.gameClient.game?.gameState?.playerPassed?.[playerIndex];
+    if (this.gameClient.isGameStarted() && !this.gameClient.isGameOver() && playerPassed) {
+      let passedBadge = handDiv.querySelector(".passed-badge") as HTMLElement | null;
+      if (!passedBadge) {
+        passedBadge = document.createElement("span");
+        passedBadge.classList.add("passed-badge");
+        passedBadge.textContent = "Passed";
+        handDiv.appendChild(passedBadge);
+      }
+    } else {
+      // Remove passed badge if player hasn't passed
+      const passedBadge = handDiv.querySelector(".passed-badge");
+      if (passedBadge) {
+        passedBadge.remove();
+      }
+    }
 
     let cardCountEl = handDiv.querySelector(".card-count") as HTMLElement | null;
     if (!cardCountEl) {
@@ -396,23 +459,32 @@ export class UI {
 
           const player = this.gameClient.getPlayers(i) as Player;
           playerHandDiv.classList.add(player.type);
-          if (
-            i === this.gameClient.getCurrentPlayerIndex() &&
-            this.gameClient.isGameStarted()
-          ) {
+          // Only highlight current player if they haven't passed
+          const playerPassed = this.gameClient.game?.gameState?.playerPassed?.[i];
+          const isCurrentPlayer = i === this.gameClient.getCurrentPlayerIndex();
+          if (isCurrentPlayer && this.gameClient.isGameStarted() && !playerPassed) {
             playerHandDiv.classList.add("current");
           } else {
             playerHandDiv.classList.remove("current");
           }
+
+          // Game-over: highlight game winner (last player to play) with green
+          if (this.gameClient.isGameOver()) {
+            const lastToPlay = this.gameClient.game?.gameState?.lastPlayerToPlay;
+            if (i === lastToPlay) {
+              playerHandDiv.classList.add("round-winner");
+            } else {
+              playerHandDiv.classList.remove("round-winner");
+            }
+          } else {
+            playerHandDiv.classList.remove("round-winner");
+          }
+
           this.renderPlayerHand(i, playerHandDiv);
 
-          // If it's an AI player and game hasn't started or ended, render persona selection
-          if (
-            player.type === PLAYER_TYPES.AI &&
-            !this.gameClient.isGameStarted() &&
-            !this.gameClient.isGameOver()
-          ) {
-            this.renderAISelection(playerHandDiv);
+          // Render AI persona dropdown for each AI player slot before game starts
+          if (player.type === PLAYER_TYPES.AI && !this.gameClient.isGameStarted() && !this.gameClient.isGameOver()) {
+            this.renderAIPlayerSlot(i, playerHandDiv);
           }
         }
       });
@@ -439,12 +511,13 @@ export class UI {
   }
 
   /**
-   * Updates the state of the play, pass, cancel, and reset buttons.
+   * Updates the state of the play, pass, cancel, reset, and AI management buttons.
    */
   updateButtonStates(): void {
     const currentPlayer = this.gameClient.getCurrentPlayer() as Player | undefined;
     if (!currentPlayer) return;
     const isHumanPlayerTurn = currentPlayer.type === PLAYER_TYPES.HUMAN;
+    const numAIPlayers = this.gameClient.getNumAIPlayers();
 
     if (this.gameClient.isGameOver()) {
       this.#setButtonDisplay(this.playButton, "none");
@@ -452,6 +525,8 @@ export class UI {
       this.#setButtonDisplay(this.cancelButton, "none");
       this.#setButtonDisplay(this.newGameButton, "block");
       this.#setButtonDisplay(this.startGameButton, "none");
+      this.#setButtonDisplay(this.addAIPlayerButton, "none");
+      this.#setButtonDisplay(this.removeAIPlayerButton, "none");
       if (this.resetButton) {
         this.#setButtonDisplay(this.resetButton, "block");
         (this.resetButton as HTMLButtonElement).disabled = false;
@@ -462,9 +537,18 @@ export class UI {
       this.#setButtonDisplay(this.cancelButton, "none");
       this.#setButtonDisplay(this.newGameButton, "none");
       this.#setButtonDisplay(this.startGameButton, "block");
+      this.#setButtonDisplay(this.addAIPlayerButton, "block");
+      this.#setButtonDisplay(this.removeAIPlayerButton, "block");
       if (this.resetButton) {
         this.#setButtonDisplay(this.resetButton, "block");
         (this.resetButton as HTMLButtonElement).disabled = false;
+      }
+      // Enable/disable add/remove buttons based on AI count
+      if (this.addAIPlayerButton) {
+        (this.addAIPlayerButton as HTMLButtonElement).disabled = numAIPlayers >= 3;
+      }
+      if (this.removeAIPlayerButton) {
+        (this.removeAIPlayerButton as HTMLButtonElement).disabled = numAIPlayers <= 1;
       }
     } else {
       if (this.playButton) {
@@ -481,6 +565,8 @@ export class UI {
       }
       this.#setButtonDisplay(this.newGameButton, "none");
       this.#setButtonDisplay(this.startGameButton, "none");
+      this.#setButtonDisplay(this.addAIPlayerButton, "none");
+      this.#setButtonDisplay(this.removeAIPlayerButton, "none");
       this.#setButtonDisplay(this.resetButton, "none");
     }
   }
