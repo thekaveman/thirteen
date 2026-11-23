@@ -1,3 +1,5 @@
+import { after, beforeEach, describe } from "mocha";
+import { expect } from "chai";
 import { MockDeck, MockGame, MockAI } from "./mocks.ts";
 import { GameClient } from "../src/app/game/index.js";
 import { Card, COMBINATION_TYPES } from "../src/app/game/index.js";
@@ -379,6 +381,34 @@ describe("UI", () => {
     });
   });
 
+  describe("renderPlayerHands()", () => {
+    it("should highlight game winner with green when game is over", () => {
+      game.gameState.gameStarted = true;
+      game.gameState.gameOver = true;
+      game.gameState.lastPlayerToPlay = 0;
+      ui.renderPlayerHands();
+      const player0HandDiv = document.getElementById("player-hand-0");
+      expect(player0HandDiv.classList.contains("round-winner")).to.be.true;
+    });
+
+    it("should NOT highlight non-winner players when game is over", () => {
+      game.gameState.gameStarted = true;
+      game.gameState.gameOver = true;
+      game.gameState.lastPlayerToPlay = 0;
+      ui.renderPlayerHands();
+      const player1HandDiv = document.getElementById("player-hand-1");
+      expect(player1HandDiv.classList.contains("round-winner")).to.be.false;
+    });
+
+    it("should NOT add green highlight during normal gameplay (game not over)", () => {
+      game.gameState.gameStarted = true;
+      game.gameState.gameOver = false;
+      game.gameState.lastPlayerToPlay = 1;
+      ui.renderPlayerHands();
+      const player1HandDiv = document.getElementById("player-hand-1");
+      expect(player1HandDiv.classList.contains("round-winner")).to.be.false;
+    });
+  });
 
   describe("createCardElement() Node.js mock path", () => {
     let originalDocument: typeof globalThis.document;

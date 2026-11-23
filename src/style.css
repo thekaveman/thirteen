@@ -167,6 +167,14 @@ h2 {
 .player-hand.current {
   border: 2px solid var(--color-blue);
   background-color: var(--color-light-blue);
+  transition: background-color 0.3s ease;
+}
+
+/* Round winner green highlight */
+.player-hand.round-winner {
+  border: 2px solid #2e7d32;
+  background-color: rgba(0, 180, 0, 0.15);
+  transition: background-color 0.3s ease;
 }
 
 .games-won {

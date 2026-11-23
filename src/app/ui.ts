@@ -432,14 +432,27 @@ export class UI {
 
           const player = this.gameClient.getPlayers(i) as Player;
           playerHandDiv.classList.add(player.type);
-          if (
-            i === this.gameClient.getCurrentPlayerIndex() &&
-            this.gameClient.isGameStarted()
-          ) {
+          // Only highlight current player if they haven't passed
+          const playerPassed = this.gameClient.game?.gameState?.playerPassed?.[i];
+          const isCurrentPlayer = i === this.gameClient.getCurrentPlayerIndex();
+          if (isCurrentPlayer && this.gameClient.isGameStarted() && !playerPassed) {
             playerHandDiv.classList.add("current");
           } else {
             playerHandDiv.classList.remove("current");
           }
+
+          // Game-over: highlight game winner (last player to play) with green
+          if (this.gameClient.isGameOver()) {
+            const lastToPlay = this.gameClient.game?.gameState?.lastPlayerToPlay;
+            if (i === lastToPlay) {
+              playerHandDiv.classList.add("round-winner");
+            } else {
+              playerHandDiv.classList.remove("round-winner");
+            }
+          } else {
+            playerHandDiv.classList.remove("round-winner");
+          }
+
           this.renderPlayerHand(i, playerHandDiv);
 
           // Render AI persona dropdown for each AI player slot before game starts

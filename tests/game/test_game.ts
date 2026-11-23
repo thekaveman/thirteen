@@ -847,4 +847,64 @@ describe("Game", () => {
       expect(game.gameState.aiPersonas).to.deep.equal(["random", "aggressive", "cautious"]);
     });
   });
+
+  describe("roundEnded Flag", function () {
+    it("should be initialized to false", function () {
+      expect(game.gameState.roundEnded).to.be.false;
+    });
+
+    it("should be set to true when round ends via play (all others passed)", function () {
+      const aiPlayers = [
+        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
+      ];
+      const players = [new HumanPlayer(new GameClient(game), 0), ...aiPlayers];
+      game.setPlayers(players);
+      game.gameState.lastPlayerToPlay = 0;
+      // Must set playerPassed AFTER setPlayers() since it resets playerPassed
+      game.gameState.playerPassed = [false, true];
+      game.gameState.numPlayers = 2;
+
+      game.playCards();
+
+      expect(game.gameState.roundEnded).to.be.true;
+    });
+
+    it("should be set to true when round ends via pass (all others passed)", function () {
+      const aiPlayers = [
+        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
+      ];
+      const players = [new HumanPlayer(new GameClient(game), 0), ...aiPlayers];
+      game.setPlayers(players);
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.playPile = [new Card("A", "♠")];
+      // Player 1 must have passed BEFORE player 0's pass ends the round
+      game.gameState.playerPassed[1] = true;
+
+      game.passTurn();
+
+      expect(game.gameState.roundEnded).to.be.true;
+    });
+
+    it("should be set to true when a player wins the game (plays last card)", function () {
+      const aiPlayers = [
+        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
+      ];
+      const players = [new HumanPlayer(new GameClient(game), 0), ...aiPlayers];
+      game.setPlayers(players);
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.playerHands = [[], []]; // Both players have 0 cards
+      game.gameState.selectedCards = [];
+
+      game.playCards();
+
+      expect(game.gameState.roundEnded).to.be.true;
+      expect(game.gameState.gameOver).to.be.true;
+    });
+
+    it("should be reset to false when init() is called", function () {
+      game.gameState.roundEnded = true;
+      game.init();
+      expect(game.gameState.roundEnded).to.be.false;
+    });
+  });
 });

@@ -29,6 +29,7 @@ export class App {
   selectedAI: string;
   aiPlayers: Player[];
   numAIPlayers: number;
+  lastRoundWinnerIndex: number | null = null;
 
   /**
    * Creates a new app instance with dependencies.
@@ -136,6 +137,49 @@ export class App {
     this.ui.render();
   }
 
+  /**
+   * Highlights the round winner with green. The green stays until they play their first card in the next round.
+   * Round winner gets green ONLY (no blue highlight).
+   */
+  highlightRoundWinner(): void {
+    // Only highlight when a round just ended
+    if (!this.gameClient.game?.gameState?.roundEnded) return;
+    // Clear the flag so we don't keep highlighting on subsequent renders
+    this.gameClient.game.gameState.roundEnded = false;
+
+    const winnerIndex = this.gameClient.getLastPlayerToPlay?.() ?? this.gameClient.getCurrentPlayerIndex();
+    // Save the old winner index before updating
+    const prevWinnerIndex = this.lastRoundWinnerIndex;
+    this.lastRoundWinnerIndex = winnerIndex;
+    const handDiv = document.getElementById(`player-hand-${winnerIndex}`);
+    if (!handDiv) return;
+
+    // Remove green from previous round winner
+    if (prevWinnerIndex !== null && prevWinnerIndex !== winnerIndex) {
+      const prevWinnerDiv = document.getElementById(`player-hand-${prevWinnerIndex}`);
+      if (prevWinnerDiv) {
+        prevWinnerDiv.classList.remove("round-winner");
+      }
+    }
+    // Add green to the new round winner (blue is handled separately by renderPlayerHands)
+    handDiv.classList.add("round-winner");
+  }
+
+  /**
+   * Clears the round winner green highlight when they make their first play.
+   * Does NOT clear the highlight when the game is over (game winner stays green).
+   */
+  clearRoundWinnerHighlight(): void {
+    if (this.lastRoundWinnerIndex === null) return;
+    // Don't clear the highlight when the game is over — game winner stays green
+    if (this.gameClient.isGameOver()) return;
+    const handDiv = document.getElementById(`player-hand-${this.lastRoundWinnerIndex}`);
+    if (handDiv) {
+      handDiv.classList.remove("round-winner");
+    }
+    this.lastRoundWinnerIndex = null;
+  }
+
   handleAITurn(): void {
     const aiPlayer = this.gameClient.getCurrentPlayer() as AIPlayer;
     if (aiPlayer.type !== PLAYER_TYPES.AI) {
@@ -154,7 +198,9 @@ export class App {
       this.gameClient.pass();
     }
 
+    this.clearRoundWinnerHighlight();
     this.ui.render();
+    this.highlightRoundWinner();
     this.nextTurn();
   }
 
@@ -180,6 +226,7 @@ export class App {
     // Reset AI state before calling gameClient.reset() so init() starts fresh
     this.numAIPlayers = 1;
     this.aiPlayers = [];
+    this.lastRoundWinnerIndex = null;
     this.gameClient.reset();
     this.init();
   }
@@ -208,7 +255,9 @@ export class App {
       log("Invalid play", selectedCards);
       this.ui.displayMessage("Invalid play", "error");
     }
+    this.clearRoundWinnerHighlight();
     this.ui.render();
+    this.highlightRoundWinner();
     this.nextTurn();
   }
 
@@ -222,7 +271,9 @@ export class App {
     if (!passSuccessful) {
       this.ui.displayMessage("You cannot pass on the first play of a round.", "error");
     }
+    this.clearRoundWinnerHighlight();
     this.ui.render();
+    this.highlightRoundWinner();
     this.nextTurn();
   }
 

@@ -111,6 +111,13 @@ export class GameClient {
   }
 
   /**
+   * Gets the index of the last player to play.
+   */
+  getLastPlayerToPlay(): number {
+    return this.game.gameState.lastPlayerToPlay;
+  }
+
+  /**
    * Gets the current player.
    */
   getCurrentPlayer(): Player {
@@ -346,6 +353,13 @@ export class GameClient {
    */
   nextRound(): void {
     this.game.nextRound();
+  }
+
+  /**
+   * Checks if the round should end: all players except lastPlayerToPlay have passed.
+   */
+  shouldEndRound(): boolean {
+    return this.game.shouldEndRound();
   }
 
   /**

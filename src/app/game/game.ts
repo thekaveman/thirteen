@@ -26,6 +26,7 @@ export interface GameState {
   gameStarted: boolean;
   playerTypes: string[];
   playerPassed: boolean[];
+  roundEnded: boolean;
 }
 
 export interface GameHooks {
@@ -90,6 +91,7 @@ export class Game {
       gameStarted: false,
       playerTypes: [],
       playerPassed: [],
+      roundEnded: false,
     };
     this.id = crypto.randomUUID();
     this.rules = new Rules();
@@ -120,6 +122,7 @@ export class Game {
     this.gameState.playerTurns = new Array(this.gameState.numPlayers).fill(0);
     this.gameState.selectedCards = [];
     this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
+    this.gameState.roundEnded = false;
     this.hooks.onGameInit(new GameClient(this));
   }
 
@@ -227,8 +230,10 @@ export class Game {
     this.hooks.onPlayerPassed(new GameClient(this));
 
     // Check if round should end (all non-last players have passed)
-    if (this.shouldEndRound()) {
+    // Only check when someone has actually played (lastPlayerToPlay !== -1)
+    if (this.gameState.lastPlayerToPlay !== -1 && this.shouldEndRound()) {
       log(`Player ${this.gameState.lastPlayerToPlay + 1} wins round ${this.gameState.roundNumber}.`);
+      this.gameState.roundEnded = true;
       this.nextRound();
       this.gameState.currentTurn++;
       this.save();
@@ -272,9 +277,11 @@ export class Game {
 
     this.hooks.onPlayerMoved(new GameClient(this));
 
-    // Check for win condition
+    // Check for win condition (must happen before round-end check)
     if (currentPlayerHand.length === 0) {
       log(`Player ${this.gameState.currentPlayer + 1} wins the game!`);
+      this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
+      this.gameState.roundEnded = true;
       this.win();
       // Clear selected cards
       this.gameState.selectedCards = [];
@@ -283,6 +290,7 @@ export class Game {
       return;
     }
 
+    // Reset consecutive passes — we're now in a new play cycle (consecutivePasses was incremented during pass sequence)
     this.gameState.consecutivePasses = 0;
     this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
 
@@ -290,8 +298,11 @@ export class Game {
     this.gameState.selectedCards = [];
 
     // Check if round should end (all other players have passed)
+    // This must happen AFTER consecutivePasses is reset (play cycle started) but BEFORE
+    // playerPassed is reset (so the check sees the original pass state from the previous cycle)
     if (this.shouldEndRound()) {
       log(`Player ${this.gameState.lastPlayerToPlay + 1} wins round ${this.gameState.roundNumber}.`);
+      this.gameState.roundEnded = true;
       this.nextRound();
       this.gameState.currentTurn++;
       this.save();
