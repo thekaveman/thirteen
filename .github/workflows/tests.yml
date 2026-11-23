@@ -25,15 +25,15 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Build game
+        run: npm run build
+
       - name: Run tests
         id: tests
         run: |
           set -o pipefail
           npm test 2>&1 | tee test-results.log
         continue-on-error: true
-
-      - name: Build game
-        run: npm run build
 
       - name: Add test results to job summary
         run: cat test-results.log >> $GITHUB_STEP_SUMMARY
