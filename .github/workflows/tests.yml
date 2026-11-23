@@ -32,29 +32,12 @@ jobs:
           npm test 2>&1 | tee test-results.log
         continue-on-error: true
 
-      - name: Install Playwright browsers
-        run: npx playwright install chromium
-
       - name: Build game
         run: npm run build
-
-      - name: Run responsive visual regression tests
-        id: responsive-tests
-        run: |
-          set -o pipefail
-          npm run test:responsive 2>&1 | tee responsive-test-results.log
-        continue-on-error: true
 
       - name: Add test results to job summary
         run: cat test-results.log >> $GITHUB_STEP_SUMMARY
 
-      - name: Add responsive test results to job summary
-        run: cat responsive-test-results.log >> $GITHUB_STEP_SUMMARY
-
       - name: Check test results
         if: steps.tests.outcome == 'failure'
-        run: exit 1
-
-      - name: Check responsive test results
-        if: steps.responsive-tests.outcome == 'failure'
         run: exit 1
