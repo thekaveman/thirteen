@@ -71,6 +71,7 @@ export class GameClient {
     player_turns: number;
     player_games_won: number;
     player_games_played: number;
+    version: string;
   } {
     return {
       id: this.getId(),
@@ -93,6 +94,7 @@ export class GameClient {
       player_turns: this.getPlayerTurns(this.getCurrentPlayerIndex()) as number,
       player_games_won: this.getGamesWon(this.getCurrentPlayerIndex()) as number,
       player_games_played: this.getGamesPlayed(this.getCurrentPlayerIndex()) as number,
+      version: this.game.gameState.version,
     };
   }
 
