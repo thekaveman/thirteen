@@ -172,6 +172,53 @@ describe("Game", () => {
       expect(game.gameState.lastPlayerToPlay).to.equal(game.gameState.currentPlayer);
       expect(game.gameState.gameStarted).to.be.true;
     });
+
+    it("load() should reset localStorage if version is outdated", async () => {
+      // Save a state with an old version
+      const oldState = {
+        id: "test-id",
+        deck: { cards: [] },
+        gameState: { version: "0.0.0", numPlayers: 2, numAIPlayers: 0, players: [], playerHands: [], playerTurns: [], playPile: [], currentPlayer: 0, currentTurn: 0, selectedCards: [], consecutivePasses: 0, lastPlayerToPlay: -1, roundNumber: 1, roundsWon: [], gamesWon: [], gamesPlayed: [], aiPersonas: [], gameOver: false, gameStarted: false, playerTypes: [], playerPassed: [], roundEnded: false },
+        stateKey: `${Game.STATE_KEY}-tests`,
+      };
+      localStorage.setItem(`${Game.STATE_KEY}-tests`, JSON.stringify(oldState));
+
+      const loadResult = await game.load(new MockUI());
+
+      expect(loadResult.loaded).to.be.false;
+      expect(localStorage.getItem(`${Game.STATE_KEY}-tests`)).to.be.null;
+    });
+
+    it("load() should succeed when version matches", async () => {
+      // Save a state with the current version
+      const state = {
+        id: "test-id",
+        deck: { cards: [] },
+        gameState: { ...game.gameState, version: Game.VERSION, players: [], playerHands: [], playPile: [], selectedCards: [], roundsWon: [], gamesWon: [], gamesPlayed: [] },
+        stateKey: `${Game.STATE_KEY}-tests`,
+      };
+      localStorage.setItem(`${Game.STATE_KEY}-tests`, JSON.stringify(state));
+
+      const loadResult = await game.load(new MockUI());
+
+      expect(loadResult.loaded).to.be.true;
+    });
+
+    it("load() should reset localStorage if no version field exists", async () => {
+      // Save a state without a version field (completely old save)
+      const oldState = {
+        id: "test-id",
+        deck: { cards: [] },
+        gameState: { numPlayers: 2, numAIPlayers: 0, players: [], playerHands: [], playerTurns: [], playPile: [], currentPlayer: 0, currentTurn: 0, selectedCards: [], consecutivePasses: 0, lastPlayerToPlay: -1, roundNumber: 1, roundsWon: [], gamesWon: [], gamesPlayed: [], aiPersonas: [], gameOver: false, gameStarted: false, playerTypes: [], playerPassed: [], roundEnded: false },
+        stateKey: `${Game.STATE_KEY}-tests`,
+      };
+      localStorage.setItem(`${Game.STATE_KEY}-tests`, JSON.stringify(oldState));
+
+      const loadResult = await game.load(new MockUI());
+
+      expect(loadResult.loaded).to.be.false;
+      expect(localStorage.getItem(`${Game.STATE_KEY}-tests`)).to.be.null;
+    });
   });
 
   describe("Gameplay Logic", () => {
