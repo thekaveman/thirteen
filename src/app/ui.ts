@@ -233,42 +233,68 @@ export class UI {
   }
 
   /**
-   * Creates and renders the AI selection UI.
-   * @param parentElement The element to append the UI to.
+   * Creates and renders the AI persona dropdown for a specific AI player slot.
+   * Each call creates a unique dropdown for that slot.
+   * @param playerIndex The index of the AI player.
+   * @param parentElement The element to append the dropdown to.
    */
-  renderAISelection(parentElement: HTMLElement): void {
-    if (typeof document === "undefined" || !parentElement) {
+  renderAIPlayerSlot(playerIndex: number, parentElement: HTMLElement): void {
+    if (typeof document === "undefined") {
       return;
     }
-    this.aiSelection!.innerHTML = "";
-    this.aiDropdown!.innerHTML = "";
-    this.aiDescription!.innerHTML = "";
+
+    // Use unique IDs for this specific slot
+    const slotPrefix = `ai-slot-${playerIndex}`;
+    const dropdownId = `${slotPrefix}-dropdown`;
+    const labelId = `${slotPrefix}-label`;
+    const descriptionId = `${slotPrefix}-description`;
+
+    // Remove existing slot UI if re-rendering
+    const existingSlot = parentElement.querySelector(`[id="${dropdownId}"]`)?.parentElement;
+    if (existingSlot) existingSlot.remove();
+
+    const wrapper = document.createElement("div");
+    wrapper.id = `${slotPrefix}-wrapper`;
+    wrapper.classList.add("ai-selector");
 
     const label = document.createElement("label");
-    label.htmlFor = this.id.aiDropdown;
-    label.textContent = "Select AI opponent:";
-    this.aiSelection!.appendChild(label);
+    label.htmlFor = dropdownId;
+    label.id = labelId;
+    label.textContent = `Select AI ${playerIndex + 1}:`;
+    wrapper.appendChild(label);
+
+    const dropdown = document.createElement("select");
+    dropdown.id = dropdownId;
+    dropdown.dataset.playerIndex = String(playerIndex);
 
     for (const [key, persona] of Object.entries(AI_PERSONAS)) {
       const option = document.createElement("option");
       option.value = key;
       option.textContent = `${persona.icon} ${persona.friendly_name}`;
-      this.aiDropdown!.appendChild(option);
+      dropdown.appendChild(option);
     }
 
-    this.aiSelection!.appendChild(this.aiDropdown!);
-    this.aiSelection!.appendChild(this.aiDescription!);
-    parentElement.appendChild(this.aiSelection!);
+    // Register the change event listener on this specific dropdown
+    dropdown.addEventListener("change", () => {
+      this.emit("aiChanged", { persona: dropdown.value, playerIndex: playerIndex });
+    });
+
+    wrapper.appendChild(dropdown);
+
+    const description = document.createElement("p");
+    description.id = descriptionId;
+    wrapper.appendChild(description);
+
+    parentElement.appendChild(wrapper);
 
     // Set initial selection based on game state
-    const currentAIPersona = this.gameClient.getPlayerPersonas(1);
+    const currentAIPersona = this.gameClient.getAIPersona(playerIndex - 1);
     if (typeof currentAIPersona === "string" && currentAIPersona) {
-      this.aiDropdown!.value = currentAIPersona;
-      this.updateAIDescription(currentAIPersona);
+      dropdown.value = currentAIPersona;
+      description.textContent = AI_PERSONAS[currentAIPersona]?.description ?? "";
     } else {
-      // Default option if none is set
-      this.aiDropdown!.value = "random";
-      this.updateAIDescription("random");
+      dropdown.value = "random";
+      description.textContent = AI_PERSONAS.random.description;
     }
   }
 
@@ -416,13 +442,9 @@ export class UI {
           }
           this.renderPlayerHand(i, playerHandDiv);
 
-          // If it's an AI player and game hasn't started or ended, render persona selection
-          if (
-            player.type === PLAYER_TYPES.AI &&
-            !this.gameClient.isGameStarted() &&
-            !this.gameClient.isGameOver()
-          ) {
-            this.renderAISelection(playerHandDiv);
+          // Render AI persona dropdown for each AI player slot before game starts
+          if (player.type === PLAYER_TYPES.AI && !this.gameClient.isGameStarted() && !this.gameClient.isGameOver()) {
+            this.renderAIPlayerSlot(i, playerHandDiv);
           }
         }
       });

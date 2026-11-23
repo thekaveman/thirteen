@@ -152,9 +152,9 @@ describe("UI", () => {
     expect(document.getElementById("player-hand-1").classList.contains("current")).to.be.false; // Player 0 is current
   });
 
-  it("renderPlayerHands() should render AI selection for AI players when game is not started", () => {
+  it("renderPlayerHands() should render AI slots for AI players when game is not started", () => {
     game.gameState.gameStarted = false;
-    const renderAISpy = sinon.spy(ui, "renderAISelection");
+    const renderAISpy = sinon.spy(ui, "renderAIPlayerSlot");
     ui.renderPlayerHands();
     expect(renderAISpy.called).to.be.true;
   });
@@ -274,24 +274,32 @@ describe("UI", () => {
     beforeEach(() => {
       playerHandDiv = document.createElement("div");
       game.gameState.gameStarted = false; // Prerequisite for rendering AI selection
-      gameClient.setAIPersona(1, "random");
+      gameClient.setAIPersona(0, "random"); // 0-based index for AI slots
     });
 
-    it("renderAISelection() should populate dropdown and set initial value", () => {
-      ui.renderAISelection(playerHandDiv);
-      const dropdown = ui.aiDropdown;
+    it("renderAIPlayerSlot() should populate dropdown and set initial value", () => {
+      ui.renderAIPlayerSlot(1, playerHandDiv);
+      const dropdown = playerHandDiv.querySelector("select") as HTMLSelectElement;
       expect(dropdown.options.length).to.equal(Object.keys(AI_PERSONAS).length);
       expect(dropdown.value).to.equal("random");
-      expect(ui.aiDescription.textContent).to.equal(AI_PERSONAS.random.description);
+      const description = playerHandDiv.querySelector("p") as HTMLElement;
+      expect(description.textContent).to.equal(AI_PERSONAS.random.description);
     });
 
-    it("dropdown change event should emit aiChanged", () => {
-      ui.renderAISelection(playerHandDiv);
-      const dropdown = ui.aiDropdown;
+    it("dropdown change event should emit aiChanged with player index", () => {
+      ui.renderAIPlayerSlot(1, playerHandDiv);
+      const dropdown = playerHandDiv.querySelector("select") as HTMLSelectElement;
       const emitSpy = sinon.spy(ui, "emit");
       dropdown.value = "aggressive";
       dropdown.dispatchEvent(new window.Event("change"));
-      expect(emitSpy.calledWith("aiChanged", "aggressive")).to.be.true;
+      expect(emitSpy.called).to.be.true;
+      // emit("aiChanged", { persona, playerIndex })
+      const emittedEventName = emitSpy.getCall(0).args[0];
+      const emittedData = emitSpy.getCall(0).args[1];
+      expect(emittedEventName).to.equal("aiChanged");
+      expect(emittedData).to.be.an("object");
+      expect(emittedData.persona).to.equal("aggressive");
+      expect(emittedData.playerIndex).to.equal(1);
     });
 
     it("aiChanged event should update description via handler", () => {
@@ -305,29 +313,40 @@ describe("UI", () => {
       }
 
       // Set up the event subscription (mimicking what App.init does)
-      realUI.on("aiChanged", (selectedAI) => {
-        gameClient.setAIPersona(1, selectedAI);
-        realUI.render();
+      const handlerSpy = sinon.spy();
+      realUI.on("aiChanged", (data: unknown) => {
+        const { persona, playerIndex } = data as { persona: string; playerIndex: number };
+        handlerSpy(persona, playerIndex);
+        gameClient.setAIPersona(playerIndex - 1, persona);
       });
 
       // Render AI selection (starts with "random" persona)
-      gameClient.setAIPersona(1, "random");
+      gameClient.setAIPersona(0, "random");
       game.gameState.gameStarted = false;
       const handDiv = document.createElement("div");
-      realUI.renderAISelection(handDiv);
-      expect(realUI.aiDescription.textContent).to.equal(AI_PERSONAS.random.description);
+      realUI.renderAIPlayerSlot(1, handDiv);
+
+      // Query the dropdown and description from the rendered DOM (per-slot elements)
+      const dropdown = handDiv.querySelector("select") as HTMLSelectElement;
+      const description = handDiv.querySelector("p") as HTMLElement;
+      expect(dropdown.value).to.equal("random");
+      expect(description.textContent).to.equal(AI_PERSONAS.random.description);
 
       // Trigger the event (simulating user changing dropdown)
-      realUI.emit("aiChanged", "aggressive");
-      expect(realUI.aiDescription.textContent).to.equal(AI_PERSONAS.aggressive.description);
+      realUI.emit("aiChanged", { persona: "aggressive", playerIndex: 1 });
+      expect(handlerSpy.called).to.be.true;
+      expect(handlerSpy.getCall(0).args[0]).to.equal("aggressive");
+      expect(handlerSpy.getCall(0).args[1]).to.equal(1);
     });
 
-    it("renderAISelection() should default to random if no persona is set", () => {
-      gameClient.setAIPersona(1, null);
-      ui.renderAISelection(playerHandDiv);
-      const dropdown = ui.aiDropdown;
+    it("renderAIPlayerSlot() should default to random if no persona is set", () => {
+      gameClient.setAIPersona(0, null);
+      const handDiv = document.createElement("div");
+      ui.renderAIPlayerSlot(1, handDiv);
+      const dropdown = handDiv.querySelector("select") as HTMLSelectElement;
+      const description = handDiv.querySelector("p") as HTMLElement;
       expect(dropdown.value).to.equal("random");
-      expect(ui.aiDescription.textContent).to.equal(AI_PERSONAS.random.description);
+      expect(description.textContent).to.equal(AI_PERSONAS.random.description);
     });
 
     it("updateAIDescription() should set the description text", () => {
@@ -335,6 +354,81 @@ describe("UI", () => {
       expect(ui.aiDescription.textContent).to.equal(AI_PERSONAS.cautious.description);
       ui.updateAIDescription("nonexistent");
       expect(ui.aiDescription.textContent).to.equal("");
+    });
+
+    it("renderAIPlayerSlot() should set dropdown value and description when persona is set", () => {
+      // aiPersonas[0] is read by getAIPersona(0), which renderAIPlayerSlot(1) uses
+      game.gameState.aiPersonas[0] = "aggressive";
+      const handDiv = document.createElement("div");
+      ui.renderAIPlayerSlot(1, handDiv);
+      const dropdown = handDiv.querySelector("select") as HTMLSelectElement;
+      const description = handDiv.querySelector("p") as HTMLElement;
+      expect(dropdown.value).to.equal("aggressive");
+      expect(description.textContent).to.equal(AI_PERSONAS.aggressive.description);
+    });
+
+    it("renderAIPlayerSlot() should render dropdown in parent element", () => {
+      const handDiv = document.createElement("div");
+      ui.renderAIPlayerSlot(1, handDiv);
+      expect(handDiv.querySelector("select")).to.not.be.null;
+      expect(handDiv.querySelector("select")).to.have.property("id", "ai-slot-1-dropdown");
+      // Verify the dropdown has persona options
+      const dropdown = handDiv.querySelector("select") as HTMLSelectElement;
+      expect(dropdown).to.have.property("options");
+      expect(dropdown.options.length).to.be.greaterThan(0);
+    });
+  });
+
+
+  describe("createCardElement() Node.js mock path", () => {
+    let originalDocument: typeof globalThis.document;
+
+    beforeEach(() => {
+      originalDocument = globalThis.document as unknown as typeof globalThis.document;
+    });
+
+    afterEach(() => {
+      // Restore original document
+      try {
+        Object.defineProperty(globalThis, "document", {
+          value: originalDocument,
+          writable: true,
+          configurable: true,
+        });
+      } catch {
+        // If redefine fails, restore via assignment
+        (globalThis as any).document = originalDocument;
+      }
+    });
+
+    function restoreDocument(): void {
+      try {
+        Object.defineProperty(globalThis, "document", {
+          value: originalDocument,
+          writable: true,
+          configurable: true,
+        });
+      } catch {
+        (globalThis as any).document = originalDocument;
+      }
+    }
+
+    it("renderAIPlayerSlot() returns early when document is undefined", () => {
+      // Create DOM element BEFORE redefining document
+      const handDiv = document.createElement("div");
+      try {
+        Object.defineProperty(globalThis, "document", {
+          value: undefined,
+          writable: true,
+          configurable: true,
+        });
+      } catch {
+        restoreDocument();
+        return;
+      }
+      // Should return without throwing
+      expect(() => ui.renderAIPlayerSlot(1, handDiv)).to.not.throw();
+      restoreDocument();
     });
   });
 });

@@ -210,7 +210,7 @@ describe("App", function () {
       const setAIPersonaSpy = this.sandbox.spy(gameClient, "setAIPersona");
       const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
 
-      ui.emit("aiChanged", "aggressive");
+      ui.emit("aiChanged", { persona: "aggressive", playerIndex: 1 });
 
       expect(app.selectedAI).to.equal("aggressive");
       expect(setAIPersonaSpy.calledWith(1, "aggressive")).to.be.true;

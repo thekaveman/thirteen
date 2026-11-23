@@ -52,6 +52,10 @@ export class App {
     this.ui.on("cancelClicked", () => this.handleCancelClick());
     this.ui.on("resetClicked", () => this.handleResetButtonClick());
     this.ui.on("startClicked", () => this.handleStartGameClick());
+    this.ui.on("aiChanged", (data: unknown) => {
+      const { persona, playerIndex } = data as { persona: string; playerIndex: number };
+      this.handleAISelection(persona, playerIndex);
+    });
     this.ui.on("addAIPlayerClicked", () => this.handleAddAIPlayerClick());
     this.ui.on("removeAIPlayerClicked", () => this.handleRemoveAIPlayerClick());
     this.ui.on("cardClicked", (card: unknown) => this.handleCardClick(card as Card));
@@ -99,12 +103,14 @@ export class App {
     }
   }
 
-  handleAISelection(selectedAI: string): void {
+  handleAISelection(selectedAI: string, playerIndex?: number): void {
     this.selectedAI = selectedAI;
+    // Determine which AI player slot to update
+    const aiIndex = playerIndex !== undefined ? playerIndex : 1;
     // Update AI player persona if it exists
-    const ai = this.aiPlayers[0];
+    const ai = this.aiPlayers[aiIndex - 1];
     if (ai && ai.type === PLAYER_TYPES.AI) {
-      this.gameClient.setAIPersona(1, selectedAI);
+      this.gameClient.setAIPersona(aiIndex, selectedAI);
     }
     if (this.humanPlayer && this.aiPlayers.length > 0) {
       this.gameClient.setPlayers([this.humanPlayer, ...this.aiPlayers]);
