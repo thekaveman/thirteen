@@ -831,6 +831,85 @@ describe("Game", () => {
     });
   });
 
+  describe("gamesPlayed", () => {
+    it("should increment gamesPlayed for all players when a game ends", () => {
+      const players = [
+        new HumanPlayer(new GameClient(game), 0),
+        new HumanPlayer(new GameClient(game), 1),
+      ];
+      game.setPlayers(players);
+      game.start();
+      game.win();
+
+      expect(game.gameState.gamesPlayed).to.deep.equal([1, 1]);
+    });
+
+    it("should preserve gamesPlayed across new games", () => {
+      const players = [
+        new HumanPlayer(new GameClient(game), 0),
+        new HumanPlayer(new GameClient(game), 1),
+      ];
+      game.setPlayers(players);
+      game.start();
+      game.win();
+      game.init(); // Simulate new game
+      game.start();
+      game.win();
+
+      // gamesPlayed should be preserved (not reset by init)
+      expect(game.gameState.gamesPlayed).to.deep.equal([2, 2]);
+    });
+
+    it("should increment gamesPlayed for all players on each completed game", () => {
+      const players = [
+        new HumanPlayer(new GameClient(game), 0),
+        new HumanPlayer(new GameClient(game), 1),
+        new HumanPlayer(new GameClient(game), 2),
+      ];
+      game.setPlayers(players);
+
+      // Complete 3 games: start -> win -> init -> start -> win -> init -> start -> win
+      game.start();
+      game.win();
+      game.init();
+      game.start();
+      game.win();
+      game.init();
+      game.start();
+      game.win();
+
+      // All 3 players increment on each of the 3 completed games
+      expect(game.gameState.gamesPlayed).to.deep.equal([3, 3, 3]);
+    });
+
+    it("should preserve gamesPlayed when adding a player", () => {
+      game.gameState.gamesPlayed = [5, 3];
+
+      const players = [
+        new HumanPlayer(new GameClient(game), 0),
+        new HumanPlayer(new GameClient(game), 1),
+        new HumanPlayer(new GameClient(game), 2),
+      ];
+      game.setPlayers(players);
+
+      // Existing player wins preserved, new player starts at 0
+      expect(game.gameState.gamesPlayed).to.deep.equal([5, 3, 0]);
+    });
+
+    it("should truncate gamesPlayed when removing a player", () => {
+      game.gameState.gamesPlayed = [5, 3, 1];
+
+      const players = [
+        new HumanPlayer(new GameClient(game), 0),
+        new HumanPlayer(new GameClient(game), 1),
+      ];
+      game.setPlayers(players);
+
+      // Truncate to remove the last player's count
+      expect(game.gameState.gamesPlayed).to.deep.equal([5, 3]);
+    });
+  });
+
   describe("AI configuration", () => {
     beforeEach(() => {
       game.gameState.numPlayers = 2;

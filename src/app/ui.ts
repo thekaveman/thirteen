@@ -376,13 +376,15 @@ export class UI {
     }
     h2.textContent = text;
 
-    let gamesWonEl = handDiv.querySelector(".games-won") as HTMLElement | null;
-    if (!gamesWonEl) {
-      gamesWonEl = document.createElement("p");
-      gamesWonEl.classList.add("games-won");
-      handDiv.appendChild(gamesWonEl);
+    let gamesCounterEl = handDiv.querySelector(".games-counter") as HTMLElement | null;
+    if (!gamesCounterEl) {
+      gamesCounterEl = document.createElement("p");
+      gamesCounterEl.classList.add("games-counter");
+      handDiv.appendChild(gamesCounterEl);
     }
-    gamesWonEl.textContent = `Games won: ${this.gameClient.getGamesWon(playerIndex)}`;
+    const gamesWon = this.gameClient.getGamesWon(playerIndex) as number;
+    const gamesPlayed = this.gameClient.getGamesPlayed(playerIndex) as number;
+    gamesCounterEl.textContent = `Played/Won: ${gamesPlayed}/${gamesWon}`;
 
     // Clear the cards container before rendering new cards
     let cardsContainer = handDiv.querySelector(".cards-container") as HTMLElement | null;

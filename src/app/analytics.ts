@@ -42,6 +42,7 @@ interface AnalyticsEventData {
   player_rounds_won: number;
   player_turns: number;
   player_games_won: number;
+  player_games_played: number;
   rounds?: number;
   rounds_won?: number;
 }

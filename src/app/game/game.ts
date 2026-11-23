@@ -21,6 +21,7 @@ export interface GameState {
   roundNumber: number;
   roundsWon: number[];
   gamesWon: number[];
+  gamesPlayed: number[];
   aiPersonas: (string | null)[];
   gameOver: boolean;
   gameStarted: boolean;
@@ -86,6 +87,7 @@ export class Game {
       roundNumber: 1,
       roundsWon: [],
       gamesWon: [],
+      gamesPlayed: [],
       aiPersonas: [],
       gameOver: false,
       gameStarted: false,
@@ -383,6 +385,20 @@ export class Game {
           // Fresh game: gamesWon is empty (e.g., after init()), initialize to zeros
           this.gameState.gamesWon = new Array(players.length).fill(0);
         }
+        // Preserve existing gamesPlayed for current players, reset only for newly added players
+        if (this.gameState.gamesPlayed.length < players.length) {
+          while (this.gameState.gamesPlayed.length < players.length) {
+            this.gameState.gamesPlayed.push(0);
+          }
+        } else if (this.gameState.gamesPlayed.length > players.length) {
+          this.gameState.gamesPlayed.length = players.length;
+        } else if (
+          this.gameState.gamesPlayed.length === 0 &&
+          this.gameState.playerHands.length === 0
+        ) {
+          // Fresh game: gamesPlayed is empty (e.g., after init()), initialize to zeros
+          this.gameState.gamesPlayed = new Array(players.length).fill(0);
+        }
       }
       this.save();
     }
@@ -410,6 +426,15 @@ export class Game {
     this.gameState.roundsWon[this.gameState.currentPlayer]++; // Increment roundsWon here too, for the current round
     this.gameState.gameOver = true;
     this.gameState.gameStarted = false;
+    // Increment games played for all participating players
+    const numPlayers = this.gameState.numPlayers;
+    if (this.gameState.gamesPlayed.length < numPlayers) {
+      this.gameState.gamesPlayed = new Array(numPlayers).fill(0);
+    }
+    for (let i = 0; i < numPlayers; i++) {
+      this.gameState.gamesPlayed[i]++;
+    }
+    this.save();
     this.hooks.onGameWon(new GameClient(this));
   }
 }

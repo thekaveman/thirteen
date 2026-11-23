@@ -187,11 +187,11 @@ h2 {
   transition: background-color 0.3s ease;
 }
 
-.games-won {
+.games-counter {
   position: absolute;
   bottom: var(--spacing-s);
   left: var(--spacing-m);
-  font-size: var(--font-size-s);
+  font-size: var(--font-size-xxs);
   color: var(--color-darker-gray);
   font-weight: bold;
   margin: 0;
