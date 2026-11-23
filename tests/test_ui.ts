@@ -408,6 +408,56 @@ describe("UI", () => {
       const player1HandDiv = document.getElementById("player-hand-1");
       expect(player1HandDiv.classList.contains("round-winner")).to.be.false;
     });
+
+    it("should add 'Passed' badge for players who have passed", () => {
+      game.gameState.gameStarted = true;
+      game.gameState.gameOver = false;
+      // Mark player 1 (AI) as passed
+      game.gameState.playerPassed = [false, true, false];
+      ui.renderPlayerHands();
+      const player1HandDiv = document.getElementById("player-hand-1");
+      expect(player1HandDiv.querySelector(".passed-badge")).to.not.be.null;
+      expect(player1HandDiv.querySelector(".passed-badge")!.textContent).to.equal("Passed");
+    });
+
+    it("should not add 'Passed' badge for players who have not passed", () => {
+      game.gameState.gameStarted = true;
+      game.gameState.gameOver = false;
+      game.gameState.playerPassed = [false, false, false];
+      ui.renderPlayerHands();
+      const player1HandDiv = document.getElementById("player-hand-1");
+      expect(player1HandDiv.querySelector(".passed-badge")).to.be.null;
+    });
+
+    it("should remove 'Passed' badge when player is no longer passed", () => {
+      game.gameState.gameStarted = true;
+      game.gameState.gameOver = false;
+      game.gameState.playerPassed = [false, false, false];
+      ui.renderPlayerHands();
+      const player1HandDiv = document.getElementById("player-hand-1");
+      expect(player1HandDiv.querySelector(".passed-badge")).to.be.null;
+    });
+
+    it("renderPlayerHand() should remove passed badge when re-rendering a passed player as not passed", () => {
+      // Set up player as passed
+      game.gameState.gameStarted = true;
+      game.gameState.gameOver = false;
+      game.gameState.playerPassed = [false, true, false];
+      gameClient.setPlayerHand(1, [new Card("A", "♠")]);
+
+      // Create handDiv and render player as passed — badge is added
+      const handDiv = document.createElement("div");
+      handDiv.id = "player-hand-1";
+      ui.renderPlayerHand(1, handDiv);
+      let badge = handDiv.querySelector(".passed-badge");
+      expect(badge).to.not.be.null;
+
+      // Re-render player as NOT passed — badge should be removed
+      game.gameState.playerPassed = [false, false, false];
+      ui.renderPlayerHand(1, handDiv);
+      badge = handDiv.querySelector(".passed-badge");
+      expect(badge).to.be.null;
+    });
   });
 
   describe("createCardElement() Node.js mock path", () => {

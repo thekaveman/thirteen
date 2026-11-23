@@ -309,9 +309,14 @@ export class Game {
       return;
     }
 
-    // Switch to next player
+    // Switch to next non-passed player after the last player to play
     if (!this.gameState.gameOver) {
-      this.nextPlayer();
+      const numPlayers = this.gameState.numPlayers;
+      let next = (this.gameState.lastPlayerToPlay + 1) % numPlayers;
+      while (this.gameState.playerPassed[next]) {
+        next = (next + 1) % numPlayers;
+      }
+      this.gameState.currentPlayer = next;
     }
     this.gameState.currentTurn++;
     this.save();

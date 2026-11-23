@@ -596,5 +596,20 @@ describe("App", function () {
       expect(document.getElementById("player-hand-0")!.classList.contains("round-winner")).to.be.true;
     });
 
+    it("nextTurn() should skip passed AI players quickly (200ms instead of 2000ms)", async function () {
+      await app.init();
+      const aiPlayer = gameClient.getPlayers(1);
+      this.sandbox.stub(aiPlayer.ai, "takeTurn").returns([]);
+      const setTimeoutFnStub = this.sandbox.stub(app, "setTimeout").callsFake((fn) => setTimeout(fn, 1000) as any);
+
+      // Make the current player (AI at index 1) have passed
+      game.gameState.currentPlayer = 1;
+      game.gameState.playerPassed = [false, true, false];
+      game.gameState.gameStarted = true;
+
+      app.nextTurn();
+      expect(setTimeoutFnStub.calledOnce).to.be.true;
+      expect(setTimeoutFnStub.getCall(0).args[1]).to.equal(200); // 200ms for passed player
+    });
   });
 });

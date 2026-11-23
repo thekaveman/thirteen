@@ -403,6 +403,24 @@ export class UI {
     const playerHand = this.gameClient.getPlayerHands(playerIndex) as Card[];
     this.renderCardsContainer(playerHand, cardsContainer, preRender);
 
+    // Render passed badge for passed players
+    const playerPassed = this.gameClient.game?.gameState?.playerPassed?.[playerIndex];
+    if (this.gameClient.isGameStarted() && !this.gameClient.isGameOver() && playerPassed) {
+      let passedBadge = handDiv.querySelector(".passed-badge") as HTMLElement | null;
+      if (!passedBadge) {
+        passedBadge = document.createElement("span");
+        passedBadge.classList.add("passed-badge");
+        passedBadge.textContent = "Passed";
+        handDiv.appendChild(passedBadge);
+      }
+    } else {
+      // Remove passed badge if player hasn't passed
+      const passedBadge = handDiv.querySelector(".passed-badge");
+      if (passedBadge) {
+        passedBadge.remove();
+      }
+    }
+
     let cardCountEl = handDiv.querySelector(".card-count") as HTMLElement | null;
     if (!cardCountEl) {
       cardCountEl = document.createElement("p");

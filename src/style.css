@@ -170,6 +170,16 @@ h2 {
   transition: background-color 0.3s ease;
 }
 
+/* Passed badge */
+.passed-badge {
+  position: absolute;
+  bottom: var(--spacing-xs);
+  right: var(--spacing-m);
+  font-size: var(--font-size-xxs);
+  color: var(--color-medium-gray);
+  text-align: right;
+}
+
 /* Round winner green highlight */
 .player-hand.round-winner {
   border: 2px solid #2e7d32;

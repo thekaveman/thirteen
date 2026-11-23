@@ -361,6 +361,16 @@ export class App {
       return;
     }
     const currentPlayer = this.gameClient.getCurrentPlayer();
+    const playerPassed = this.gameClient.game?.gameState?.playerPassed?.[this.gameClient.getCurrentPlayerIndex()];
+
+    // If current player has passed, skip them quickly
+    if (playerPassed && currentPlayer.type === PLAYER_TYPES.AI) {
+      if (this.setTimeout) {
+        this.setTimeout(() => this.nextTurn(), 200);
+      }
+      return;
+    }
+
     if (currentPlayer.type === PLAYER_TYPES.AI) {
       if (this.setTimeout) {
         this.setTimeout(() => this.handleAITurn(), 1000);
