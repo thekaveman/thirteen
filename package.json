@@ -1,6 +1,6 @@
 {
   "name": "thirteen",
-  "version": "2025.10.1",
+  "version": "2026.11.1",
   "description": "A web-based implementation of the card game Thirteen (Tiến Lên), built with vanilla TypeScript, HTML, and CSS.",
   "main": "src/app.js",
   "directories": {
