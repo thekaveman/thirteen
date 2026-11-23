@@ -5,8 +5,10 @@ import type { Player } from "../player/base.js";
 import { PLAYER_TYPES, createPlayer } from "../player/index.js";
 import { Rules } from "./rules.js";
 import { log } from "../utils.js";
+import { VERSION } from "../version.js";
 
 export interface GameState {
+  version: string;
   numPlayers: number;
   numAIPlayers: number;
   players: Player[];
@@ -47,6 +49,7 @@ export interface LoadResult {
 }
 
 export class Game {
+  static readonly VERSION = VERSION;
   static STATE_KEY = "13gs";
 
   deck: Deck;
@@ -73,6 +76,7 @@ export class Game {
       onRoundPlayed: () => {},
     };
     this.gameState = {
+      version: Game.VERSION,
       numPlayers: 0,
       numAIPlayers: 0,
       players: [],
@@ -136,6 +140,16 @@ export class Game {
   async load(ui: unknown): Promise<LoadResult> {
     const savedState = localStorage.getItem(this.stateKey);
     const parsedState = savedState ? JSON.parse(savedState) : null;
+
+    // Check version — must happen before we overwrite this.gameState
+    const isOutdated =
+      parsedState &&
+      (parsedState.gameState?.version === undefined || parsedState.gameState?.version !== Game.VERSION);
+    if (isOutdated) {
+      log("Outdated game state schema detected, resetting.");
+      localStorage.removeItem(this.stateKey);
+      return { loaded: false };
+    }
     if (parsedState && ui) {
       // Store data from the parsed state before overwriting this.gameState
       const loadedPlayerIds = parsedState.gameState.players.map((p: { id: string }) => p.id);

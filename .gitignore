@@ -1,4 +1,5 @@
 .env
+src/app/version.ts
 .nyc_output/
 built/
 coverage/
