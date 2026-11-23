@@ -373,7 +373,7 @@ export class App {
 
     if (currentPlayer.type === PLAYER_TYPES.AI) {
       if (this.setTimeout) {
-        this.setTimeout(() => this.handleAITurn(), 1000);
+        this.setTimeout(() => this.handleAITurn(), 2000);
       }
     } else {
       log("Human player's turn. Waiting for user input.");

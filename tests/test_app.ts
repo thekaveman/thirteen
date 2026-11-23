@@ -395,10 +395,10 @@ describe("App", function () {
       const aiPlayer = gameClient.getPlayers(1);
       this.sandbox.stub(aiPlayer.ai, "takeTurn").returns([]);
       // Stub setTimeoutFn directly since the mock game doesn't have setTimeout
-      const setTimeoutFnStub = this.sandbox.stub(app, "setTimeout").callsFake((fn) => setTimeout(fn, 1000) as any);
+      const setTimeoutFnStub = this.sandbox.stub(app, "setTimeout").callsFake((fn) => setTimeout(fn, 2000) as any);
       app.nextTurn();
       expect(setTimeoutFnStub.calledOnce).to.be.true;
-      expect(setTimeoutFnStub.getCall(0).args[1]).to.equal(1000);
+      expect(setTimeoutFnStub.getCall(0).args[1]).to.equal(2000);
 
       // Manually trigger the callback passed to setTimeout
       const callback = setTimeoutFnStub.getCall(0).args[0];
