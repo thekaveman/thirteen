@@ -203,6 +203,10 @@ combination-type {
   margin-left: var(--spacing-xs);
 }
 
+.straight-count {
+  color: var(--color-medium-gray);
+}
+
 .cards-container {
   display: flex;
   flex-wrap: nowrap;

@@ -74,7 +74,7 @@ describe("UI", () => {
     expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.SINGLE)).to.equal("\uD83C\uDCCF");
     expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.PAIR)).to.equal("\uD83C\uDCCF\u200D\uD83C\uDCCF");
     expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.TRIPLE)).to.equal("\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF");
-    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.STRAIGHT)).to.equal("\uD83E\uDDDC");
+    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.STRAIGHT)).to.equal("\uD83E\uDE9C");
     expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.FOUR_OF_A_KIND)).to.equal("💣");
     expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.CONSECUTIVE_PAIRS)).to.equal("💣");
     expect(ui.getCombinationTypeIndicator("invalid")).to.equal("🟢");
@@ -92,7 +92,7 @@ describe("UI", () => {
 
     expect(ui.gameContent.innerHTML).to.include("Round 5");
     const player1HandDiv = document.getElementById("player-hand-0");
-    expect(player1HandDiv.querySelector("h2").textContent).to.include("👉 Player 1");
+    expect(player1HandDiv.querySelector("h2").textContent).to.include("Player 1");
     expect(player1HandDiv.classList.contains("current")).to.be.true;
     expect(player1HandDiv.querySelector(".games-won").textContent).to.equal("Games won: 1");
     expect(player1HandDiv.querySelector(".card-count").textContent).to.equal("Cards: 1/13");
@@ -105,6 +105,16 @@ describe("UI", () => {
     expect(ui.gameContent.innerHTML).to.include('<h2>Play Area (Round 1) <span class="combination-type">🟢</span></h2>');
   });
 
+  it("renderPlayArea() should show straight combo with card count span", () => {
+    // [3,4,5] forms a straight
+    gameClient.setPlayPile([new Card("3", "♠"), new Card("4", "♦"), new Card("5", "♥")]);
+    game.gameState.roundNumber = 3;
+    ui.renderPlayArea();
+    expect(ui.gameContent.innerHTML).to.include("Round 3");
+    expect(ui.gameContent.innerHTML).to.include("straight-count");
+    expect(ui.gameContent.innerHTML).to.include("(3)");
+  });
+
   it("renderPlayerHand() should render cards and emit cardClicked event for human players", () => {
     const playerHandDiv = document.createElement("div");
     const card = new Card("A", "♠");
@@ -114,7 +124,7 @@ describe("UI", () => {
 
     ui.renderPlayerHand(0, playerHandDiv);
 
-    expect(playerHandDiv.textContent).to.include("👉 Player 1: 🎮 You");
+    expect(playerHandDiv.textContent).to.include("Player 1: 🎮 You");
 
     const cardElements = playerHandDiv.querySelectorAll(".card");
     expect(cardElements).to.have.lengthOf(2);
@@ -134,7 +144,7 @@ describe("UI", () => {
 
     const cardElements = playerHandDiv.querySelectorAll(".card");
     expect(cardElements).to.have.lengthOf(2);
-    expect(playerHandDiv.textContent).to.include("👉 Player 2 (AI)");
+    expect(playerHandDiv.textContent).to.include("Player 2 (AI)");
   });
 
   it("renderPlayerHand() should display winner message", () => {

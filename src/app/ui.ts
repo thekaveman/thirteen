@@ -191,13 +191,30 @@ export class UI {
       case COMBINATION_TYPES.TRIPLE:
         return "\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF";
       case COMBINATION_TYPES.STRAIGHT:
-        return "\uD83E\uDDDC";
+        return "\uD83E\uDE9C";
       case COMBINATION_TYPES.FOUR_OF_A_KIND:
         return "\uD83D\uDCA3"; // Bomb indicator for Four of a Kind
       case COMBINATION_TYPES.CONSECUTIVE_PAIRS:
         return "\uD83D\uDCA3"; // Bomb indicator for Consecutive Pairs
       default:
         return "\uD83D\uDFE2"; // Default for an open play pile
+    }
+  }
+
+  /**
+   * Renders the play area in the DOM.
+   */
+  renderPlayArea(): void {
+    if (this.gameContent) {
+      const combinationType = this.gameClient.getPlayPileCombinationType();
+      const playPile = this.gameClient.getPlayPile();
+      // For straights, show the card count next to the ladder emoji
+      let indicator = this.getCombinationTypeIndicator(combinationType);
+      if (combinationType === COMBINATION_TYPES.STRAIGHT && playPile.length > 0) {
+        indicator = `${indicator} <span class="straight-count">(${playPile.length})</span>`;
+      }
+      this.gameContent.innerHTML = `<h2>Play Area (Round ${this.gameClient.getRoundNumber()}) <span class="combination-type">${indicator}</span></h2>`;
+      this.renderCardsContainer(playPile, this.gameContent);
     }
   }
 
@@ -323,18 +340,6 @@ export class UI {
   }
 
   /**
-   * Renders the play area in the DOM.
-   */
-  renderPlayArea(): void {
-    if (this.gameContent) {
-      const combinationType = this.gameClient.getPlayPileCombinationType();
-      const indicator = this.getCombinationTypeIndicator(combinationType);
-      this.gameContent.innerHTML = `<h2>Play Area (Round ${this.gameClient.getRoundNumber()}) <span class="combination-type">${indicator}</span></h2>`;
-      this.renderCardsContainer(this.gameClient.getPlayPile(), this.gameContent);
-    }
-  }
-
-  /**
    * Renders a single player's hand in the DOM.
    * @param playerIndex The index of the player.
    * @param handDiv The div element to render the hand in.
@@ -358,8 +363,6 @@ export class UI {
     if (this.gameClient.isGameOver() && this.gameClient.getPlayerHands(playerIndex).length === 0) {
       this.displayMessage(`${text} - wins in ${this.gameClient.getRoundNumber()} rounds!`, "info");
       text += " (Winner!)";
-    } else if (this.gameClient.getCurrentPlayerIndex() === playerIndex) {
-      text = `👉 ${text}`;
     }
 
     let h2 = handDiv.querySelector("h2") as HTMLElement | null;
