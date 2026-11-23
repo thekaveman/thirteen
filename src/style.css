@@ -330,7 +330,7 @@ combination-type {
 
 #controls {
   position: fixed;
-  bottom: 32px;
+  bottom: 64px;
   left: 0;
   right: 0;
   background-color: var(--color-light-gray);
