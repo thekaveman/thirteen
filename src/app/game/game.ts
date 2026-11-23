@@ -369,7 +369,18 @@ export class Game {
         this.gameState.playerHands = players.map(() => []);
         this.gameState.roundsWon = new Array(players.length).fill(0);
         this.gameState.playerPassed = new Array(players.length).fill(false);
-        if (this.gameState.gamesWon.length !== players.length) {
+        // Preserve existing wins for current players, reset only for newly added players
+        if (this.gameState.gamesWon.length < players.length) {
+          while (this.gameState.gamesWon.length < players.length) {
+            this.gameState.gamesWon.push(0);
+          }
+        } else if (this.gameState.gamesWon.length > players.length) {
+          this.gameState.gamesWon.length = players.length;
+        } else if (
+          this.gameState.gamesWon.length === 0 &&
+          this.gameState.playerHands.length === 0
+        ) {
+          // Fresh game: gamesWon is empty (e.g., after init()), initialize to zeros
           this.gameState.gamesWon = new Array(players.length).fill(0);
         }
       }

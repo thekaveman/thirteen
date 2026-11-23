@@ -788,7 +788,7 @@ describe("Game", () => {
       expect(game.gameState.gamesWon).to.deep.equal(originalGamesWon);
     });
 
-    it("should reset gamesWon when setPlayers is called with different player count", () => {
+    it("should preserve gamesWon for existing players when adding a player", () => {
       game.gameState.gamesWon = [3, 2];
       game.gameState.numPlayers = 2;
 
@@ -799,8 +799,22 @@ describe("Game", () => {
       ];
       game.setPlayers(players);
 
-      // gamesWon should be reset (different count)
-      expect(game.gameState.gamesWon).to.deep.equal([0, 0, 0]);
+      // Existing player wins preserved, new player starts at 0
+      expect(game.gameState.gamesWon).to.deep.equal([3, 2, 0]);
+    });
+
+    it("should truncate gamesWon when removing a player", () => {
+      game.gameState.gamesWon = [3, 2, 1];
+      game.gameState.numPlayers = 3;
+
+      const players = [
+        new HumanPlayer(new GameClient(game), 0),
+        new HumanPlayer(new GameClient(game), 1),
+      ];
+      game.setPlayers(players);
+
+      // Truncate to remove the last player's wins
+      expect(game.gameState.gamesWon).to.deep.equal([3, 2]);
     });
 
     it("should initialize gamesWon with correct size for 4 players", () => {
