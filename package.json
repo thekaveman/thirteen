@@ -7,7 +7,7 @@
     "test": "tests"
   },
   "scripts": {
-    "build": "node bin/generate-version.js && tsc && cp src/*.html src/*.css src/logo.png favicon.ico dist/ && node bin/hash-css.js && node bin/cache-bust.js",
+    "build": "rm -f dist/style_*.css; node bin/generate-version.js && tsc && cp src/*.html src/*.css src/logo.png favicon.ico dist/ && node bin/hash-css.js && node bin/cache-bust.js",
     "start": "npm run build && http-server dist -p 8888",
     "test": "node --loader tsm node_modules/mocha/bin/mocha.js --require ./tests/setup.ts tests/test_*.ts tests/**/*.ts",
     "test:coverage": "NODE_OPTIONS='--loader tsm' c8 --reporter=text --reporter=html --report-dir=coverage --include='src/**/*.ts' --include='src/**/*.js' node ./node_modules/mocha/bin/mocha.js --require ./tests/setup.ts tests/test_*.ts tests/**/*.ts"
