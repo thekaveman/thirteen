@@ -421,7 +421,7 @@ export class UI {
     }
     const gamesWon = this.gameClient.getGamesWon(playerIndex) as number;
     const gamesPlayed = this.gameClient.getGamesPlayed(playerIndex) as number;
-    gamesCounterEl.textContent = `Played/Won: ${gamesPlayed}/${gamesWon}`;
+    gamesCounterEl.textContent = `Won/Played: ${gamesWon}/${gamesPlayed}`;
 
     // Clear the cards container before rendering new cards
     let cardsContainer = handDiv.querySelector(".cards-container") as HTMLElement | null;

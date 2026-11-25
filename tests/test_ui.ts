@@ -121,7 +121,7 @@ describe("UI", () => {
     const player1HandDiv = document.getElementById("player-hand-0");
     expect(player1HandDiv.querySelector("h2").textContent).to.include("Player 1");
     expect(player1HandDiv.classList.contains("current")).to.be.true;
-    expect(player1HandDiv.querySelector(".games-counter").textContent).to.equal("Played/Won: 1/1");
+    expect(player1HandDiv.querySelector(".games-counter").textContent).to.equal("Won/Played: 1/1");
     expect(player1HandDiv.querySelector(".card-count").textContent).to.equal("Cards: 1/13");
   });
 
