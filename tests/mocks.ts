@@ -76,9 +76,13 @@ export class MockAnalytics {
 }
 
 export class MockAI extends AI {
+  move: Card[] | undefined;
+  validMoves: Card[][] | undefined;
+
   constructor(gameClient, move, persona = null) {
     super(gameClient, "mock", persona);
     this.move = move;
+    this.validMoves = undefined;
     this.takeTurnCalled = false;
   }
 
@@ -108,6 +112,17 @@ export class MockAI extends AI {
     }
 
     // Otherwise, simulate a pass for default behavior in tests
+    return [];
+  }
+
+  findAllValidMoves(_hand, _playPile, _currentTurn, _allPlayerHands) {
+    if (this.validMoves !== undefined) {
+      return this.validMoves;
+    }
+    // Default: return a move if set, otherwise empty
+    if (this.move && this.move.length > 0) {
+      return [this.move];
+    }
     return [];
   }
 }

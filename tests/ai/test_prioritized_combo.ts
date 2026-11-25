@@ -9,11 +9,11 @@ describe("PrioritizedComboAI", () => {
   beforeEach(() => {
     game = new MockGame(new MockDeck());
     gameClient = new GameClient(game);
-    // MockAI1 will always return a move
+    // MockAI1 will always return a valid move
     mockAI1 = new MockAI(gameClient, [new Card("3", "♠")]);
-    // MockAI2 will return no move initially, then a move
+    // MockAI2 will return no valid moves initially
     mockAI2 = new MockAI(gameClient, []);
-    // MockAI3 will always return a move
+    // MockAI3 will always return a valid move
     mockAI3 = new MockAI(gameClient, [new Card("4", "♦")]);
 
     prioritizedComboAI = new PrioritizedComboAI(gameClient, [mockAI1, mockAI2, mockAI3]);
@@ -32,18 +32,31 @@ describe("PrioritizedComboAI", () => {
   });
 
   it("select() should skip strategies that cannot make a move", () => {
-    // Make mockAI1 return no move
-    mockAI1.move = [];
+    // Make mockAI1 return no valid moves
+    mockAI1.validMoves = [];
     const selectedStrategy = prioritizedComboAI.select([], [], 0, []);
     expect(selectedStrategy).to.equal(mockAI3);
   });
 
   it("select() should return null if no strategy can make a move", () => {
-    mockAI1.move = [];
-    mockAI2.move = [];
-    mockAI3.move = [];
+    mockAI1.validMoves = [];
+    mockAI2.validMoves = [];
+    mockAI3.validMoves = [];
     const selectedStrategy = prioritizedComboAI.select([], [], 0, []);
     expect(selectedStrategy).to.be.null;
+  });
+
+  it("select() should call findAllValidMoves(), not takeTurn()", () => {
+    const findAllValidMovesSpy = sinon.spy(mockAI1, "findAllValidMoves");
+    const takeTurnSpy = sinon.spy(mockAI1, "takeTurn");
+
+    prioritizedComboAI.select([], [], 0, []);
+
+    expect(findAllValidMovesSpy.calledOnce).to.be.true;
+    expect(takeTurnSpy.called).to.be.false;
+
+    findAllValidMovesSpy.restore();
+    takeTurnSpy.restore();
   });
 
   it("takeTurn() should execute the selected strategy's takeTurn method", () => {
