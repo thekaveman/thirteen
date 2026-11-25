@@ -16,15 +16,16 @@ In every game, the player with the `3♠` starts. If the `3♠` is not in any pl
 - `Single`: 1 card
 - `Pair`: 2 cards of the same value
 - `Triple`: 3 cards of the same value
+- `Four-of-a-kind`: 4 cards of the same value
 - `Straight`: 3+ cards in sequence (`2` cannot be part of a `Straight`)
-- `Consecutive Pairs`: 3 or 4 pairs in sequence (e.g. two `3`, two `4`, two `5`) - these are only valid as bombs
+- `Consecutive Pairs`: 3 pairs in sequence (e.g. two `3`, two `4`, two `5`) - these are only valid as bombs
 
 ## Bombs
 
-Bombs are special combinations that can beat `2` and can only be played on `2`:
+Bombs are special combinations that can beat `2`:
 
-- A single `2` is beaten by a **Four-of-a-Kind** or **Three Consecutive Pairs**
-- A pair of `2`s is beaten by **Four Consecutive Pairs**
+- A single `2` is beaten by a **Four-of-a-Kind**
+- A single `2` is beaten by **Three Consecutive Pairs** (only valid as a bomb)
 
 ## Rounds
 
