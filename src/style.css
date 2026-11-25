@@ -467,7 +467,7 @@ button:disabled,
 }
 
 #game-container.help {
-  padding-bottom: var(--spacing-s);
+  padding-bottom: var(--spacing-xxl);
   height: unset;
 }
 

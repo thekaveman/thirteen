@@ -146,6 +146,8 @@ export class UI {
       if (this.removeAIPlayerButton)
         this.removeAIPlayerButton.addEventListener("click", () => this.emit("removeAIPlayerClicked", undefined));
     }
+    // Footer version is static — render it as soon as UI is initialized
+    this.updateFooterVersion();
   }
 
   /**
@@ -280,7 +282,7 @@ export class UI {
   /**
    * Updates the version number in the footer.
    */
-  private updateFooterVersion(): void {
+  updateFooterVersion(): void {
     if (typeof document === "undefined") return;
     const versionSpan = document.querySelector(".game-footer .version") as HTMLElement | null;
     if (versionSpan) {
