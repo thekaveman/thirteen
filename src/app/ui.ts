@@ -178,11 +178,34 @@ export class UI {
   }
 
   /**
+   * Returns true if the given combination type is being played as a bomb
+   * (i.e., the play pile contains a single 2, or a bomb of the same type).
+   * @param combinationType The combination type.
+   * @param playPile Optional play pile to determine context.
+   * @returns True if played as a bomb.
+   */
+  getIsBomb(combinationType: string, playPile?: Card[]): boolean {
+    // Consecutive pairs is always a bomb
+    if (combinationType === COMBINATION_TYPES.CONSECUTIVE_PAIRS) {
+      return true;
+    }
+    // Four-of-a-kind is a bomb only when played against a single 2
+    if (combinationType === COMBINATION_TYPES.FOUR_OF_A_KIND) {
+      if (playPile && playPile.length === 1 && playPile[0].rank === "2") {
+        return true;
+      }
+      return false;
+    }
+    return false;
+  }
+
+  /**
    * Returns a character-based indicator for the given combination type.
    * @param combinationType The combination type (e.g., COMBINATION_TYPES.SINGLE).
+   * @param playPile Optional play pile to determine bomb context.
    * @returns The character indicator.
    */
-  getCombinationTypeIndicator(combinationType: string): string {
+  getCombinationTypeIndicator(combinationType: string, playPile?: Card[]): string {
     switch (combinationType) {
       case COMBINATION_TYPES.SINGLE:
         return "\uD83C\uDCCF";
@@ -193,7 +216,7 @@ export class UI {
       case COMBINATION_TYPES.STRAIGHT:
         return "\uD83E\uDE9C";
       case COMBINATION_TYPES.FOUR_OF_A_KIND:
-        return "\uD83D\uDCA3"; // Bomb indicator for Four of a Kind
+        return this.getIsBomb(combinationType, playPile) ? "\uD83D\uDCA3" : "\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF";
       case COMBINATION_TYPES.CONSECUTIVE_PAIRS:
         return "\uD83D\uDCA3"; // Bomb indicator for Consecutive Pairs
       default:
@@ -209,7 +232,7 @@ export class UI {
       const combinationType = this.gameClient.getPlayPileCombinationType();
       const playPile = this.gameClient.getPlayPile();
       // For straights, show the card count next to the ladder emoji
-      let indicator = this.getCombinationTypeIndicator(combinationType);
+      let indicator = this.getCombinationTypeIndicator(combinationType, playPile);
       if (combinationType === COMBINATION_TYPES.STRAIGHT && playPile.length > 0) {
         indicator = `${indicator} <span class="straight-count">(${playPile.length})</span>`;
       }

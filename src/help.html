@@ -65,7 +65,7 @@
         </p>
 
         <h3>Valid Combinations</h3>
-        <div class="combination-examples">
+        <div class="combination-examples" data-section="valid_combos">
           <div class="combination" data-combination="single">
             <span class="combination-type"></span>
             <strong>Single</strong>
@@ -81,16 +81,21 @@
             <strong>Triple</strong>
             <p>Three cards of the same rank. Triples can include 2s.</p>
           </div>
+          <div class="combination" data-combination="four_of_a_kind">
+            <span class="combination-type"></span>
+            <strong>Four of a Kind</strong>
+            <p>Four cards of the same rank. Four of a kind can include 2s.</p>
+          </div>
           <div class="combination" data-combination="straight">
             <span class="combination-type"></span>
             <strong>Straight</strong>
-            <p>Three or more cards of sequential rank. No 2 can be part of a straight.</p>
+            <p>Three or more cards of sequential rank. No straight can contain a 2.</p>
           </div>
         </div>
 
         <h3>Bombs</h3>
         <p>Bombs are special combinations that can be played on any 2.</p>
-        <div class="combination-examples">
+        <div class="combination-examples" data-section="bombs">
           <div class="combination" data-combination="four_of_a_kind">
             <span class="combination-type"></span>
             <strong>Four of a Kind</strong>
@@ -99,13 +104,12 @@
           <div class="combination" data-combination="consecutive_pairs">
             <span class="combination-type"></span>
             <strong>Consecutive Pairs</strong>
-            <p>Three consecutive pairs beat any single 2. Four consecutive pairs beat any pair of 2s.</p>
+            <p>Three consecutive pairs beat any single 2.</p>
           </div>
         </div>
-
         <h2>Try it!</h2>
         <div id="try-it">
-          <div id="play-area" class="play-area">
+          <div id="play-area" class="play-area help-play-area">
             <div id="game-content"></div>
           </div>
           <div id="messages"></div>
