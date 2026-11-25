@@ -54,30 +54,11 @@ export class AI {
     allPlayerHands: Card[][],
   ): Card[][] {
     let allValidMoves: Card[][] = [];
-    allValidMoves = allValidMoves.concat(
-      this.findValidMoves(hand, playPile, COMBINATION_TYPES.SINGLE, currentTurn, allPlayerHands),
-    );
-    allValidMoves = allValidMoves.concat(
-      this.findValidMoves(hand, playPile, COMBINATION_TYPES.PAIR, currentTurn, allPlayerHands),
-    );
-    allValidMoves = allValidMoves.concat(
-      this.findValidMoves(hand, playPile, COMBINATION_TYPES.TRIPLE, currentTurn, allPlayerHands),
-    );
-    allValidMoves = allValidMoves.concat(
-      this.findValidMoves(hand, playPile, COMBINATION_TYPES.STRAIGHT, currentTurn, allPlayerHands),
-    );
-    allValidMoves = allValidMoves.concat(
-      this.findValidMoves(hand, playPile, COMBINATION_TYPES.FOUR_OF_A_KIND, currentTurn, allPlayerHands),
-    );
-    allValidMoves = allValidMoves.concat(
-      this.findValidMoves(
-        hand,
-        playPile,
-        COMBINATION_TYPES.CONSECUTIVE_PAIRS,
-        currentTurn,
-        allPlayerHands,
-      ),
-    );
+    for (const combinationType of Object.values(COMBINATION_TYPES)) {
+      allValidMoves = allValidMoves.concat(
+        this.findValidMoves(hand, playPile, combinationType, currentTurn, allPlayerHands),
+      );
+    }
     return allValidMoves;
   }
 
@@ -123,27 +104,17 @@ export class AI {
    * @returns An array of combinations.
    */
   generateCombinations(hand: Card[], type: string): Card[][] {
-    let combinations: Card[][] = [];
-    switch (type) {
-      case COMBINATION_TYPES.SINGLE:
-        combinations = this._generateSingles(hand);
-        break;
-      case COMBINATION_TYPES.PAIR:
-        combinations = this._generatePairs(hand);
-        break;
-      case COMBINATION_TYPES.TRIPLE:
-        combinations = this._generateTriples(hand);
-        break;
-      case COMBINATION_TYPES.STRAIGHT:
-        combinations = this._generateStraights(hand);
-        break;
-      case COMBINATION_TYPES.FOUR_OF_A_KIND:
-        combinations = this._generateFourOfAKind(hand);
-        break;
-      case COMBINATION_TYPES.CONSECUTIVE_PAIRS:
-        combinations = this._generateConsecutivePairs(hand);
-        break;
-    }
+    const generators: Record<string, (hand: Card[]) => Card[][]> = {
+      [COMBINATION_TYPES.SINGLE]: this._generateSingles.bind(this),
+      [COMBINATION_TYPES.PAIR]: this._generatePairs.bind(this),
+      [COMBINATION_TYPES.TRIPLE]: this._generateTriples.bind(this),
+      [COMBINATION_TYPES.STRAIGHT]: this._generateStraights.bind(this),
+      [COMBINATION_TYPES.FOUR_OF_A_KIND]: this._generateFourOfAKind.bind(this),
+      [COMBINATION_TYPES.CONSECUTIVE_PAIRS]: this._generateConsecutivePairs.bind(this),
+    };
+
+    const generator = generators[type];
+    const combinations = generator ? generator(hand) : [];
 
     combinations.forEach(CardClass.sort);
     combinations.sort((a, b) => a[0].value - b[0].value);
