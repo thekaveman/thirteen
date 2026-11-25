@@ -5,6 +5,17 @@
     "{file:/home/node/app/specs/tasks.md}",
     "{file:/home/node/app/specs/wishlist.md}"
   ],
+  "compaction": {
+    "auto": true,
+    "keep": {
+      "tokens": 8000
+    },
+    "buffer": 20000
+  },
+  "tool_output": {
+    "max_lines": 1000,
+    "max_bytes": 32768
+  },
   "providers": {
     "llama": {
       "package": "@opencode/ai/providers/openai-compatible",
@@ -13,7 +24,11 @@
       },
       "models": {
         "local": {
-          "name": "qwen3.6-35b"
+          "name": "qwen3.6-35b",
+          "limit": {
+            "context": 131072,
+            "output": 16384
+          }
         }
       }
     }
