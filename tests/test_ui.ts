@@ -75,10 +75,36 @@ describe("UI", () => {
     expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.PAIR)).to.equal("\uD83C\uDCCF\u200D\uD83C\uDCCF");
     expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.TRIPLE)).to.equal("\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF");
     expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.STRAIGHT)).to.equal("\uD83E\uDE9C");
-    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.FOUR_OF_A_KIND)).to.equal("💣");
+    // Four of a Kind without bomb context = 4 card emoji
+    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.FOUR_OF_A_KIND)).to.equal("\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF");
     expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.CONSECUTIVE_PAIRS)).to.equal("💣");
     expect(ui.getCombinationTypeIndicator("invalid")).to.equal("🟢");
     expect(ui.getCombinationTypeIndicator(null)).to.equal("🟢");
+  });
+
+  it("getIsBomb() should return true for consecutive pairs", () => {
+    expect(ui.getIsBomb(COMBINATION_TYPES.CONSECUTIVE_PAIRS)).to.be.true;
+  });
+
+  it("getIsBomb() should return false for four of a kind without bomb context", () => {
+    expect(ui.getIsBomb(COMBINATION_TYPES.FOUR_OF_A_KIND)).to.be.false;
+    expect(ui.getIsBomb(COMBINATION_TYPES.FOUR_OF_A_KIND, [])).to.be.false;
+    expect(ui.getIsBomb(COMBINATION_TYPES.FOUR_OF_A_KIND, [new Card("5", "♠")] as Card[])).to.be.false;
+  });
+
+  it("getIsBomb() should return true for four of a kind played against a single 2", () => {
+    expect(ui.getIsBomb(COMBINATION_TYPES.FOUR_OF_A_KIND, [new Card("2", "♠")] as Card[])).to.be.true;
+    expect(ui.getIsBomb(COMBINATION_TYPES.FOUR_OF_A_KIND, [new Card("2", "♥")] as Card[])).to.be.true;
+  });
+
+  it("getCombinationTypeIndicator() should return bomb emoji for four of a kind played against a 2", () => {
+    const two = new Card("2", "♥");
+    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.FOUR_OF_A_KIND, [two])).to.equal("💣");
+  });
+
+  it("getCombinationTypeIndicator() should return card emoji for four of a kind in normal context", () => {
+    const five = new Card("5", "♠");
+    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.FOUR_OF_A_KIND, [five])).to.equal("\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF");
   });
 
   it("render() should display all game info correctly", () => {
