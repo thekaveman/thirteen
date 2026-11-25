@@ -126,7 +126,10 @@ class Help {
         // Update the indicator text
         const placeholder = div.querySelector(".combination-type");
         if (placeholder) {
-          (placeholder as HTMLElement).textContent = this.ui.getCombinationTypeIndicator(combinationType);
+          // Determine bomb context from the section: bombs section → play on a 2
+          const comboSection = ((div as HTMLElement).closest(".combination-examples") as HTMLElement | null)?.dataset.section;
+          const playPile = comboSection === "bombs" ? [new Card("2", "♠")] : [];
+          (placeholder as HTMLElement).textContent = this.ui.getCombinationTypeIndicator(combinationType, playPile);
         }
 
         // Render the example
@@ -225,7 +228,7 @@ class Help {
               [state.hand],
             );
             const indicator = isValid
-              ? this.ui.getCombinationTypeIndicator(this.gameClient.getCombinationType(state.selectedCards))
+              ? this.ui.getCombinationTypeIndicator(this.gameClient.getCombinationType(state.selectedCards), this.gameClient.getPlayPile())
               : "❌";
             if (messageContainer) {
               messageContainer.innerHTML = `<p>${isValid ? "Valid" : "Invalid"} combination ${indicator}</p>`;
