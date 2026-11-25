@@ -220,15 +220,14 @@ class Help {
           Card.sort(state.selectedCards);
 
           if (state.selectedCards.length > 0) {
-            const isValid = this.gameClient.isValidPlay(
-              state.selectedCards,
-              this.gameClient.getPlayPile(),
+            const isValid = this.gameClient.isValidPlay(state.selectedCards, this.gameClient.getPlayPile(), state.hand, 1, [
               state.hand,
-              1,
-              [state.hand],
-            );
+            ]);
             const indicator = isValid
-              ? this.ui.getCombinationTypeIndicator(this.gameClient.getCombinationType(state.selectedCards), this.gameClient.getPlayPile())
+              ? this.ui.getCombinationTypeIndicator(
+                  this.gameClient.getCombinationType(state.selectedCards),
+                  this.gameClient.getPlayPile()
+                )
               : "❌";
             if (messageContainer) {
               messageContainer.innerHTML = `<p>${isValid ? "Valid" : "Invalid"} combination ${indicator}</p>`;
@@ -242,7 +241,12 @@ class Help {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  // initialize a new help page
-  new Help();
-});
+if (typeof document !== "undefined") {
+  document.addEventListener("DOMContentLoaded", () => {
+    // initialize a new help page
+    new Help();
+  });
+}
+
+export { Help };
+export default Help;
