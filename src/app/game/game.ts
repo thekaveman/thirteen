@@ -367,6 +367,8 @@ export class Game {
     this.id = crypto.randomUUID();
     this.gameState.numAIPlayers = 0;
     this.gameState.gamesWon = new Array(this.gameState.numPlayers).fill(0);
+    this.gameState.gamesPlayed = new Array(this.gameState.numPlayers).fill(0);
+    this.gameState.gamesResigned = new Array(this.gameState.numPlayers).fill(0);
     this.init();
     this.hooks.onGameReset(new GameClient(this));
   }

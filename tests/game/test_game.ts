@@ -93,11 +93,15 @@ describe("Game", () => {
       const originalGameId = game.id;
       game.gameState.numPlayers = 2;
       game.gameState.gamesWon = [1, 2];
+      game.gameState.gamesPlayed = [5, 3];
+      game.gameState.gamesResigned = [0, 1];
 
       game.reset();
 
       expect(game.id).to.not.equal(originalGameId);
       expect(game.gameState.gamesWon).to.deep.equal([0, 0]);
+      expect(game.gameState.gamesPlayed).to.deep.equal([0, 0]);
+      expect(game.gameState.gamesResigned).to.deep.equal([0, 0]);
       expect(game.gameState.roundNumber).to.equal(1); // Check that init() was called
     });
   });
