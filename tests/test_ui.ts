@@ -77,7 +77,9 @@ describe("UI", () => {
     expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.TRIPLE)).to.equal("\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF");
     expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.STRAIGHT)).to.equal("\uD83E\uDE9C");
     // Four of a Kind without bomb context = 4 card emoji
-    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.FOUR_OF_A_KIND)).to.equal("\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF");
+    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.FOUR_OF_A_KIND)).to.equal(
+      "\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF"
+    );
     expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.CONSECUTIVE_PAIRS)).to.equal("💣");
     expect(ui.getCombinationTypeIndicator("invalid")).to.equal("🟢");
     expect(ui.getCombinationTypeIndicator(null)).to.equal("🟢");
@@ -105,7 +107,9 @@ describe("UI", () => {
 
   it("getCombinationTypeIndicator() should return card emoji for four of a kind in normal context", () => {
     const five = new Card("5", "♠");
-    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.FOUR_OF_A_KIND, [five])).to.equal("\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF");
+    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.FOUR_OF_A_KIND, [five])).to.equal(
+      "\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF"
+    );
   });
 
   it("render() should display all game info correctly", () => {
@@ -246,7 +250,7 @@ describe("UI", () => {
       expect(ui.resetButton.disabled).to.be.false;
     });
 
-    it("should show Start Game, Reset, and AI buttons when game has not started", () => {
+    it("should show Start, Reset, and AI buttons when game has not started", () => {
       game.gameState.gameStarted = false;
       ui.updateButtonStates();
       expect(ui.playButton.style.display).to.equal("none");
@@ -305,6 +309,90 @@ describe("UI", () => {
       expect(ui.addAIPlayerButton.style.display).to.equal("none");
       expect(ui.removeAIPlayerButton.style.display).to.equal("none");
       expect(ui.resetButton.style.display).to.equal("none");
+    });
+
+    it("should show Resign button during human player's turn", () => {
+      game.gameState.gameStarted = true;
+      gameClient.setCurrentPlayer(0);
+      ui.updateButtonStates();
+      expect(ui.resignButton.style.display).to.equal("block");
+    });
+
+    it("should show Resign button during AI player's turn (but disabled)", () => {
+      game.gameState.gameStarted = true;
+      gameClient.setCurrentPlayer(1);
+      ui.updateButtonStates();
+      expect(ui.resignButton.style.display).to.equal("block");
+      expect(ui.resignButton.disabled).to.be.true;
+    });
+
+    it("should hide Resign button when game is over", () => {
+      game.gameState.gameOver = true;
+      ui.updateButtonStates();
+      expect(ui.resignButton.style.display).to.equal("none");
+    });
+
+    it("should hide Resign button when game has not started", () => {
+      game.gameState.gameStarted = false;
+      ui.updateButtonStates();
+      expect(ui.resignButton.style.display).to.equal("none");
+    });
+
+    it("should show Confirm? and disable Play/Pass during resignation confirmation", () => {
+      game.gameState.gameStarted = true;
+      gameClient.setCurrentPlayer(0);
+      game.gameState.resignConfirming = true;
+      ui.updateButtonStates();
+      expect(ui.resignButton.textContent).to.equal("Confirm?");
+      expect(ui.playButton.disabled).to.be.true;
+      expect(ui.passButton.disabled).to.be.true;
+    });
+  });
+
+  describe("Resignation Highlights", () => {
+    beforeEach(() => {
+      gameClient.setCurrentPlayer(0);
+      gameClient.setPlayerHands([[new Card("3", "♠")], [new Card("4", "♦")]]);
+    });
+
+    it("should add 'resigned' class to the resigning player and not 'round-winner'", () => {
+      game.gameState.resigned = true;
+      game.gameState.resignedPlayer = 0;
+      game.gameState.gameOver = true;
+      game.gameState.lastPlayerToPlay = -1;
+
+      ui.updateButtonStates();
+      ui.render();
+
+      const handDiv = document.getElementById("player-hand-0");
+      expect(handDiv.classList.contains("resigned")).to.be.true;
+      expect(handDiv.classList.contains("round-winner")).to.be.false;
+    });
+
+    it("should not add 'resigned' class to non-resigning players", () => {
+      game.gameState.resigned = true;
+      game.gameState.resignedPlayer = 0;
+      game.gameState.gameOver = true;
+
+      ui.updateButtonStates();
+      ui.render();
+
+      const handDiv = document.getElementById("player-hand-1");
+      expect(handDiv.classList.contains("resigned")).to.be.false;
+      expect(handDiv.classList.contains("round-winner")).to.be.false;
+    });
+
+    it("should add 'round-winner' class for normal game-over (not resignation)", () => {
+      game.gameState.resigned = false;
+      game.gameState.gameOver = true;
+      game.gameState.lastPlayerToPlay = 0;
+
+      ui.updateButtonStates();
+      ui.render();
+
+      const handDiv = document.getElementById("player-hand-0");
+      expect(handDiv.classList.contains("round-winner")).to.be.true;
+      expect(handDiv.classList.contains("resigned")).to.be.false;
     });
   });
 

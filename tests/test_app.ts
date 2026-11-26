@@ -613,4 +613,95 @@ describe("App", function () {
       expect(setTimeoutFnStub.getCall(0).args[1]).to.equal(200); // 200ms for passed player
     });
   });
+
+  describe("Resignation", function () {
+    beforeEach(function () {
+      game.loadWillSucceed = false;
+      gameClient.setCurrentPlayer(0); // Human
+    });
+
+    it("handleResignClick() should set resignConfirming to true on first click", async function () {
+      await app.init();
+      game.gameState.resignConfirming = false;
+
+      app.handleResignClick();
+
+      expect(game.gameState.resignConfirming).to.be.true;
+    });
+
+    it("handleResignClick() should call game.resign() when confirming", async function () {
+      await app.init();
+      game.gameState.resignConfirming = true;
+      game.gameState.gamesPlayed = [0, 0];
+      game.gameState.gamesWon = [0, 0];
+      game.gameState.gamesResigned = [0, 0];
+      const resignSpy = this.sandbox.spy(game, "resign");
+
+      app.handleResignClick();
+
+      expect(resignSpy.calledWith(0)).to.be.true;
+      expect(game.gameState.resignConfirming).to.be.false;
+      expect(game.gameState.gameOver).to.be.true;
+      expect(game.gameState.resigned).to.be.true;
+    });
+
+    it("handleResignClick() during confirmation should trigger analytics gameResigned event", async function () {
+      await app.init();
+      game.gameState.resignConfirming = true;
+      game.gameState.gamesPlayed = [0, 0];
+      game.gameState.gamesWon = [0, 0];
+      game.gameState.gamesResigned = [0, 0];
+      const analyticsSpy = this.sandbox.spy(analytics, "gameResigned");
+
+      app.handleResignClick();
+
+      expect(analyticsSpy.called).to.be.true;
+    });
+
+    it("handleCancelClick() during resignation confirmation should cancel without clearing cards", async function () {
+      await app.init();
+      game.gameState.resignConfirming = true;
+      const selectedCards = [new Card("3", "♠"), new Card("4", "♦")];
+      gameClient.toggleCardSelection(selectedCards[0]);
+      gameClient.toggleCardSelection(selectedCards[1]);
+      const clearSelectedSpy = this.sandbox.spy(gameClient, "clearSelectedCards");
+      const resignSpy = this.sandbox.spy(game, "resign");
+
+      ui.emit("cancelClicked");
+
+      expect(game.gameState.resignConfirming).to.be.false;
+      expect(clearSelectedSpy.called).to.be.false;
+      expect(resignSpy.called).to.be.false;
+      // Cards should still be selected
+      expect(gameClient.getSelectedCards()).to.have.lengthOf(2);
+    });
+
+    it("handleCancelClick() normally should still clear selected cards", async function () {
+      await app.init();
+      game.gameState.resignConfirming = false;
+      const selectedCards = [new Card("3", "♠"), new Card("4", "♦")];
+      gameClient.toggleCardSelection(selectedCards[0]);
+      gameClient.toggleCardSelection(selectedCards[1]);
+      const clearSelectedSpy = this.sandbox.spy(gameClient, "clearSelectedCards");
+      const renderSelectedSpy = this.sandbox.spy(ui, "renderSelectedCards");
+
+      ui.emit("cancelClicked");
+
+      expect(clearSelectedSpy.called).to.be.true;
+      expect(renderSelectedSpy.called).to.be.true;
+      expect(gameClient.getSelectedCards()).to.have.lengthOf(0);
+    });
+
+    it("gameResigned should track gamesResigned count on resignation", async function () {
+      await app.init();
+      game.gameState.resignConfirming = true;
+      game.gameState.gamesResigned = [0, 0];
+      game.gameState.gamesPlayed = [0, 0];
+      game.gameState.gamesWon = [0, 0];
+
+      app.handleResignClick();
+
+      expect(game.gameState.gamesResigned[0]).to.equal(1);
+    });
+  });
 });

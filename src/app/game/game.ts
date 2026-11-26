@@ -24,12 +24,16 @@ export interface GameState {
   roundsWon: number[];
   gamesWon: number[];
   gamesPlayed: number[];
+  gamesResigned: number[];
   aiPersonas: (string | null)[];
   gameOver: boolean;
   gameStarted: boolean;
   playerTypes: string[];
   playerPassed: boolean[];
   roundEnded: boolean;
+  resigned: boolean;
+  resignedPlayer: number;
+  resignConfirming: boolean;
 }
 
 export interface GameHooks {
@@ -37,6 +41,7 @@ export interface GameHooks {
   onGameReset: (_gameClient: GameClient) => void;
   onGameStarted: (_gameClient: GameClient) => void;
   onGameWon: (_gameClient: GameClient) => void;
+  onGameResigned: (_gameClient: GameClient) => void;
   onPlayerMoved: (_gameClient: GameClient) => void;
   onPlayerPassed: (_gameClient: GameClient) => void;
   onRoundPlayed: (_gameClient: GameClient) => void;
@@ -71,6 +76,7 @@ export class Game {
       onGameReset: () => {},
       onGameStarted: () => {},
       onGameWon: () => {},
+      onGameResigned: () => {},
       onPlayerMoved: () => {},
       onPlayerPassed: () => {},
       onRoundPlayed: () => {},
@@ -92,12 +98,16 @@ export class Game {
       roundsWon: [],
       gamesWon: [],
       gamesPlayed: [],
+      gamesResigned: [],
       aiPersonas: [],
       gameOver: false,
       gameStarted: false,
       playerTypes: [],
       playerPassed: [],
       roundEnded: false,
+      resigned: false,
+      resignedPlayer: -1,
+      resignConfirming: false,
     };
     this.id = crypto.randomUUID();
     this.rules = new Rules();
@@ -113,9 +123,10 @@ export class Game {
   }
 
   /**
-   * Initializes the game state for a new round or game, preserving cumulative wins and game ID.
+   * Resets all game state flags for a new game.
+   * Called by init() and setPlayers() to ensure fresh state.
    */
-  init(): void {
+  #resetForNewGame(): void {
     this.gameState.currentPlayer = 0;
     this.gameState.currentTurn = 0;
     this.gameState.consecutivePasses = 0;
@@ -124,11 +135,22 @@ export class Game {
     this.gameState.lastPlayerToPlay = -1;
     this.gameState.playPile = [];
     this.gameState.roundNumber = 1;
-    this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
     this.gameState.playerTurns = new Array(this.gameState.numPlayers).fill(0);
     this.gameState.selectedCards = [];
     this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
     this.gameState.roundEnded = false;
+    this.gameState.resigned = false;
+    this.gameState.resignedPlayer = -1;
+    this.gameState.resignConfirming = false;
+  }
+
+  /**
+   * Initializes the game state for a new round or game, preserving cumulative wins and game ID.
+   */
+  init(): void {
+    this.#resetForNewGame();
+    this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
+    this.gameState.gamesResigned = new Array(this.gameState.numPlayers).fill(0);
     this.hooks.onGameInit(new GameClient(this));
   }
 
@@ -345,6 +367,8 @@ export class Game {
     this.id = crypto.randomUUID();
     this.gameState.numAIPlayers = 0;
     this.gameState.gamesWon = new Array(this.gameState.numPlayers).fill(0);
+    this.gameState.gamesPlayed = new Array(this.gameState.numPlayers).fill(0);
+    this.gameState.gamesResigned = new Array(this.gameState.numPlayers).fill(0);
     this.init();
     this.hooks.onGameReset(new GameClient(this));
   }
@@ -381,46 +405,33 @@ export class Game {
 
       const skipDeal = options?.skipDeal ?? false;
       if (!skipDeal) {
-        // For a fresh game, initialize game state fields including empty hands for rendering
+        this.#resizeStatsArray(this.gameState.gamesWon, players.length);
+        this.#resizeStatsArray(this.gameState.gamesPlayed, players.length);
+        this.#resizeStatsArray(this.gameState.gamesResigned, players.length);
+        this.#resetForNewGame();
         this.gameState.playerHands = players.map(() => []);
         this.gameState.roundsWon = new Array(players.length).fill(0);
-        this.gameState.playerPassed = new Array(players.length).fill(false);
-        // Preserve existing wins for current players, reset only for newly added players
-        if (this.gameState.gamesWon.length < players.length) {
-          while (this.gameState.gamesWon.length < players.length) {
-            this.gameState.gamesWon.push(0);
-          }
-        } else if (this.gameState.gamesWon.length > players.length) {
-          this.gameState.gamesWon.length = players.length;
-        } else if (
-          this.gameState.gamesWon.length === 0 &&
-          this.gameState.playerHands.length === 0
-        ) {
-          // Fresh game: gamesWon is empty (e.g., after init()), initialize to zeros
-          this.gameState.gamesWon = new Array(players.length).fill(0);
-        }
-        // Preserve existing gamesPlayed for current players, reset only for newly added players
-        if (this.gameState.gamesPlayed.length < players.length) {
-          while (this.gameState.gamesPlayed.length < players.length) {
-            this.gameState.gamesPlayed.push(0);
-          }
-        } else if (this.gameState.gamesPlayed.length > players.length) {
-          this.gameState.gamesPlayed.length = players.length;
-        } else if (
-          this.gameState.gamesPlayed.length === 0 &&
-          this.gameState.playerHands.length === 0
-        ) {
-          // Fresh game: gamesPlayed is empty (e.g., after init()), initialize to zeros
-          this.gameState.gamesPlayed = new Array(players.length).fill(0);
-        }
       }
       this.save();
     }
   }
 
   /**
-   * Marks the game as started. If not already started, deals cards and finds the starting player.
+   * Resizes a stats array to the target length.
+   * - Grows by pushing zeros if shorter
+   * - Truncates if longer
+   * @param statsArray The stats array to resize.
+   * @param targetLength The target length.
    */
+  #resizeStatsArray(statsArray: number[], targetLength: number): void {
+    if (statsArray.length < targetLength) {
+      while (statsArray.length < targetLength) {
+        statsArray.push(0);
+      }
+    } else if (statsArray.length > targetLength) {
+      statsArray.length = targetLength;
+    }
+  }
   start(): void {
     if (!this.gameState.gameStarted) {
       this.deal();
@@ -450,5 +461,31 @@ export class Game {
     }
     this.save();
     this.hooks.onGameWon(new GameClient(this));
+  }
+
+  /**
+   * Handles a player resignation. Marks the game as over without counting it as a win.
+   * @param playerIndex The index of the resigning player.
+   */
+  resign(playerIndex: number): void {
+    this.gameState.gameOver = true;
+    this.gameState.resigned = true;
+    this.gameState.resignedPlayer = playerIndex;
+    this.gameState.gameStarted = false;
+    // Increment games played for all players (resignation counts as participation)
+    const numPlayers = this.gameState.numPlayers;
+    if (this.gameState.gamesPlayed.length < numPlayers) {
+      this.gameState.gamesPlayed = new Array(numPlayers).fill(0);
+    }
+    for (let i = 0; i < numPlayers; i++) {
+      this.gameState.gamesPlayed[i]++;
+    }
+    // Increment gamesResigned for the resigning player only
+    if (this.gameState.gamesResigned.length < numPlayers) {
+      this.gameState.gamesResigned = new Array(numPlayers).fill(0);
+    }
+    this.gameState.gamesResigned[playerIndex]++;
+    this.save();
+    this.hooks.onGameResigned(new GameClient(this));
   }
 }

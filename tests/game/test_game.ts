@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, it } from "mocha";
 import { expect } from "chai";
+import * as sinon from "sinon";
 import { AI_PERSONAS } from "../../src/app/ai/personas.js";
 import { Card, Game } from "../../src/app/game/index.js";
 import { HumanPlayer, AIPlayer } from "../../src/app/player/index.js";
@@ -18,7 +19,8 @@ describe("Game", () => {
     localStorage.clear();
   });
 
-  describe("Game Setup", () => {
+
+  describe("Initialization", () => {
     it("should initialize with correct default game state", () => {
       expect(game.gameState.numPlayers).to.equal(0);
       expect(game.gameState.playerHands).to.be.an("array").that.is.empty;
@@ -33,7 +35,7 @@ describe("Game", () => {
       expect(game.gameState.gameOver).to.be.false;
     });
 
-    it("init() should reset the game state for a new round", () => {
+    it("init() should reset all game state flags", () => {
       const originalGameId = game.id;
       const originalGamesWon = [1, 1];
       game.gameState.numPlayers = 2;
@@ -49,6 +51,10 @@ describe("Game", () => {
       game.gameState.gamesWon = originalGamesWon;
       game.gameState.gameStarted = true;
       game.gameState.gameOver = true;
+      game.gameState.roundEnded = true;
+      game.gameState.resignConfirming = true;
+      game.gameState.resigned = true;
+      game.gameState.resignedPlayer = 0;
 
       game.init();
 
@@ -65,35 +71,15 @@ describe("Game", () => {
       expect(game.id).to.equal(originalGameId);
       expect(game.gameState.gameStarted).to.be.false;
       expect(game.gameState.gameOver).to.be.false;
-    });
-
-    it("start() should initialize the game state for starting", () => {
-      const players = [
-        new HumanPlayer(new GameClient(game), 0),
-        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
-      ];
-      game.setPlayers(players);
-      game.start();
-
-      expect(game.gameState.gameStarted).to.be.true;
-      expect(game.gameState.currentPlayer).to.be.oneOf([0, 1]);
-      expect(game.gameState.lastPlayerToPlay).to.equal(game.gameState.currentPlayer);
-    });
-
-    it("reset() should completely reset the game", () => {
-      const originalGameId = game.id;
-      game.gameState.numPlayers = 2;
-      game.gameState.gamesWon = [1, 2];
-
-      game.reset();
-
-      expect(game.id).to.not.equal(originalGameId);
-      expect(game.gameState.gamesWon).to.deep.equal([0, 0]);
-      expect(game.gameState.roundNumber).to.equal(1); // Check that init() was called
+      expect(game.gameState.roundEnded).to.be.false;
+      expect(game.gameState.resignConfirming).to.be.false;
+      expect(game.gameState.resigned).to.be.false;
+      expect(game.gameState.resignedPlayer).to.equal(-1);
     });
   });
 
-  describe("Player Management", () => {
+
+  describe("Player Setup", () => {
     it("setPlayers() should initialize players and associated game state", () => {
       const players = [
         new HumanPlayer(new GameClient(game), 0),
@@ -157,6 +143,37 @@ describe("Game", () => {
       expect(game.gameState.playPile).to.have.lengthOf(1);
     });
 
+    it("should save numAIPlayers and aiPersonas in setPlayers()", () => {
+      game.gameState.numPlayers = 2;
+      game.gameState.players = [
+        new HumanPlayer(new GameClient(game), 0),
+        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], AI_PERSONAS.random.name)),
+      ];
+
+      game.setPlayers(game.gameState.players);
+
+      expect(game.gameState.numAIPlayers).to.equal(1);
+      expect(game.gameState.aiPersonas).to.have.lengthOf(1);
+      expect(game.gameState.aiPersonas[0]).to.equal(AI_PERSONAS.random.name);
+    });
+
+    it("should save multiple AI personas in setPlayers()", () => {
+      const aiPlayers = [
+        new AIPlayer(new GameClient(game), 0, new MockAI(new GameClient(game), [], AI_PERSONAS.random.name)),
+        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], AI_PERSONAS.aggressive.name)),
+        new AIPlayer(new GameClient(game), 2, new MockAI(new GameClient(game), [], AI_PERSONAS.conservative.name)),
+      ];
+      const players = [new HumanPlayer(new GameClient(game), 0), ...aiPlayers];
+      game.setPlayers(players);
+
+      expect(game.gameState.numAIPlayers).to.equal(3);
+      expect(game.gameState.aiPersonas).to.deep.equal([
+        AI_PERSONAS.random.name,
+        AI_PERSONAS.aggressive.name,
+        AI_PERSONAS.conservative.name,
+      ]);
+    });
+
     it("start() should deal cards and find starting player", () => {
       const players = [
         new HumanPlayer(new GameClient(game), 0),
@@ -174,160 +191,39 @@ describe("Game", () => {
       expect(game.gameState.gameStarted).to.be.true;
     });
 
-    it("load() should reset localStorage if version is outdated", async () => {
-      // Save a state with an old version
-      const oldState = {
-        id: "test-id",
-        deck: { cards: [] },
-        gameState: { version: "0.0.0", numPlayers: 2, numAIPlayers: 0, players: [], playerHands: [], playerTurns: [], playPile: [], currentPlayer: 0, currentTurn: 0, selectedCards: [], consecutivePasses: 0, lastPlayerToPlay: -1, roundNumber: 1, roundsWon: [], gamesWon: [], gamesPlayed: [], aiPersonas: [], gameOver: false, gameStarted: false, playerTypes: [], playerPassed: [], roundEnded: false },
-        stateKey: `${Game.STATE_KEY}-tests`,
-      };
-      localStorage.setItem(`${Game.STATE_KEY}-tests`, JSON.stringify(oldState));
+    it("start() should initialize the game state for starting", () => {
+      const players = [
+        new HumanPlayer(new GameClient(game), 0),
+        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
+      ];
+      game.setPlayers(players);
+      game.start();
 
-      const loadResult = await game.load(new MockUI());
-
-      expect(loadResult.loaded).to.be.false;
-      expect(localStorage.getItem(`${Game.STATE_KEY}-tests`)).to.be.null;
-    });
-
-    it("load() should succeed when version matches", async () => {
-      // Save a state with the current version
-      const state = {
-        id: "test-id",
-        deck: { cards: [] },
-        gameState: { ...game.gameState, version: Game.VERSION, players: [], playerHands: [], playPile: [], selectedCards: [], roundsWon: [], gamesWon: [], gamesPlayed: [] },
-        stateKey: `${Game.STATE_KEY}-tests`,
-      };
-      localStorage.setItem(`${Game.STATE_KEY}-tests`, JSON.stringify(state));
-
-      const loadResult = await game.load(new MockUI());
-
-      expect(loadResult.loaded).to.be.true;
-    });
-
-    it("load() should reset localStorage if no version field exists", async () => {
-      // Save a state without a version field (completely old save)
-      const oldState = {
-        id: "test-id",
-        deck: { cards: [] },
-        gameState: { numPlayers: 2, numAIPlayers: 0, players: [], playerHands: [], playerTurns: [], playPile: [], currentPlayer: 0, currentTurn: 0, selectedCards: [], consecutivePasses: 0, lastPlayerToPlay: -1, roundNumber: 1, roundsWon: [], gamesWon: [], gamesPlayed: [], aiPersonas: [], gameOver: false, gameStarted: false, playerTypes: [], playerPassed: [], roundEnded: false },
-        stateKey: `${Game.STATE_KEY}-tests`,
-      };
-      localStorage.setItem(`${Game.STATE_KEY}-tests`, JSON.stringify(oldState));
-
-      const loadResult = await game.load(new MockUI());
-
-      expect(loadResult.loaded).to.be.false;
-      expect(localStorage.getItem(`${Game.STATE_KEY}-tests`)).to.be.null;
+      expect(game.gameState.gameStarted).to.be.true;
+      expect(game.gameState.currentPlayer).to.be.oneOf([0, 1]);
+      expect(game.gameState.lastPlayerToPlay).to.equal(game.gameState.currentPlayer);
     });
   });
 
-  describe("Gameplay Logic", () => {
-    it("nextPlayer() should cycle through players", () => {
+
+  describe("Reset", () => {
+    it("reset() should completely reset the game", () => {
+      const originalGameId = game.id;
       game.gameState.numPlayers = 2;
-      game.gameState.currentPlayer = 0;
-      game.nextPlayer();
-      expect(game.gameState.currentPlayer).to.equal(1);
-      game.nextPlayer();
-      expect(game.gameState.currentPlayer).to.equal(0);
-    });
+      game.gameState.gamesWon = [1, 2];
+      game.gameState.gamesPlayed = [5, 3];
+      game.gameState.gamesResigned = [0, 1];
 
-    it("passTurn() should not be allowed on the first play of a round", () => {
-      game.gameState.playPile = [];
-      const originalState = { ...game.gameState };
-      const passSuccessful = game.passTurn();
-      expect(passSuccessful).to.be.false;
-      expect(game.gameState.currentPlayer).to.equal(originalState.currentPlayer);
-      expect(game.gameState.consecutivePasses).to.equal(originalState.consecutivePasses);
-    });
+      game.reset();
 
-    it("passTurn() should increment passes and switch player", () => {
-      game.gameState.numPlayers = 3;
-      game.gameState.currentPlayer = 0;
-      game.gameState.consecutivePasses = 0;
-      game.gameState.playPile = [new Card("3", "♠")];
-      game.gameState.selectedCards = [new Card("A", "♠")];
-
-      const passSuccessful = game.passTurn();
-
-      expect(passSuccessful).to.be.true;
-      expect(game.gameState.currentPlayer).to.equal(1);
-      expect(game.gameState.selectedCards).to.be.empty;
-      expect(game.gameState.consecutivePasses).to.equal(1);
-    });
-
-    it("passTurn() should end the round when all other players have passed", () => {
-      game.gameState.numPlayers = 3;
-      game.gameState.currentPlayer = 2;
-      game.gameState.lastPlayerToPlay = 1;
-      game.gameState.consecutivePasses = 0;
-      game.gameState.roundNumber = 1;
-      game.gameState.roundsWon = [0, 0, 0];
-      game.gameState.playPile = [new Card("A", "♠")];
-      // Player 0 already passed, player 2 (current) is now passing
-      game.gameState.playerPassed = [true, false, false];
-
-      game.passTurn();
-
-      expect(game.gameState.playPile).to.be.empty;
-      expect(game.gameState.currentPlayer).to.equal(1);
-      expect(game.gameState.roundNumber).to.equal(2);
-      expect(game.gameState.roundsWon[1]).to.equal(1);
-    });
-
-    it("playCards() should update game state correctly", () => {
-      game.gameState.currentPlayer = 0;
-      game.gameState.numPlayers = 2;
-      const cardToPlay = new Card("4", "♠");
-      game.gameState.playerHands = [[cardToPlay, new Card("5", "♠")], []];
-      game.gameState.selectedCards = [cardToPlay];
-      game.gameState.playPile = [];
-      game.gameState.currentTurn = 1;
-      game.gameState.consecutivePasses = 1;
-
-      game.playCards();
-
-      expect(game.gameState.playerHands[0]).to.have.lengthOf(1);
-      expect(game.gameState.playPile).to.have.lengthOf(1);
-      expect(game.gameState.playPile[0].value).to.equal(Card.getValue("4", "♠"));
-      expect(game.gameState.selectedCards).to.be.empty;
-      expect(game.gameState.currentPlayer).to.equal(1);
-      expect(game.gameState.consecutivePasses).to.equal(0);
-      expect(game.gameState.lastPlayerToPlay).to.equal(0);
-      expect(game.gameState.gameOver).to.be.false;
-    });
-
-    it("playCards() should end the game when a player plays their last card", () => {
-      game.gameState.currentPlayer = 0;
-      game.gameState.numPlayers = 2;
-      const cardToPlay = new Card("4", "♠");
-      game.gameState.playerHands = [[cardToPlay], []];
-      game.gameState.selectedCards = [cardToPlay];
-      game.gameState.gamesWon = [0, 0];
-
-      game.playCards();
-
-      expect(game.gameState.gameOver).to.be.true;
-      expect(game.gameState.gamesWon[0]).to.equal(1);
-    });
-
-    it("win() should update game state correctly", () => {
-      game.gameState.numPlayers = 2;
-      game.gameState.currentPlayer = 0;
-      game.gameState.gamesWon = [0, 0];
-      game.gameState.roundsWon = [0, 0];
-      game.gameState.playPile = [new Card("A", "♠")];
-      game.gameState.gameStarted = true;
-
-      game.win();
-
-      expect(game.gameState.gameOver).to.be.true;
-      expect(game.gameState.gameStarted).to.be.false;
-      expect(game.gameState.gamesWon[0]).to.equal(1);
-      expect(game.gameState.roundsWon[0]).to.equal(1);
-      expect(game.gameState.playPile).to.have.lengthOf(1);
+      expect(game.id).to.not.equal(originalGameId);
+      expect(game.gameState.gamesWon).to.deep.equal([0, 0]);
+      expect(game.gameState.gamesPlayed).to.deep.equal([0, 0]);
+      expect(game.gameState.gamesResigned).to.deep.equal([0, 0]);
+      expect(game.gameState.roundNumber).to.equal(1); // Check that init() was called
     });
   });
+
 
   describe("Save and Load", () => {
     it("save() should save the game state to localStorage", () => {
@@ -404,8 +300,23 @@ describe("Game", () => {
       game.gameState.gameStarted = true;
 
       // Simulate mid-game: player 0 has 5 cards, player 1 has 8 cards, playPile has 2 cards
-      game.gameState.playerHands[0] = [new Card("K", "♠"), new Card("Q", "♦"), new Card("J", "♣"), new Card("10", "♥"), new Card("9", "♠")];
-      game.gameState.playerHands[1] = [new Card("A", "♠"), new Card("2", "♦"), new Card("3", "♥"), new Card("4", "♣"), new Card("5", "♠"), new Card("6", "♦"), new Card("7", "♥"), new Card("8", "♣")];
+      game.gameState.playerHands[0] = [
+        new Card("K", "♠"),
+        new Card("Q", "♦"),
+        new Card("J", "♣"),
+        new Card("10", "♥"),
+        new Card("9", "♠"),
+      ];
+      game.gameState.playerHands[1] = [
+        new Card("A", "♠"),
+        new Card("2", "♦"),
+        new Card("3", "♥"),
+        new Card("4", "♣"),
+        new Card("5", "♠"),
+        new Card("6", "♦"),
+        new Card("7", "♥"),
+        new Card("8", "♣"),
+      ];
       game.gameState.playPile = [new Card("3", "♠"), new Card("3", "♦")];
       game.gameState.lastPlayerToPlay = 0;
       game.gameState.currentPlayer = 1;
@@ -458,9 +369,268 @@ describe("Game", () => {
       expect(loaded.loaded).to.be.true;
       expect(newGame.gameState.playerPassed).to.deep.equal([false, false, false]);
     });
+
+    it("load() should reset localStorage if version is outdated", async () => {
+      // Save a state with an old version
+      const oldState = {
+        id: "test-id",
+        deck: { cards: [] },
+        gameState: {
+          version: "0.0.0",
+          numPlayers: 2,
+          numAIPlayers: 0,
+          players: [],
+          playerHands: [],
+          playerTurns: [],
+          playPile: [],
+          currentPlayer: 0,
+          currentTurn: 0,
+          selectedCards: [],
+          consecutivePasses: 0,
+          lastPlayerToPlay: -1,
+          roundNumber: 1,
+          roundsWon: [],
+          gamesWon: [],
+          gamesPlayed: [],
+          aiPersonas: [],
+          gameOver: false,
+          gameStarted: false,
+          playerTypes: [],
+          playerPassed: [],
+          roundEnded: false,
+        },
+        stateKey: `${Game.STATE_KEY}-tests`,
+      };
+      localStorage.setItem(`${Game.STATE_KEY}-tests`, JSON.stringify(oldState));
+
+      const loadResult = await game.load(new MockUI());
+
+      expect(loadResult.loaded).to.be.false;
+      expect(localStorage.getItem(`${Game.STATE_KEY}-tests`)).to.be.null;
+    });
+
+    it("load() should succeed when version matches", async () => {
+      // Save a state with the current version
+      const state = {
+        id: "test-id",
+        deck: { cards: [] },
+        gameState: {
+          ...game.gameState,
+          version: Game.VERSION,
+          players: [],
+          playerHands: [],
+          playPile: [],
+          selectedCards: [],
+          roundsWon: [],
+          gamesWon: [],
+          gamesPlayed: [],
+        },
+        stateKey: `${Game.STATE_KEY}-tests`,
+      };
+      localStorage.setItem(`${Game.STATE_KEY}-tests`, JSON.stringify(state));
+
+      const loadResult = await game.load(new MockUI());
+
+      expect(loadResult.loaded).to.be.true;
+    });
+
+    it("load() should reset localStorage if no version field exists", async () => {
+      // Save a state without a version field (completely old save)
+      const oldState = {
+        id: "test-id",
+        deck: { cards: [] },
+        gameState: {
+          numPlayers: 2,
+          numAIPlayers: 0,
+          players: [],
+          playerHands: [],
+          playerTurns: [],
+          playPile: [],
+          currentPlayer: 0,
+          currentTurn: 0,
+          selectedCards: [],
+          consecutivePasses: 0,
+          lastPlayerToPlay: -1,
+          roundNumber: 1,
+          roundsWon: [],
+          gamesWon: [],
+          gamesPlayed: [],
+          aiPersonas: [],
+          gameOver: false,
+          gameStarted: false,
+          playerTypes: [],
+          playerPassed: [],
+          roundEnded: false,
+        },
+        stateKey: `${Game.STATE_KEY}-tests`,
+      };
+      localStorage.setItem(`${Game.STATE_KEY}-tests`, JSON.stringify(oldState));
+
+      const loadResult = await game.load(new MockUI());
+
+      expect(loadResult.loaded).to.be.false;
+      expect(localStorage.getItem(`${Game.STATE_KEY}-tests`)).to.be.null;
+    });
   });
 
-  describe("Player Passed Tracking", () => {
+
+  describe("Gameplay", () => {
+    it("nextPlayer() should cycle through players", () => {
+      game.gameState.numPlayers = 2;
+      game.gameState.currentPlayer = 0;
+      game.nextPlayer();
+      expect(game.gameState.currentPlayer).to.equal(1);
+      game.nextPlayer();
+      expect(game.gameState.currentPlayer).to.equal(0);
+    });
+
+    it("passTurn() should not be allowed on the first play of a round", () => {
+      game.gameState.playPile = [];
+      const originalState = { ...game.gameState };
+      const passSuccessful = game.passTurn();
+      expect(passSuccessful).to.be.false;
+      expect(game.gameState.currentPlayer).to.equal(originalState.currentPlayer);
+      expect(game.gameState.consecutivePasses).to.equal(originalState.consecutivePasses);
+    });
+
+    it("passTurn() should increment passes and switch player", () => {
+      game.gameState.numPlayers = 3;
+      game.gameState.currentPlayer = 0;
+      game.gameState.consecutivePasses = 0;
+      game.gameState.playPile = [new Card("3", "♠")];
+      game.gameState.selectedCards = [new Card("A", "♠")];
+
+      const passSuccessful = game.passTurn();
+
+      expect(passSuccessful).to.be.true;
+      expect(game.gameState.currentPlayer).to.equal(1);
+      expect(game.gameState.selectedCards).to.be.empty;
+      expect(game.gameState.consecutivePasses).to.equal(1);
+    });
+
+    it("playCards() should update game state correctly", () => {
+      game.gameState.currentPlayer = 0;
+      game.gameState.numPlayers = 2;
+      const cardToPlay = new Card("4", "♠");
+      game.gameState.playerHands = [[cardToPlay, new Card("5", "♠")], []];
+      game.gameState.selectedCards = [cardToPlay];
+      game.gameState.playPile = [];
+      game.gameState.currentTurn = 1;
+      game.gameState.consecutivePasses = 1;
+
+      game.playCards();
+
+      expect(game.gameState.playerHands[0]).to.have.lengthOf(1);
+      expect(game.gameState.playPile).to.have.lengthOf(1);
+      expect(game.gameState.playPile[0].value).to.equal(Card.getValue("4", "♠"));
+      expect(game.gameState.selectedCards).to.be.empty;
+      expect(game.gameState.currentPlayer).to.equal(1);
+      expect(game.gameState.consecutivePasses).to.equal(0);
+      expect(game.gameState.lastPlayerToPlay).to.equal(0);
+      expect(game.gameState.gameOver).to.be.false;
+    });
+
+    it("playCards() should end the game when a player plays their last card", () => {
+      game.gameState.currentPlayer = 0;
+      game.gameState.numPlayers = 2;
+      const cardToPlay = new Card("4", "♠");
+      game.gameState.playerHands = [[cardToPlay], []];
+      game.gameState.selectedCards = [cardToPlay];
+      game.gameState.gamesWon = [0, 0];
+
+      game.playCards();
+
+      expect(game.gameState.gameOver).to.be.true;
+      expect(game.gameState.gamesWon[0]).to.equal(1);
+    });
+
+    it("win() should update game state correctly", () => {
+      game.gameState.numPlayers = 2;
+      game.gameState.currentPlayer = 0;
+      game.gameState.gamesWon = [0, 0];
+      game.gameState.roundsWon = [0, 0];
+      game.gameState.playPile = [new Card("A", "♠")];
+      game.gameState.gameStarted = true;
+
+      game.win();
+
+      expect(game.gameState.gameOver).to.be.true;
+      expect(game.gameState.gameStarted).to.be.false;
+      expect(game.gameState.gamesWon[0]).to.equal(1);
+      expect(game.gameState.roundsWon[0]).to.equal(1);
+      expect(game.gameState.playPile).to.have.lengthOf(1);
+    });
+
+    // roundEnded flag behavior
+
+    describe("roundEnded flag", () => {
+      it("should be initialized to false", function () {
+        expect(game.gameState.roundEnded).to.be.false;
+      });
+
+      it("should be set to true when round ends via play (all others passed)", function () {
+        const aiPlayers = [new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock"))];
+        const players = [new HumanPlayer(new GameClient(game), 0), ...aiPlayers];
+        game.setPlayers(players);
+        game.gameState.lastPlayerToPlay = 0;
+        // Must set playerPassed AFTER setPlayers() since it resets playerPassed
+        game.gameState.playerPassed = [false, true];
+        game.gameState.numPlayers = 2;
+
+        game.playCards();
+
+        expect(game.gameState.roundEnded).to.be.true;
+      });
+
+      it("should be set to true when round ends via pass (all others passed)", function () {
+        const aiPlayers = [new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock"))];
+        const players = [new HumanPlayer(new GameClient(game), 0), ...aiPlayers];
+        game.setPlayers(players);
+        game.gameState.lastPlayerToPlay = 0;
+        game.gameState.playPile = [new Card("A", "♠")];
+        // Player 1 must have passed BEFORE player 0's pass ends the round
+        game.gameState.playerPassed[1] = true;
+
+        game.passTurn();
+
+        expect(game.gameState.roundEnded).to.be.true;
+      });
+
+      it("should be set to true when a player wins the game (plays last card)", function () {
+        const aiPlayers = [new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock"))];
+        const players = [new HumanPlayer(new GameClient(game), 0), ...aiPlayers];
+        game.setPlayers(players);
+        game.gameState.lastPlayerToPlay = 0;
+        game.gameState.playerHands = [[], []]; // Both players have 0 cards
+        game.gameState.selectedCards = [];
+
+        game.playCards();
+
+        expect(game.gameState.roundEnded).to.be.true;
+        expect(game.gameState.gameOver).to.be.true;
+      });
+
+      it("should skip past passed players in the while loop when 3+ players", function () {
+        // Set up a 3-player game state directly without using setPlayers(deal)
+        // since MockDeck only deals 2 hands
+        game.gameState.numPlayers = 3;
+        game.gameState.playerPassed = [false, true, false];
+        game.gameState.lastPlayerToPlay = 0;
+        game.gameState.consecutivePasses = 0;
+        game.gameState.selectedCards = [];
+        // Give player 0 some cards so they don't auto-win
+        game.gameState.playerHands = [[new Card("3", "♠"), new Card("4", "♦")], [new Card("5", "♣")], [new Card("6", "♥")]];
+
+        game.playCards();
+
+        // The while loop should skip player 1 (passed) and land on player 2 (not passed)
+        expect(game.gameState.currentPlayer).to.equal(2);
+      });
+    });
+  });
+
+
+  describe("Turn Order & Passing", () => {
     beforeEach(() => {
       game.gameState.numPlayers = 3;
       game.gameState.players = [
@@ -513,6 +683,20 @@ describe("Game", () => {
       // Cards should NOT have been played (state unchanged)
       expect(game.gameState.playerHands[0]).to.have.lengthOf(1);
       expect(game.gameState.selectedCards).to.have.lengthOf(1);
+    });
+
+    it("nextRound() should clear all playerPassed values", () => {
+      game.init();
+      game.gameState.currentPlayer = 0;
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.roundNumber = 1;
+      game.gameState.playerPassed = [true, false, true];
+      game.gameState.playPile = [new Card("A", "♠")];
+
+      game.nextRound();
+
+      expect(game.gameState.playerPassed).to.deep.equal([false, false, false]);
+      expect(game.gameState.playPile).to.be.empty;
     });
 
     it("should end the round when all non-passed players except lastPlayerToPlay have passed", () => {
@@ -576,20 +760,6 @@ describe("Game", () => {
       expect(game.gameState.roundNumber).to.equal(2);
       expect(game.gameState.roundsWon[0]).to.equal(1);
       expect(game.gameState.currentPlayer).to.equal(0);
-    });
-
-    it("nextRound() should clear all playerPassed values", () => {
-      game.init();
-      game.gameState.currentPlayer = 0;
-      game.gameState.lastPlayerToPlay = 0;
-      game.gameState.roundNumber = 1;
-      game.gameState.playerPassed = [true, false, true];
-      game.gameState.playPile = [new Card("A", "♠")];
-
-      game.nextRound();
-
-      expect(game.gameState.playerPassed).to.deep.equal([false, false, false]);
-      expect(game.gameState.playPile).to.be.empty;
     });
 
     it("should work correctly with 2 players (1+1 mode)", () => {
@@ -819,233 +989,269 @@ describe("Game", () => {
     });
   });
 
-  describe("gamesWon multi-player", () => {
+
+  describe("Game Statistics", () => {
+    describe("gamesWon", () => {
+      beforeEach(() => {
+        game.gameState.numPlayers = 2;
+        game.gameState.players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
+      });
+
+      it("should preserve gamesWon when setPlayers is called with same player count", () => {
+        const originalGamesWon = [3, 2];
+        game.gameState.gamesWon = originalGamesWon;
+
+        const players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
+        game.setPlayers(players);
+
+        // gamesWon should be preserved (same count)
+        expect(game.gameState.gamesWon).to.deep.equal(originalGamesWon);
+      });
+
+      it("should preserve gamesWon for existing players when adding a player", () => {
+        game.gameState.gamesWon = [3, 2];
+        game.gameState.numPlayers = 2;
+
+        const players = [
+          new HumanPlayer(new GameClient(game), 0),
+          new HumanPlayer(new GameClient(game), 1),
+          new HumanPlayer(new GameClient(game), 2),
+        ];
+        game.setPlayers(players);
+
+        // Existing player wins preserved, new player starts at 0
+        expect(game.gameState.gamesWon).to.deep.equal([3, 2, 0]);
+      });
+
+      it("should truncate gamesWon when removing a player", () => {
+        game.gameState.gamesWon = [3, 2, 1];
+        game.gameState.numPlayers = 3;
+
+        const players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
+        game.setPlayers(players);
+
+        // Truncate to remove the last player's wins
+        expect(game.gameState.gamesWon).to.deep.equal([3, 2]);
+      });
+
+      it("should initialize gamesWon with correct size for 4 players", () => {
+        const players = [
+          new HumanPlayer(new GameClient(game), 0),
+          new HumanPlayer(new GameClient(game), 1),
+          new HumanPlayer(new GameClient(game), 2),
+          new HumanPlayer(new GameClient(game), 3),
+        ];
+        game.setPlayers(players);
+
+        expect(game.gameState.gamesWon).to.have.lengthOf(4);
+        expect(game.gameState.gamesWon).to.deep.equal([0, 0, 0, 0]);
+      });
+    });
+
+    describe("gamesPlayed", () => {
+      it("should increment gamesPlayed for all players when a game ends", () => {
+        const players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
+        game.setPlayers(players);
+        game.start();
+        game.win();
+
+        expect(game.gameState.gamesPlayed).to.deep.equal([1, 1]);
+      });
+
+      it("should preserve gamesPlayed across new games", () => {
+        const players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
+        game.setPlayers(players);
+        game.start();
+        game.win();
+        game.init(); // Simulate new game
+        game.start();
+        game.win();
+
+        // gamesPlayed should be preserved (not reset by init)
+        expect(game.gameState.gamesPlayed).to.deep.equal([2, 2]);
+      });
+
+      it("should increment gamesPlayed for all players on each completed game", () => {
+        const players = [
+          new HumanPlayer(new GameClient(game), 0),
+          new HumanPlayer(new GameClient(game), 1),
+          new HumanPlayer(new GameClient(game), 2),
+        ];
+        game.setPlayers(players);
+
+        // Complete 3 games: start -> win -> init -> start -> win -> init -> start -> win
+        game.start();
+        game.win();
+        game.init();
+        game.start();
+        game.win();
+        game.init();
+        game.start();
+        game.win();
+
+        // All 3 players increment on each of the 3 completed games
+        expect(game.gameState.gamesPlayed).to.deep.equal([3, 3, 3]);
+      });
+
+      it("should preserve gamesPlayed when adding a player", () => {
+        game.gameState.gamesPlayed = [5, 3];
+
+        const players = [
+          new HumanPlayer(new GameClient(game), 0),
+          new HumanPlayer(new GameClient(game), 1),
+          new HumanPlayer(new GameClient(game), 2),
+        ];
+        game.setPlayers(players);
+
+        // Existing player wins preserved, new player starts at 0
+        expect(game.gameState.gamesPlayed).to.deep.equal([5, 3, 0]);
+      });
+
+      it("should truncate gamesPlayed when removing a player", () => {
+        game.gameState.gamesPlayed = [5, 3, 1];
+
+        const players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
+        game.setPlayers(players);
+
+        // Truncate to remove the last player's count
+        expect(game.gameState.gamesPlayed).to.deep.equal([5, 3]);
+      });
+    });
+
+    describe("gamesResigned", () => {
+      it("should initialize gamesResigned array in init()", () => {
+        game.gameState.numPlayers = 2;
+        game.init();
+
+        expect(game.gameState.gamesResigned).to.be.an("array").that.has.lengthOf(2);
+        expect(game.gameState.gamesResigned).to.deep.equal([0, 0]);
+      });
+
+      it("should initialize gamesResigned array in setPlayers()", () => {
+        const players = [
+          new HumanPlayer(new GameClient(game), 0),
+          new HumanPlayer(new GameClient(game), 1),
+        ];
+        game.setPlayers(players);
+
+        expect(game.gameState.gamesResigned).to.be.an("array").that.has.lengthOf(2);
+        expect(game.gameState.gamesResigned).to.deep.equal([0, 0]);
+      });
+    });
+  });
+
+
+  describe("Resignation", () => {
+    let sandbox;
+
     beforeEach(() => {
+      sandbox = sinon.createSandbox();
       game.gameState.numPlayers = 2;
       game.gameState.players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
+      game.setPlayers(game.gameState.players);
+      game.gameState.gamesPlayed = [0, 0];
     });
 
-    it("should preserve gamesWon when setPlayers is called with same player count", () => {
-      const originalGamesWon = [3, 2];
-      game.gameState.gamesWon = originalGamesWon;
-
-      const players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
-      game.setPlayers(players);
-
-      // gamesWon should be preserved (same count)
-      expect(game.gameState.gamesWon).to.deep.equal(originalGamesWon);
+    afterEach(() => {
+      sandbox.restore();
     });
 
-    it("should preserve gamesWon for existing players when adding a player", () => {
-      game.gameState.gamesWon = [3, 2];
-      game.gameState.numPlayers = 2;
+    it("should initialize resigned to false in init()", () => {
+      game.init();
 
-      const players = [
-        new HumanPlayer(new GameClient(game), 0),
-        new HumanPlayer(new GameClient(game), 1),
-        new HumanPlayer(new GameClient(game), 2),
-      ];
-      game.setPlayers(players);
-
-      // Existing player wins preserved, new player starts at 0
-      expect(game.gameState.gamesWon).to.deep.equal([3, 2, 0]);
+      expect(game.gameState.resigned).to.be.false;
     });
 
-    it("should truncate gamesWon when removing a player", () => {
-      game.gameState.gamesWon = [3, 2, 1];
-      game.gameState.numPlayers = 3;
+    it("resign() should set gameOver and resigned to true", () => {
+      game.init();
+      game.gameState.currentPlayer = 0;
+      game.gameState.gamesPlayed = [1, 1];
 
-      const players = [
-        new HumanPlayer(new GameClient(game), 0),
-        new HumanPlayer(new GameClient(game), 1),
-      ];
-      game.setPlayers(players);
+      game.resign(0);
 
-      // Truncate to remove the last player's wins
-      expect(game.gameState.gamesWon).to.deep.equal([3, 2]);
+      expect(game.gameState.gameOver).to.be.true;
+      expect(game.gameState.resigned).to.be.true;
     });
 
-    it("should initialize gamesWon with correct size for 4 players", () => {
-      const players = [
-        new HumanPlayer(new GameClient(game), 0),
-        new HumanPlayer(new GameClient(game), 1),
-        new HumanPlayer(new GameClient(game), 2),
-        new HumanPlayer(new GameClient(game), 3),
-      ];
-      game.setPlayers(players);
+    it("resign() should increment gamesPlayed for all players but NOT gamesWon", () => {
+      game.init();
+      game.gameState.currentPlayer = 0;
+      game.gameState.gamesPlayed = [1, 1];
+      game.gameState.gamesWon = [2, 1];
 
-      expect(game.gameState.gamesWon).to.have.lengthOf(4);
-      expect(game.gameState.gamesWon).to.deep.equal([0, 0, 0, 0]);
-    });
-  });
+      game.resign(0);
 
-  describe("gamesPlayed", () => {
-    it("should increment gamesPlayed for all players when a game ends", () => {
-      const players = [
-        new HumanPlayer(new GameClient(game), 0),
-        new HumanPlayer(new GameClient(game), 1),
-      ];
-      game.setPlayers(players);
-      game.start();
-      game.win();
-
-      expect(game.gameState.gamesPlayed).to.deep.equal([1, 1]);
-    });
-
-    it("should preserve gamesPlayed across new games", () => {
-      const players = [
-        new HumanPlayer(new GameClient(game), 0),
-        new HumanPlayer(new GameClient(game), 1),
-      ];
-      game.setPlayers(players);
-      game.start();
-      game.win();
-      game.init(); // Simulate new game
-      game.start();
-      game.win();
-
-      // gamesPlayed should be preserved (not reset by init)
       expect(game.gameState.gamesPlayed).to.deep.equal([2, 2]);
+      expect(game.gameState.gamesWon).to.deep.equal([2, 1]);
     });
 
-    it("should increment gamesPlayed for all players on each completed game", () => {
-      const players = [
-        new HumanPlayer(new GameClient(game), 0),
-        new HumanPlayer(new GameClient(game), 1),
-        new HumanPlayer(new GameClient(game), 2),
-      ];
-      game.setPlayers(players);
-
-      // Complete 3 games: start -> win -> init -> start -> win -> init -> start -> win
-      game.start();
-      game.win();
+    it("resign() should increment gamesResigned for the resigning player", () => {
       game.init();
-      game.start();
-      game.win();
+      game.gameState.currentPlayer = 0;
+      game.gameState.gamesResigned = [0, 0];
+
+      game.resign(0);
+
+      expect(game.gameState.gamesResigned).to.deep.equal([1, 0]);
+    });
+
+    it("resign() should trigger onGameResigned hook", () => {
       game.init();
-      game.start();
-      game.win();
+      game.gameState.currentPlayer = 0;
+      const hookSpy = sandbox.spy(game.hooks, "onGameResigned");
 
-      // All 3 players increment on each of the 3 completed games
-      expect(game.gameState.gamesPlayed).to.deep.equal([3, 3, 3]);
+      game.resign(0);
+
+      expect(hookSpy.called).to.be.true;
     });
 
-    it("should preserve gamesPlayed when adding a player", () => {
-      game.gameState.gamesPlayed = [5, 3];
+    it("resign() should save to localStorage", () => {
+      const saveSpy = sandbox.spy(game, "save");
+      game.gameState.currentPlayer = 0;
 
-      const players = [
-        new HumanPlayer(new GameClient(game), 0),
-        new HumanPlayer(new GameClient(game), 1),
-        new HumanPlayer(new GameClient(game), 2),
-      ];
-      game.setPlayers(players);
+      game.resign(0);
 
-      // Existing player wins preserved, new player starts at 0
-      expect(game.gameState.gamesPlayed).to.deep.equal([5, 3, 0]);
+      expect(saveSpy.called).to.be.true;
     });
 
-    it("should truncate gamesPlayed when removing a player", () => {
-      game.gameState.gamesPlayed = [5, 3, 1];
+    it("setPlayers() should reset resignConfirming to false", () => {
+      game.gameState.resignConfirming = true;
 
-      const players = [
-        new HumanPlayer(new GameClient(game), 0),
-        new HumanPlayer(new GameClient(game), 1),
-      ];
-      game.setPlayers(players);
-
-      // Truncate to remove the last player's count
-      expect(game.gameState.gamesPlayed).to.deep.equal([5, 3]);
-    });
-  });
-
-  describe("AI configuration", () => {
-    beforeEach(() => {
-      game.gameState.numPlayers = 2;
-      game.gameState.players = [
-        new HumanPlayer(new GameClient(game), 0),
-        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], AI_PERSONAS.random.name)),
-      ];
-    });
-
-    it("should save numAIPlayers and aiPersonas in setPlayers()", () => {
       game.setPlayers(game.gameState.players);
 
-      expect(game.gameState.numAIPlayers).to.equal(1);
-      expect(game.gameState.aiPersonas).to.have.lengthOf(1);
-      expect(game.gameState.aiPersonas[0]).to.equal(AI_PERSONAS.random.name);
+      expect(game.gameState.resignConfirming).to.be.false;
     });
 
-    it("should save multiple AI personas in setPlayers()", () => {
-      const aiPlayers = [
-        new AIPlayer(new GameClient(game), 0, new MockAI(new GameClient(game), [], AI_PERSONAS.random.name)),
-        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], AI_PERSONAS.aggressive.name)),
-        new AIPlayer(new GameClient(game), 2, new MockAI(new GameClient(game), [], AI_PERSONAS.conservative.name)),
-      ];
-      const players = [new HumanPlayer(new GameClient(game), 0), ...aiPlayers];
-      game.setPlayers(players);
+    describe("defensive array initialization", () => {
+      beforeEach(() => {
+        // Set up game state directly without calling setPlayers/init
+        game.gameState.numPlayers = 2;
+        game.gameState.players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
+        game.gameState.gamesResigned = [];
+        game.gameState.gamesPlayed = [];
+      });
 
-      expect(game.gameState.numAIPlayers).to.equal(3);
-      expect(game.gameState.aiPersonas).to.deep.equal([AI_PERSONAS.random.name, AI_PERSONAS.aggressive.name, AI_PERSONAS.conservative.name]);
-    });
-  });
+      it("resign() should grow gamesPlayed when shorter than numPlayers", () => {
+        game.resign(0);
 
-  describe("roundEnded Flag", function () {
-    it("should be initialized to false", function () {
-      expect(game.gameState.roundEnded).to.be.false;
-    });
+        expect(game.gameState.gamesPlayed).to.have.lengthOf(2);
+        expect(game.gameState.gamesPlayed).to.deep.equal([1, 1]);
+      });
 
-    it("should be set to true when round ends via play (all others passed)", function () {
-      const aiPlayers = [
-        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
-      ];
-      const players = [new HumanPlayer(new GameClient(game), 0), ...aiPlayers];
-      game.setPlayers(players);
-      game.gameState.lastPlayerToPlay = 0;
-      // Must set playerPassed AFTER setPlayers() since it resets playerPassed
-      game.gameState.playerPassed = [false, true];
-      game.gameState.numPlayers = 2;
+      it("resign() should grow gamesResigned when shorter than numPlayers", () => {
+        game.resign(0);
 
-      game.playCards();
+        expect(game.gameState.gamesResigned).to.have.lengthOf(2);
+        expect(game.gameState.gamesResigned).to.deep.equal([1, 0]);
+      });
 
-      expect(game.gameState.roundEnded).to.be.true;
-    });
+      it("resign() should work with pre-sized gamesPlayed but not gamesResigned", () => {
+        game.gameState.gamesPlayed = [0, 0];
+        game.resign(0);
 
-    it("should be set to true when round ends via pass (all others passed)", function () {
-      const aiPlayers = [
-        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
-      ];
-      const players = [new HumanPlayer(new GameClient(game), 0), ...aiPlayers];
-      game.setPlayers(players);
-      game.gameState.lastPlayerToPlay = 0;
-      game.gameState.playPile = [new Card("A", "♠")];
-      // Player 1 must have passed BEFORE player 0's pass ends the round
-      game.gameState.playerPassed[1] = true;
-
-      game.passTurn();
-
-      expect(game.gameState.roundEnded).to.be.true;
-    });
-
-    it("should be set to true when a player wins the game (plays last card)", function () {
-      const aiPlayers = [
-        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
-      ];
-      const players = [new HumanPlayer(new GameClient(game), 0), ...aiPlayers];
-      game.setPlayers(players);
-      game.gameState.lastPlayerToPlay = 0;
-      game.gameState.playerHands = [[], []]; // Both players have 0 cards
-      game.gameState.selectedCards = [];
-
-      game.playCards();
-
-      expect(game.gameState.roundEnded).to.be.true;
-      expect(game.gameState.gameOver).to.be.true;
-    });
-
-    it("should be reset to false when init() is called", function () {
-      game.gameState.roundEnded = true;
-      game.init();
-      expect(game.gameState.roundEnded).to.be.false;
+        expect(game.gameState.gamesPlayed).to.deep.equal([1, 1]);
+        expect(game.gameState.gamesResigned).to.deep.equal([1, 0]);
+      });
     });
   });
 });

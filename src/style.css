@@ -20,12 +20,16 @@
   --color-info-background: #d4edda;
   --color-info-text: #155724;
   --color-info-border: #c3e6cb;
+  --color-resign-background: #f5f0b8;
+  --color-resign-text: #5a5a2e;
+  --color-resign-border: #e8d96a;
   --color-disabled-background: #cccccc;
   --color-disabled-text: #666666;
   --color-disabled-border: #cccccc;
   --color-play-button: #4caf50;
   --color-pass-button: #f44336;
   --color-new-game-button: #008cba;
+  --color-resign-button: #e8d96a;
 
   /* Spacing */
   --spacing-xxs: 3px;
@@ -187,6 +191,13 @@ h2 {
   transition: background-color 0.3s ease;
 }
 
+/* Resigned yellow highlight */
+.player-hand.resigned {
+  border: 2px solid #c8b830;
+  background-color: rgba(232, 217, 106, 0.25);
+  transition: background-color 0.3s ease;
+}
+
 .games-counter {
   position: absolute;
   bottom: var(--spacing-s);
@@ -328,6 +339,12 @@ combination-type {
   border: 1px solid var(--color-info-border);
 }
 
+#game-messages.resign {
+  background-color: var(--color-resign-background);
+  color: var(--color-resign-text);
+  border: 1px solid var(--color-resign-border);
+}
+
 #controls {
   position: fixed;
   bottom: 64px;
@@ -370,6 +387,12 @@ button:hover {
   background-color: var(--color-pass-button);
   color: var(--color-white);
   border-color: var(--color-pass-button);
+}
+
+#resign-button {
+  background-color: var(--color-resign-button);
+  color: var(--color-darker-gray);
+  border-color: var(--color-resign-button);
 }
 
 #new-game-button {
@@ -707,8 +730,15 @@ button:disabled,
 }
 
 @media (min-width: 992px) {
+  #game-container {
+    height: 100vh;
+    height: 100dvh;
+  }
+
   #game-board {
-    flex-grow: initial;
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 150px;
   }
 
   .player-hand {
@@ -723,15 +753,17 @@ button:disabled,
   }
 
   #controls {
-    position: static;
-    box-shadow: none;
+    position: fixed;
+    bottom: 40px;
+    left: 0;
+    right: 0;
     justify-content: center;
     gap: var(--spacing-l);
     width: auto;
-    margin-top: var(--spacing-l);
-    padding: 0;
-    z-index: auto;
-    bottom: auto;
+    padding: var(--spacing-s) var(--spacing-l);
+    z-index: 1000;
+    background-color: var(--color-light-gray);
+    box-shadow: 0 -2px 5px var(--color-shadow-light);
   }
 
   #controls button {
