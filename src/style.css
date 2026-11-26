@@ -730,8 +730,15 @@ button:disabled,
 }
 
 @media (min-width: 992px) {
+  #game-container {
+    height: 100vh;
+    height: 100dvh;
+  }
+
   #game-board {
-    flex-grow: initial;
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 150px;
   }
 
   .player-hand {
@@ -746,15 +753,17 @@ button:disabled,
   }
 
   #controls {
-    position: static;
-    box-shadow: none;
+    position: fixed;
+    bottom: 40px;
+    left: 0;
+    right: 0;
     justify-content: center;
     gap: var(--spacing-l);
     width: auto;
-    margin-top: var(--spacing-l);
-    padding: 0;
-    z-index: auto;
-    bottom: auto;
+    padding: var(--spacing-s) var(--spacing-l);
+    z-index: 1000;
+    background-color: var(--color-light-gray);
+    box-shadow: 0 -2px 5px var(--color-shadow-light);
   }
 
   #controls button {
