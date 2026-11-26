@@ -1,4 +1,5 @@
 import { Analytics } from "../src/app/analytics.js";
+import { AI_PERSONAS } from "../src/app/ai/personas.js";
 import { HumanPlayer, AIPlayer, PLAYER_TYPES } from "../src/app/player/index.js";
 import { MockDeck, MockUI, MockAmplitude, MockAI, MockGame } from "./mocks.ts";
 import { GameClient } from "../src/app/game/index.js";
@@ -85,7 +86,7 @@ describe("Analytics", () => {
     const mockAIPlayer = {
       id: "ai-player-1",
       type: PLAYER_TYPES.AI,
-      persona: "random",
+      persona: AI_PERSONAS.random.name,
       data: () => ({ some: "ai data" }),
       gameClient: { id: "test-game" },
     };

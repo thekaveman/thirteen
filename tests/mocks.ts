@@ -1,4 +1,5 @@
 import { AI } from "../src/app/ai/index.js";
+import { AI_PERSONAS } from "../src/app/ai/personas.js";
 import { Card, Game, GameClient } from "../src/app/game/index.js";
 import { Player, PLAYER_TYPES, createPlayer } from "../src/app/player/index.js";
 import { UI } from "../src/app/ui.js";
@@ -354,7 +355,7 @@ export class MockUI {
     this.resetButton = { style: { display: "" } };
     this.addAIPlayerButton = { style: { display: "block" } };
     this.removeAIPlayerButton = { style: { display: "block" } };
-    this.aiDropdown = { value: "random" };
+    this.aiDropdown = { value: AI_PERSONAS.random.name };
     this.gameMessages = { textContent: "", classList: { add: () => {}, remove: () => {} } };
     this.playersHands = { innerHTML: "", appendChild: () => {} };
     this.playArea = { innerHTML: "", appendChild: () => {} };
