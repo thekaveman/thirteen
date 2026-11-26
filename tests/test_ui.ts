@@ -77,7 +77,9 @@ describe("UI", () => {
     expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.TRIPLE)).to.equal("\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF");
     expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.STRAIGHT)).to.equal("\uD83E\uDE9C");
     // Four of a Kind without bomb context = 4 card emoji
-    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.FOUR_OF_A_KIND)).to.equal("\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF");
+    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.FOUR_OF_A_KIND)).to.equal(
+      "\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF"
+    );
     expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.CONSECUTIVE_PAIRS)).to.equal("💣");
     expect(ui.getCombinationTypeIndicator("invalid")).to.equal("🟢");
     expect(ui.getCombinationTypeIndicator(null)).to.equal("🟢");
@@ -105,7 +107,9 @@ describe("UI", () => {
 
   it("getCombinationTypeIndicator() should return card emoji for four of a kind in normal context", () => {
     const five = new Card("5", "♠");
-    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.FOUR_OF_A_KIND, [five])).to.equal("\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF");
+    expect(ui.getCombinationTypeIndicator(COMBINATION_TYPES.FOUR_OF_A_KIND, [five])).to.equal(
+      "\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF\u200D\uD83C\uDCCF"
+    );
   });
 
   it("render() should display all game info correctly", () => {
@@ -246,7 +250,7 @@ describe("UI", () => {
       expect(ui.resetButton.disabled).to.be.false;
     });
 
-    it("should show Start Game, Reset, and AI buttons when game has not started", () => {
+    it("should show Start, Reset, and AI buttons when game has not started", () => {
       game.gameState.gameStarted = false;
       ui.updateButtonStates();
       expect(ui.playButton.style.display).to.equal("none");
@@ -348,10 +352,7 @@ describe("UI", () => {
   describe("Resignation Highlights", () => {
     beforeEach(() => {
       gameClient.setCurrentPlayer(0);
-      gameClient.setPlayerHands([
-        [new Card("3", "♠")],
-        [new Card("4", "♦")],
-      ]);
+      gameClient.setPlayerHands([[new Card("3", "♠")], [new Card("4", "♦")]]);
     });
 
     it("should add 'resigned' class to the resigning player and not 'round-winner'", () => {
