@@ -63,6 +63,10 @@ export class MockAnalytics {
     this.events.push({ eventType: "game_won", gameClient });
   }
 
+  gameResigned(gameClient) {
+    this.events.push({ eventType: "game_resigned", gameClient });
+  }
+
   roundPlayed(gameClient) {
     this.events.push({ eventType: "round_played", gameClient });
   }
@@ -205,6 +209,7 @@ export class MockGame extends Game {
     this.playCardsCalled = false;
     this.passTurnCalled = false;
     this.initCalled = false;
+    this.resignCalled = false;
     this.resetCalled = false;
     this.saveCalled = false;
     this.startCalled = false;
@@ -213,6 +218,7 @@ export class MockGame extends Game {
     this.onGameResetCalled = false;
     this.onGameStartedCalled = false;
     this.onGameWonCalled = false;
+    this.onGameResignedCalled = false;
     this.onPlayerMovedCalled = false;
     this.onPlayerPassedCalled = false;
     this.onRoundPlayedCalled = false;
@@ -232,6 +238,9 @@ export class MockGame extends Game {
       },
       onGameWon: (_gameClient) => {
         this.onGameWonCalled = true;
+      },
+      onGameResigned: (_gameClient) => {
+        this.onGameResignedCalled = true;
       },
       onPlayerMoved: (_gameClient) => {
         this.onPlayerMovedCalled = true;

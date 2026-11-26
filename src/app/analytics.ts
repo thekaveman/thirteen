@@ -170,6 +170,17 @@ export class Analytics {
   }
 
   /**
+   * Tracks the game resigned event.
+   * @param gameClient The game instance sending this event.
+   */
+  gameResigned(gameClient: GameClient): void {
+    this.#send("game_resigned", gameClient, {
+      id: gameClient.getId(),
+      round: gameClient.getRoundNumber(),
+    });
+  }
+
+  /**
    * Tracks the player moved event.
    * @param gameClient The game instance sending this event.
    */

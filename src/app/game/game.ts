@@ -41,6 +41,7 @@ export interface GameHooks {
   onGameReset: (_gameClient: GameClient) => void;
   onGameStarted: (_gameClient: GameClient) => void;
   onGameWon: (_gameClient: GameClient) => void;
+  onGameResigned: (_gameClient: GameClient) => void;
   onPlayerMoved: (_gameClient: GameClient) => void;
   onPlayerPassed: (_gameClient: GameClient) => void;
   onRoundPlayed: (_gameClient: GameClient) => void;
@@ -75,6 +76,7 @@ export class Game {
       onGameReset: () => {},
       onGameStarted: () => {},
       onGameWon: () => {},
+      onGameResigned: () => {},
       onPlayerMoved: () => {},
       onPlayerPassed: () => {},
       onRoundPlayed: () => {},
@@ -482,5 +484,6 @@ export class Game {
     }
     this.gameState.gamesResigned[playerIndex]++;
     this.save();
+    this.hooks.onGameResigned(new GameClient(this));
   }
 }

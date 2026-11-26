@@ -25,6 +25,7 @@ export class GameClient {
     gameReset: (_gc: GameClient) => void;
     gameStarted: (_gc: GameClient) => void;
     gameWon: (_gc: GameClient) => void;
+    gameResigned: (_gc: GameClient) => void;
     playerMoved: (_gc: GameClient) => void;
     playerPassed: (_gc: GameClient) => void;
     roundPlayed: (_gc: GameClient) => void;
@@ -34,6 +35,7 @@ export class GameClient {
       onGameReset: () => analytics.gameReset(this),
       onGameStarted: () => analytics.gameStarted(this),
       onGameWon: () => analytics.gameWon(this),
+      onGameResigned: () => analytics.gameResigned(this),
       onPlayerMoved: () => analytics.playerMoved(this),
       onPlayerPassed: () => analytics.playerPassed(this),
       onRoundPlayed: () => analytics.roundPlayed(this),
@@ -486,5 +488,13 @@ export class GameClient {
    */
   win(): void {
     this.game.win();
+  }
+
+  /**
+   * Handles a player resignation.
+   * @param playerIndex The index of the resigning player.
+   */
+  resign(playerIndex: number): void {
+    this.game.resign(playerIndex);
   }
 }
