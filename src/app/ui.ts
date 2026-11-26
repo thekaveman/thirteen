@@ -351,7 +351,7 @@ export class UI {
       dropdown.value = currentAIPersona;
       description.textContent = AI_PERSONAS[currentAIPersona]?.description ?? "";
     } else {
-      dropdown.value = "random";
+      dropdown.value = AI_PERSONAS.random.name;
       description.textContent = AI_PERSONAS.random.description;
     }
   }

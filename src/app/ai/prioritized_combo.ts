@@ -18,6 +18,9 @@ export class PrioritizedComboAI extends ComboAI {
 
   /**
    * Selects a strategy from the available strategies based on priority.
+   * Uses findAllValidMoves() directly to avoid redundant computation
+   * that would occur if we called takeTurn() (which internally calls
+   * findAllValidMoves() again).
    * @param playerHand The AI player's hand.
    * @param playPile The current play pile.
    * @param currentTurn The current turn number.
@@ -26,8 +29,8 @@ export class PrioritizedComboAI extends ComboAI {
    */
   select(playerHand: Card[], playPile: Card[], currentTurn: number, allPlayerHands: Card[][]): AI | null {
     for (const strategy of this.strategies) {
-      const move = strategy.takeTurn(playerHand, playPile, currentTurn, allPlayerHands);
-      if (move && move.length > 0) {
+      const validMoves = strategy.findAllValidMoves(playerHand, playPile, currentTurn, allPlayerHands);
+      if (validMoves.length > 0) {
         return strategy;
       }
     }

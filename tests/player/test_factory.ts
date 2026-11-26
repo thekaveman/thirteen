@@ -1,4 +1,5 @@
 import { Deck, Game, GameClient } from "../../src/app/game/index.js";
+import { AI_PERSONAS } from "../../src/app/ai/personas.js";
 import { createPlayer, HumanPlayer, AIPlayer, PLAYER_TYPES } from "../../src/app/player/index.js";
 
 describe("Player Factory", () => {
@@ -25,13 +26,13 @@ describe("Player Factory", () => {
   it("should create an AIPlayer with a valid persona", async () => {
     const player = await createPlayer({
       type: PLAYER_TYPES.AI,
-      persona: "random",
+      persona: AI_PERSONAS.random.name,
       gameClient: gameClient,
       number: 1,
     });
     expect(player).to.be.an.instanceOf(AIPlayer);
     expect(player.type).to.equal(PLAYER_TYPES.AI);
-    expect(player.ai.type).to.equal("random");
+    expect(player.ai.type).to.equal(AI_PERSONAS.random.name);
     expect(player.number).to.equal(1);
   });
 

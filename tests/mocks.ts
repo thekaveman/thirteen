@@ -1,4 +1,5 @@
 import { AI } from "../src/app/ai/index.js";
+import { AI_PERSONAS } from "../src/app/ai/personas.js";
 import { Card, Game, GameClient } from "../src/app/game/index.js";
 import { Player, PLAYER_TYPES, createPlayer } from "../src/app/player/index.js";
 import { UI } from "../src/app/ui.js";
@@ -76,9 +77,13 @@ export class MockAnalytics {
 }
 
 export class MockAI extends AI {
+  move: Card[] | undefined;
+  validMoves: Card[][] | undefined;
+
   constructor(gameClient, move, persona = null) {
     super(gameClient, "mock", persona);
     this.move = move;
+    this.validMoves = undefined;
     this.takeTurnCalled = false;
   }
 
@@ -108,6 +113,17 @@ export class MockAI extends AI {
     }
 
     // Otherwise, simulate a pass for default behavior in tests
+    return [];
+  }
+
+  findAllValidMoves(_hand, _playPile, _currentTurn, _allPlayerHands) {
+    if (this.validMoves !== undefined) {
+      return this.validMoves;
+    }
+    // Default: return a move if set, otherwise empty
+    if (this.move && this.move.length > 0) {
+      return [this.move];
+    }
     return [];
   }
 }
@@ -339,7 +355,7 @@ export class MockUI {
     this.resetButton = { style: { display: "" } };
     this.addAIPlayerButton = { style: { display: "block" } };
     this.removeAIPlayerButton = { style: { display: "block" } };
-    this.aiDropdown = { value: "random" };
+    this.aiDropdown = { value: AI_PERSONAS.random.name };
     this.gameMessages = { textContent: "", classList: { add: () => {}, remove: () => {} } };
     this.playersHands = { innerHTML: "", appendChild: () => {} };
     this.playArea = { innerHTML: "", appendChild: () => {} };

@@ -61,7 +61,7 @@ export class App {
     this.ui.on("removeAIPlayerClicked", () => this.handleRemoveAIPlayerClick());
     this.ui.on("cardClicked", (card: unknown) => this.handleCardClick(card as Card));
 
-    this.selectedAI = "random";
+    this.selectedAI = AI_PERSONAS.random.name;
     this.aiPlayers = [];
     this.numAIPlayers = 1;
   }
@@ -86,7 +86,7 @@ export class App {
       gameClient: this.gameClient,
       type: PLAYER_TYPES.AI,
       number: this.numAIPlayers,
-      persona: "random",
+      persona: AI_PERSONAS.random.name,
       id: crypto.randomUUID(),
     });
     this.aiPlayers.push(aiPlayer);
@@ -301,7 +301,7 @@ export class App {
           gameClient: this.gameClient,
           type: PLAYER_TYPES.AI,
           number: i + 1,
-          persona: persona || "random",
+          persona: persona || AI_PERSONAS.random.name,
           id: crypto.randomUUID(),
         });
         this.aiPlayers.push(aiPlayer);
@@ -323,7 +323,7 @@ export class App {
 
       this.aiPlayers = [];
       for (let i = 0; i < this.numAIPlayers; i++) {
-        const persona = aiPersonas[i] || "random";
+        const persona = aiPersonas[i] || AI_PERSONAS.random.name;
         const aiPlayer = await createPlayer({
           gameClient: this.gameClient,
           type: PLAYER_TYPES.AI,
@@ -339,7 +339,7 @@ export class App {
         gameClient: this.gameClient,
         type: PLAYER_TYPES.AI,
         number: 1,
-        persona: "random",
+        persona: AI_PERSONAS.random.name,
         id: crypto.randomUUID(),
       });
       this.aiPlayers = [aiPlayer];
