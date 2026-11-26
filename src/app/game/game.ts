@@ -113,9 +113,10 @@ export class Game {
   }
 
   /**
-   * Initializes the game state for a new round or game, preserving cumulative wins and game ID.
+   * Resets all game state flags for a new game.
+   * Called by init() and setPlayers() to ensure fresh state.
    */
-  init(): void {
+  #resetForNewGame(): void {
     this.gameState.currentPlayer = 0;
     this.gameState.currentTurn = 0;
     this.gameState.consecutivePasses = 0;
@@ -124,11 +125,18 @@ export class Game {
     this.gameState.lastPlayerToPlay = -1;
     this.gameState.playPile = [];
     this.gameState.roundNumber = 1;
-    this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
     this.gameState.playerTurns = new Array(this.gameState.numPlayers).fill(0);
     this.gameState.selectedCards = [];
     this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
     this.gameState.roundEnded = false;
+  }
+
+  /**
+   * Initializes the game state for a new round or game, preserving cumulative wins and game ID.
+   */
+  init(): void {
+    this.#resetForNewGame();
+    this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
     this.hooks.onGameInit(new GameClient(this));
   }
 
@@ -381,46 +389,32 @@ export class Game {
 
       const skipDeal = options?.skipDeal ?? false;
       if (!skipDeal) {
-        // For a fresh game, initialize game state fields including empty hands for rendering
+        this.#resizeStatsArray(this.gameState.gamesWon, players.length);
+        this.#resizeStatsArray(this.gameState.gamesPlayed, players.length);
+        this.#resetForNewGame();
         this.gameState.playerHands = players.map(() => []);
         this.gameState.roundsWon = new Array(players.length).fill(0);
-        this.gameState.playerPassed = new Array(players.length).fill(false);
-        // Preserve existing wins for current players, reset only for newly added players
-        if (this.gameState.gamesWon.length < players.length) {
-          while (this.gameState.gamesWon.length < players.length) {
-            this.gameState.gamesWon.push(0);
-          }
-        } else if (this.gameState.gamesWon.length > players.length) {
-          this.gameState.gamesWon.length = players.length;
-        } else if (
-          this.gameState.gamesWon.length === 0 &&
-          this.gameState.playerHands.length === 0
-        ) {
-          // Fresh game: gamesWon is empty (e.g., after init()), initialize to zeros
-          this.gameState.gamesWon = new Array(players.length).fill(0);
-        }
-        // Preserve existing gamesPlayed for current players, reset only for newly added players
-        if (this.gameState.gamesPlayed.length < players.length) {
-          while (this.gameState.gamesPlayed.length < players.length) {
-            this.gameState.gamesPlayed.push(0);
-          }
-        } else if (this.gameState.gamesPlayed.length > players.length) {
-          this.gameState.gamesPlayed.length = players.length;
-        } else if (
-          this.gameState.gamesPlayed.length === 0 &&
-          this.gameState.playerHands.length === 0
-        ) {
-          // Fresh game: gamesPlayed is empty (e.g., after init()), initialize to zeros
-          this.gameState.gamesPlayed = new Array(players.length).fill(0);
-        }
       }
       this.save();
     }
   }
 
   /**
-   * Marks the game as started. If not already started, deals cards and finds the starting player.
+   * Resizes a stats array to the target length.
+   * - Grows by pushing zeros if shorter
+   * - Truncates if longer
+   * @param statsArray The stats array to resize.
+   * @param targetLength The target length.
    */
+  #resizeStatsArray(statsArray: number[], targetLength: number): void {
+    if (statsArray.length < targetLength) {
+      while (statsArray.length < targetLength) {
+        statsArray.push(0);
+      }
+    } else if (statsArray.length > targetLength) {
+      statsArray.length = targetLength;
+    }
+  }
   start(): void {
     if (!this.gameState.gameStarted) {
       this.deal();

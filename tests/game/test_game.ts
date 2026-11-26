@@ -33,7 +33,7 @@ describe("Game", () => {
       expect(game.gameState.gameOver).to.be.false;
     });
 
-    it("init() should reset the game state for a new round", () => {
+    it("init() should reset all game state flags", () => {
       const originalGameId = game.id;
       const originalGamesWon = [1, 1];
       game.gameState.numPlayers = 2;
@@ -49,6 +49,7 @@ describe("Game", () => {
       game.gameState.gamesWon = originalGamesWon;
       game.gameState.gameStarted = true;
       game.gameState.gameOver = true;
+      game.gameState.roundEnded = true;
 
       game.init();
 
@@ -65,6 +66,7 @@ describe("Game", () => {
       expect(game.id).to.equal(originalGameId);
       expect(game.gameState.gameStarted).to.be.false;
       expect(game.gameState.gameOver).to.be.false;
+      expect(game.gameState.roundEnded).to.be.false;
     });
 
     it("start() should initialize the game state for starting", () => {
@@ -179,7 +181,30 @@ describe("Game", () => {
       const oldState = {
         id: "test-id",
         deck: { cards: [] },
-        gameState: { version: "0.0.0", numPlayers: 2, numAIPlayers: 0, players: [], playerHands: [], playerTurns: [], playPile: [], currentPlayer: 0, currentTurn: 0, selectedCards: [], consecutivePasses: 0, lastPlayerToPlay: -1, roundNumber: 1, roundsWon: [], gamesWon: [], gamesPlayed: [], aiPersonas: [], gameOver: false, gameStarted: false, playerTypes: [], playerPassed: [], roundEnded: false },
+        gameState: {
+          version: "0.0.0",
+          numPlayers: 2,
+          numAIPlayers: 0,
+          players: [],
+          playerHands: [],
+          playerTurns: [],
+          playPile: [],
+          currentPlayer: 0,
+          currentTurn: 0,
+          selectedCards: [],
+          consecutivePasses: 0,
+          lastPlayerToPlay: -1,
+          roundNumber: 1,
+          roundsWon: [],
+          gamesWon: [],
+          gamesPlayed: [],
+          aiPersonas: [],
+          gameOver: false,
+          gameStarted: false,
+          playerTypes: [],
+          playerPassed: [],
+          roundEnded: false,
+        },
         stateKey: `${Game.STATE_KEY}-tests`,
       };
       localStorage.setItem(`${Game.STATE_KEY}-tests`, JSON.stringify(oldState));
@@ -195,7 +220,17 @@ describe("Game", () => {
       const state = {
         id: "test-id",
         deck: { cards: [] },
-        gameState: { ...game.gameState, version: Game.VERSION, players: [], playerHands: [], playPile: [], selectedCards: [], roundsWon: [], gamesWon: [], gamesPlayed: [] },
+        gameState: {
+          ...game.gameState,
+          version: Game.VERSION,
+          players: [],
+          playerHands: [],
+          playPile: [],
+          selectedCards: [],
+          roundsWon: [],
+          gamesWon: [],
+          gamesPlayed: [],
+        },
         stateKey: `${Game.STATE_KEY}-tests`,
       };
       localStorage.setItem(`${Game.STATE_KEY}-tests`, JSON.stringify(state));
@@ -210,7 +245,29 @@ describe("Game", () => {
       const oldState = {
         id: "test-id",
         deck: { cards: [] },
-        gameState: { numPlayers: 2, numAIPlayers: 0, players: [], playerHands: [], playerTurns: [], playPile: [], currentPlayer: 0, currentTurn: 0, selectedCards: [], consecutivePasses: 0, lastPlayerToPlay: -1, roundNumber: 1, roundsWon: [], gamesWon: [], gamesPlayed: [], aiPersonas: [], gameOver: false, gameStarted: false, playerTypes: [], playerPassed: [], roundEnded: false },
+        gameState: {
+          numPlayers: 2,
+          numAIPlayers: 0,
+          players: [],
+          playerHands: [],
+          playerTurns: [],
+          playPile: [],
+          currentPlayer: 0,
+          currentTurn: 0,
+          selectedCards: [],
+          consecutivePasses: 0,
+          lastPlayerToPlay: -1,
+          roundNumber: 1,
+          roundsWon: [],
+          gamesWon: [],
+          gamesPlayed: [],
+          aiPersonas: [],
+          gameOver: false,
+          gameStarted: false,
+          playerTypes: [],
+          playerPassed: [],
+          roundEnded: false,
+        },
         stateKey: `${Game.STATE_KEY}-tests`,
       };
       localStorage.setItem(`${Game.STATE_KEY}-tests`, JSON.stringify(oldState));
@@ -404,8 +461,23 @@ describe("Game", () => {
       game.gameState.gameStarted = true;
 
       // Simulate mid-game: player 0 has 5 cards, player 1 has 8 cards, playPile has 2 cards
-      game.gameState.playerHands[0] = [new Card("K", "♠"), new Card("Q", "♦"), new Card("J", "♣"), new Card("10", "♥"), new Card("9", "♠")];
-      game.gameState.playerHands[1] = [new Card("A", "♠"), new Card("2", "♦"), new Card("3", "♥"), new Card("4", "♣"), new Card("5", "♠"), new Card("6", "♦"), new Card("7", "♥"), new Card("8", "♣")];
+      game.gameState.playerHands[0] = [
+        new Card("K", "♠"),
+        new Card("Q", "♦"),
+        new Card("J", "♣"),
+        new Card("10", "♥"),
+        new Card("9", "♠"),
+      ];
+      game.gameState.playerHands[1] = [
+        new Card("A", "♠"),
+        new Card("2", "♦"),
+        new Card("3", "♥"),
+        new Card("4", "♣"),
+        new Card("5", "♠"),
+        new Card("6", "♦"),
+        new Card("7", "♥"),
+        new Card("8", "♣"),
+      ];
       game.gameState.playPile = [new Card("3", "♠"), new Card("3", "♦")];
       game.gameState.lastPlayerToPlay = 0;
       game.gameState.currentPlayer = 1;
@@ -855,10 +927,7 @@ describe("Game", () => {
       game.gameState.gamesWon = [3, 2, 1];
       game.gameState.numPlayers = 3;
 
-      const players = [
-        new HumanPlayer(new GameClient(game), 0),
-        new HumanPlayer(new GameClient(game), 1),
-      ];
+      const players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
       game.setPlayers(players);
 
       // Truncate to remove the last player's wins
@@ -881,10 +950,7 @@ describe("Game", () => {
 
   describe("gamesPlayed", () => {
     it("should increment gamesPlayed for all players when a game ends", () => {
-      const players = [
-        new HumanPlayer(new GameClient(game), 0),
-        new HumanPlayer(new GameClient(game), 1),
-      ];
+      const players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
       game.setPlayers(players);
       game.start();
       game.win();
@@ -893,10 +959,7 @@ describe("Game", () => {
     });
 
     it("should preserve gamesPlayed across new games", () => {
-      const players = [
-        new HumanPlayer(new GameClient(game), 0),
-        new HumanPlayer(new GameClient(game), 1),
-      ];
+      const players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
       game.setPlayers(players);
       game.start();
       game.win();
@@ -947,10 +1010,7 @@ describe("Game", () => {
     it("should truncate gamesPlayed when removing a player", () => {
       game.gameState.gamesPlayed = [5, 3, 1];
 
-      const players = [
-        new HumanPlayer(new GameClient(game), 0),
-        new HumanPlayer(new GameClient(game), 1),
-      ];
+      const players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
       game.setPlayers(players);
 
       // Truncate to remove the last player's count
@@ -985,7 +1045,13 @@ describe("Game", () => {
       game.setPlayers(players);
 
       expect(game.gameState.numAIPlayers).to.equal(3);
-      expect(game.gameState.aiPersonas).to.deep.equal([AI_PERSONAS.random.name, AI_PERSONAS.aggressive.name, AI_PERSONAS.conservative.name]);
+      expect(game.gameState.aiPersonas).to.deep.equal([
+        AI_PERSONAS.random.name,
+        AI_PERSONAS.aggressive.name,
+        AI_PERSONAS.conservative.name,
+      ]);
+    });
+  });
     });
   });
 
@@ -995,9 +1061,7 @@ describe("Game", () => {
     });
 
     it("should be set to true when round ends via play (all others passed)", function () {
-      const aiPlayers = [
-        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
-      ];
+      const aiPlayers = [new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock"))];
       const players = [new HumanPlayer(new GameClient(game), 0), ...aiPlayers];
       game.setPlayers(players);
       game.gameState.lastPlayerToPlay = 0;
@@ -1011,9 +1075,7 @@ describe("Game", () => {
     });
 
     it("should be set to true when round ends via pass (all others passed)", function () {
-      const aiPlayers = [
-        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
-      ];
+      const aiPlayers = [new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock"))];
       const players = [new HumanPlayer(new GameClient(game), 0), ...aiPlayers];
       game.setPlayers(players);
       game.gameState.lastPlayerToPlay = 0;
@@ -1027,9 +1089,7 @@ describe("Game", () => {
     });
 
     it("should be set to true when a player wins the game (plays last card)", function () {
-      const aiPlayers = [
-        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock")),
-      ];
+      const aiPlayers = [new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "mock"))];
       const players = [new HumanPlayer(new GameClient(game), 0), ...aiPlayers];
       game.setPlayers(players);
       game.gameState.lastPlayerToPlay = 0;
@@ -1040,6 +1100,23 @@ describe("Game", () => {
 
       expect(game.gameState.roundEnded).to.be.true;
       expect(game.gameState.gameOver).to.be.true;
+    });
+
+    it("should skip past passed players in the while loop when 3+ players", function () {
+      // Set up a 3-player game state directly without using setPlayers(deal)
+      // since MockDeck only deals 2 hands
+      game.gameState.numPlayers = 3;
+      game.gameState.playerPassed = [false, true, false];
+      game.gameState.lastPlayerToPlay = 0;
+      game.gameState.consecutivePasses = 0;
+      game.gameState.selectedCards = [];
+      // Give player 0 some cards so they don't auto-win
+      game.gameState.playerHands = [[new Card("3", "♠"), new Card("4", "♦")], [new Card("5", "♣")], [new Card("6", "♥")]];
+
+      game.playCards();
+
+      // The while loop should skip player 1 (passed) and land on player 2 (not passed)
+      expect(game.gameState.currentPlayer).to.equal(2);
     });
 
     it("should be reset to false when init() is called", function () {
