@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import { AI_PERSONAS } from "../src/app/ai/personas.js";
 import { afterEach, beforeEach, describe } from "mocha";
 import * as sinon from "sinon";
 import { App } from "../src/app/app.js";
@@ -79,7 +80,7 @@ describe("App", function () {
       // Pre-set AI configuration on the game state so getNumAIPlayers/getAIPersonas
       // return the expected values when init() calls them
       game.gameState.numAIPlayers = 2;
-      game.gameState.aiPersonas = ["aggressive", "cautious"];
+      game.gameState.aiPersonas = [AI_PERSONAS.aggressive.name, AI_PERSONAS.conservative.name];
 
       const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
 
@@ -119,7 +120,7 @@ describe("App", function () {
       game.loadWillSucceed = true;
       game.gameOverOnLoad = true;
       game.gameState.numAIPlayers = 2;
-      game.gameState.aiPersonas = ["aggressive", "cautious"];
+      game.gameState.aiPersonas = [AI_PERSONAS.aggressive.name, AI_PERSONAS.conservative.name];
       const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
 
       await app.init();
@@ -210,10 +211,10 @@ describe("App", function () {
       const setAIPersonaSpy = this.sandbox.spy(gameClient, "setAIPersona");
       const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
 
-      ui.emit("aiChanged", { persona: "aggressive", playerIndex: 1 });
+      ui.emit("aiChanged", { persona: AI_PERSONAS.aggressive.name, playerIndex: 1 });
 
-      expect(app.selectedAI).to.equal("aggressive");
-      expect(setAIPersonaSpy.calledWith(1, "aggressive")).to.be.true;
+      expect(app.selectedAI).to.equal(AI_PERSONAS.aggressive.name);
+      expect(setAIPersonaSpy.calledWith(1, AI_PERSONAS.aggressive.name)).to.be.true;
       expect(setPlayersSpy.called).to.be.true;
       // setPlayers should include human + AI player
       const players = setPlayersSpy.firstCall.args[0];
@@ -230,7 +231,7 @@ describe("App", function () {
       app.numAIPlayers = 0;
 
       const setAIPersonaSpy = this.sandbox.spy(gameClient, "setAIPersona");
-      app.handleAISelection("aggressive");
+      app.handleAISelection(AI_PERSONAS.aggressive.name);
 
       expect(setAIPersonaSpy.called).to.be.false;
     });
@@ -240,7 +241,7 @@ describe("App", function () {
       app.aiPlayers = [{ type: "ai" }];
 
       const setPlayersSpy = this.sandbox.spy(gameClient, "setPlayers");
-      app.handleAISelection("aggressive");
+      app.handleAISelection(AI_PERSONAS.aggressive.name);
 
       expect(setPlayersSpy.called).to.be.false;
     });

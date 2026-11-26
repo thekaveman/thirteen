@@ -1,4 +1,5 @@
 import { after, beforeEach, describe } from "mocha";
+import { AI_PERSONAS } from "../src/app/ai/personas.js";
 import { expect } from "chai";
 import { MockDeck, MockGame, MockAI } from "./mocks.ts";
 import { GameClient } from "../src/app/game/index.js";
@@ -313,14 +314,14 @@ describe("UI", () => {
     beforeEach(() => {
       playerHandDiv = document.createElement("div");
       game.gameState.gameStarted = false; // Prerequisite for rendering AI selection
-      gameClient.setAIPersona(0, "random"); // 0-based index for AI slots
+      gameClient.setAIPersona(0, AI_PERSONAS.random.name); // 0-based index for AI slots
     });
 
     it("renderAIPlayerSlot() should populate dropdown and set initial value", () => {
       ui.renderAIPlayerSlot(1, playerHandDiv);
       const dropdown = playerHandDiv.querySelector("select") as HTMLSelectElement;
       expect(dropdown.options.length).to.equal(Object.keys(AI_PERSONAS).length);
-      expect(dropdown.value).to.equal("random");
+      expect(dropdown.value).to.equal(AI_PERSONAS.random.name);
       const description = playerHandDiv.querySelector("p") as HTMLElement;
       expect(description.textContent).to.equal(AI_PERSONAS.random.description);
     });
@@ -329,7 +330,7 @@ describe("UI", () => {
       ui.renderAIPlayerSlot(1, playerHandDiv);
       const dropdown = playerHandDiv.querySelector("select") as HTMLSelectElement;
       const emitSpy = sinon.spy(ui, "emit");
-      dropdown.value = "aggressive";
+      dropdown.value = AI_PERSONAS.aggressive.name;
       dropdown.dispatchEvent(new window.Event("change"));
       expect(emitSpy.called).to.be.true;
       // emit("aiChanged", { persona, playerIndex })
@@ -337,7 +338,7 @@ describe("UI", () => {
       const emittedData = emitSpy.getCall(0).args[1];
       expect(emittedEventName).to.equal("aiChanged");
       expect(emittedData).to.be.an("object");
-      expect(emittedData.persona).to.equal("aggressive");
+      expect(emittedData.persona).to.equal(AI_PERSONAS.aggressive.name);
       expect(emittedData.playerIndex).to.equal(1);
     });
 
@@ -360,7 +361,7 @@ describe("UI", () => {
       });
 
       // Render AI selection (starts with "random" persona)
-      gameClient.setAIPersona(0, "random");
+      gameClient.setAIPersona(0, AI_PERSONAS.random.name);
       game.gameState.gameStarted = false;
       const handDiv = document.createElement("div");
       realUI.renderAIPlayerSlot(1, handDiv);
@@ -368,13 +369,13 @@ describe("UI", () => {
       // Query the dropdown and description from the rendered DOM (per-slot elements)
       const dropdown = handDiv.querySelector("select") as HTMLSelectElement;
       const description = handDiv.querySelector("p") as HTMLElement;
-      expect(dropdown.value).to.equal("random");
+      expect(dropdown.value).to.equal(AI_PERSONAS.random.name);
       expect(description.textContent).to.equal(AI_PERSONAS.random.description);
 
       // Trigger the event (simulating user changing dropdown)
-      realUI.emit("aiChanged", { persona: "aggressive", playerIndex: 1 });
+      realUI.emit("aiChanged", { persona: AI_PERSONAS.aggressive.name, playerIndex: 1 });
       expect(handlerSpy.called).to.be.true;
-      expect(handlerSpy.getCall(0).args[0]).to.equal("aggressive");
+      expect(handlerSpy.getCall(0).args[0]).to.equal(AI_PERSONAS.aggressive.name);
       expect(handlerSpy.getCall(0).args[1]).to.equal(1);
     });
 
@@ -384,25 +385,25 @@ describe("UI", () => {
       ui.renderAIPlayerSlot(1, handDiv);
       const dropdown = handDiv.querySelector("select") as HTMLSelectElement;
       const description = handDiv.querySelector("p") as HTMLElement;
-      expect(dropdown.value).to.equal("random");
+      expect(dropdown.value).to.equal(AI_PERSONAS.random.name);
       expect(description.textContent).to.equal(AI_PERSONAS.random.description);
     });
 
     it("updateAIDescription() should set the description text", () => {
-      ui.updateAIDescription("cautious");
-      expect(ui.aiDescription.textContent).to.equal(AI_PERSONAS.cautious.description);
+      ui.updateAIDescription(AI_PERSONAS.conservative.name);
+      expect(ui.aiDescription.textContent).to.equal(AI_PERSONAS.conservative.description);
       ui.updateAIDescription("nonexistent");
       expect(ui.aiDescription.textContent).to.equal("");
     });
 
     it("renderAIPlayerSlot() should set dropdown value and description when persona is set", () => {
       // aiPersonas[0] is read by getAIPersona(0), which renderAIPlayerSlot(1) uses
-      game.gameState.aiPersonas[0] = "aggressive";
+      game.gameState.aiPersonas[0] = AI_PERSONAS.aggressive.name;
       const handDiv = document.createElement("div");
       ui.renderAIPlayerSlot(1, handDiv);
       const dropdown = handDiv.querySelector("select") as HTMLSelectElement;
       const description = handDiv.querySelector("p") as HTMLElement;
-      expect(dropdown.value).to.equal("aggressive");
+      expect(dropdown.value).to.equal(AI_PERSONAS.aggressive.name);
       expect(description.textContent).to.equal(AI_PERSONAS.aggressive.description);
     });
 
@@ -422,7 +423,7 @@ describe("UI", () => {
     it("should render AI player with valid persona icon and name", () => {
       // Set the AI player's persona to a valid persona key that exists in AI_PERSONAS
       // Player 1 is the AI player; setAIPersona sets both player.persona and ai.persona
-      gameClient.setAIPersona(1, "aggressive");
+      gameClient.setAIPersona(1, AI_PERSONAS.aggressive.name);
       gameClient.setPlayerHand(1, [new Card("A", "♠")]);
       gameClient.setCurrentPlayer(1);
       const playerHandDiv = document.createElement("div");

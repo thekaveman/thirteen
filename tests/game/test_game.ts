@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, it } from "mocha";
 import { expect } from "chai";
+import { AI_PERSONAS } from "../../src/app/ai/personas.js";
 import { Card, Game } from "../../src/app/game/index.js";
 import { HumanPlayer, AIPlayer } from "../../src/app/player/index.js";
 import { MockAI, MockDeck, MockUI } from "../mocks.ts";
@@ -360,7 +361,7 @@ describe("Game", () => {
 
     it("load() should correctly rehydrate game data", async () => {
       const mockUI = new MockUI(new GameClient(game));
-      const mockAI = new MockAI(new GameClient(game), [new Card("3", "♠")], "random");
+      const mockAI = new MockAI(new GameClient(game), [new Card("3", "♠")], AI_PERSONAS.random.name);
       const mockPlayers = [new AIPlayer(new GameClient(game), 0, mockAI), new HumanPlayer(new GameClient(game), 1)];
 
       game.setPlayers(mockPlayers);
@@ -396,7 +397,7 @@ describe("Game", () => {
 
     it("load() should preserve both player hands and playPile (full mid-game reload simulation)", async () => {
       const mockUI = new MockUI(new GameClient(game));
-      const mockAI = new MockAI(new GameClient(game), [new Card("3", "♠")], "random");
+      const mockAI = new MockAI(new GameClient(game), [new Card("3", "♠")], AI_PERSONAS.random.name);
       const mockPlayers = [new AIPlayer(new GameClient(game), 0, mockAI), new HumanPlayer(new GameClient(game), 1)];
 
       game.setPlayers(mockPlayers);
@@ -962,7 +963,7 @@ describe("Game", () => {
       game.gameState.numPlayers = 2;
       game.gameState.players = [
         new HumanPlayer(new GameClient(game), 0),
-        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "random")),
+        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], AI_PERSONAS.random.name)),
       ];
     });
 
@@ -971,20 +972,20 @@ describe("Game", () => {
 
       expect(game.gameState.numAIPlayers).to.equal(1);
       expect(game.gameState.aiPersonas).to.have.lengthOf(1);
-      expect(game.gameState.aiPersonas[0]).to.equal("random");
+      expect(game.gameState.aiPersonas[0]).to.equal(AI_PERSONAS.random.name);
     });
 
     it("should save multiple AI personas in setPlayers()", () => {
       const aiPlayers = [
-        new AIPlayer(new GameClient(game), 0, new MockAI(new GameClient(game), [], "random")),
-        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], "aggressive")),
-        new AIPlayer(new GameClient(game), 2, new MockAI(new GameClient(game), [], "cautious")),
+        new AIPlayer(new GameClient(game), 0, new MockAI(new GameClient(game), [], AI_PERSONAS.random.name)),
+        new AIPlayer(new GameClient(game), 1, new MockAI(new GameClient(game), [], AI_PERSONAS.aggressive.name)),
+        new AIPlayer(new GameClient(game), 2, new MockAI(new GameClient(game), [], AI_PERSONAS.conservative.name)),
       ];
       const players = [new HumanPlayer(new GameClient(game), 0), ...aiPlayers];
       game.setPlayers(players);
 
       expect(game.gameState.numAIPlayers).to.equal(3);
-      expect(game.gameState.aiPersonas).to.deep.equal(["random", "aggressive", "cautious"]);
+      expect(game.gameState.aiPersonas).to.deep.equal([AI_PERSONAS.random.name, AI_PERSONAS.aggressive.name, AI_PERSONAS.conservative.name]);
     });
   });
 

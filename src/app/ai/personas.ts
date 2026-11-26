@@ -18,65 +18,50 @@ export interface AIPersonaMetadata {
 }
 
 export const AI_PERSONAS: Record<string, AIPersonaMetadata> = {
-  // Simple Personas
   random: {
     name: "random",
     friendly_name: "Random",
-    description: "Plays a random valid move.",
+    description: "Plays a random valid move with no strategy or pattern.",
     icon: "\uD83C\uDFB2",
-    create: (gameClient: GameClient) => new RandomAI(gameClient, "random"),
+    create: (gameClient: GameClient) => new RandomAI(gameClient, AI_PERSONAS.random.name),
   },
-  cautious: {
-    name: "cautious",
-    friendly_name: "Cautious",
-    description: "Plays a combination with the lowest card.",
+  conservative: {
+    name: "conservative",
+    friendly_name: "Conservative",
+    description: "Plays the combination with the lowest card to conserve stronger cards.",
     icon: "\uD83D\uDEE1\uFE0F",
-    create: (gameClient: GameClient) => new LowestCardAI(gameClient, "cautious"),
+    create: (gameClient: GameClient) => new LowestCardAI(gameClient, AI_PERSONAS.conservative.name),
   },
   aggressive: {
     name: "aggressive",
     friendly_name: "Aggressive",
-    description: "Plays a combination with the highest card.",
+    description: "Commits the highest card or combination available. Plays to take control early.",
     icon: "\u2694\uFE0F",
-    create: (gameClient: GameClient) => new HighestCardAI(gameClient, "aggressive"),
-  },
-  low_stakes: {
-    name: "low_stakes",
-    friendly_name: "Low Stakes",
-    description: "Plays the combination with the lowest total value.",
-    icon: "\uD83D\uDCC9",
-    create: (gameClient: GameClient) => new LowestValueAI(gameClient, "low_stakes"),
-  },
-  high_stakes: {
-    name: "high_stakes",
-    friendly_name: "High Stakes",
-    description: "Plays the combination with the highest total value.",
-    icon: "\uD83D\uDCC8",
-    create: (gameClient: GameClient) => new HighestValueAI(gameClient, "high_stakes"),
+    create: (gameClient: GameClient) => new HighestCardAI(gameClient, AI_PERSONAS.aggressive.name),
   },
   passive: {
     name: "passive",
     friendly_name: "Passive",
-    description: "Passes whenever possible. When forced to play, plays the lowest card.",
+    description: "Passes whenever possible. Only plays when forced by the game rules.",
     icon: "\uD83E\uDDD8",
     create: (gameClient: GameClient) =>
-      new PassAI(gameClient, new LowestCardAI(gameClient, "passive"), "passive"),
+      new PassAI(gameClient, new LowestCardAI(gameClient, AI_PERSONAS.passive.name), AI_PERSONAS.passive.name),
   },
   // Combo Personas
   opportunist: {
     name: "opportunist",
     friendly_name: "Opportunist",
-    description: "Tries to play high-value combos, otherwise plays low-value cards.",
+    description: "Favors high-value moves but falls back to lower-value plays when needed.",
     icon: "\uD83C\uDFAF",
     create: (gameClient: GameClient) =>
       new PrioritizedComboAI(
         gameClient,
         [
-          new HighestValueAI(gameClient, "opportunist"),
-          new HighestCardAI(gameClient, "opportunist"),
-          new LowestCardAI(gameClient, "opportunist"),
+          new HighestValueAI(gameClient, AI_PERSONAS.opportunist.name),
+          new HighestCardAI(gameClient, AI_PERSONAS.opportunist.name),
+          new LowestCardAI(gameClient, AI_PERSONAS.opportunist.name),
         ],
-        "opportunist",
+        AI_PERSONAS.opportunist.name,
       ),
   },
   unpredictable: {
@@ -88,14 +73,14 @@ export const AI_PERSONAS: Record<string, AIPersonaMetadata> = {
       new RandomComboAI(
         gameClient,
         [
-          new HighestCardAI(gameClient, "unpredictable"),
-          new HighestValueAI(gameClient, "unpredictable"),
-          new LowestCardAI(gameClient, "unpredictable"),
-          new LowestValueAI(gameClient, "unpredictable"),
-          new PassAI(gameClient, new LowestCardAI(gameClient, "unpredictable"), "unpredictable"),
-          new RandomAI(gameClient, "unpredictable"),
+          new HighestCardAI(gameClient, AI_PERSONAS.unpredictable.name),
+          new HighestValueAI(gameClient, AI_PERSONAS.unpredictable.name),
+          new LowestCardAI(gameClient, AI_PERSONAS.unpredictable.name),
+          new LowestValueAI(gameClient, AI_PERSONAS.unpredictable.name),
+          new PassAI(gameClient, new LowestCardAI(gameClient, AI_PERSONAS.unpredictable.name), AI_PERSONAS.unpredictable.name),
+          new RandomAI(gameClient, AI_PERSONAS.unpredictable.name),
         ],
-        "unpredictable",
+        AI_PERSONAS.unpredictable.name,
       ),
   },
 };
