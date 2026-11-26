@@ -14,6 +14,7 @@ export interface UIId {
   gameContent: string;
   playButton: string;
   passButton: string;
+  resignButton: string;
   newGameButton: string;
   startGameButton: string;
   cancelButton: string;
@@ -42,6 +43,7 @@ export class UI {
   gameContent: HTMLElement | null;
   playButton: HTMLElement | null;
   passButton: HTMLElement | null;
+  resignButton: HTMLElement | null;
   newGameButton: HTMLElement | null;
   startGameButton: HTMLElement | null;
   cancelButton: HTMLElement | null;
@@ -65,6 +67,7 @@ export class UI {
       gameContent: "game-content",
       playButton: "play-button",
       passButton: "pass-button",
+      resignButton: "resign-button",
       newGameButton: "new-game-button",
       startGameButton: "start-game-button",
       cancelButton: "cancel-button",
@@ -85,6 +88,7 @@ export class UI {
     this.gameContent = null;
     this.playButton = null;
     this.passButton = null;
+    this.resignButton = null;
     this.newGameButton = null;
     this.startGameButton = null;
     this.cancelButton = null;
@@ -120,6 +124,7 @@ export class UI {
       this.gameContent = document.getElementById(this.id.gameContent);
       this.playButton = document.getElementById(this.id.playButton);
       this.passButton = document.getElementById(this.id.passButton);
+      this.resignButton = document.getElementById(this.id.resignButton);
       this.newGameButton = document.getElementById(this.id.newGameButton);
       this.startGameButton = document.getElementById(this.id.startGameButton);
       this.cancelButton = document.getElementById(this.id.cancelButton);
@@ -136,6 +141,7 @@ export class UI {
       // Add event listeners that emit events
       if (this.playButton) this.playButton.addEventListener("click", () => this.emit("playClicked", undefined));
       if (this.passButton) this.passButton.addEventListener("click", () => this.emit("passClicked", undefined));
+      if (this.resignButton) this.resignButton.addEventListener("click", () => this.emit("resignClicked", undefined));
       if (this.newGameButton) this.newGameButton.addEventListener("click", () => this.emit("newGameClicked", undefined));
       if (this.resetButton) this.resetButton.addEventListener("click", () => this.emit("resetClicked", undefined));
       if (this.startGameButton) this.startGameButton.addEventListener("click", () => this.emit("startClicked", undefined));
@@ -505,16 +511,29 @@ export class UI {
             playerHandDiv.classList.remove("current");
           }
 
-          // Game-over: highlight game winner (last player to play) with green
+          // Game-over: highlight winner with green, or resigned player with yellow
           if (this.gameClient.isGameOver()) {
-            const lastToPlay = this.gameClient.game?.gameState?.lastPlayerToPlay;
-            if (i === lastToPlay) {
-              playerHandDiv.classList.add("round-winner");
-            } else {
+            const isResigned = this.gameClient.game?.gameState?.resigned;
+            if (isResigned) {
+              const resignedPlayer = this.gameClient.game?.gameState?.resignedPlayer;
+              if (i === resignedPlayer) {
+                playerHandDiv.classList.add("resigned");
+              } else {
+                playerHandDiv.classList.remove("resigned");
+              }
               playerHandDiv.classList.remove("round-winner");
+            } else {
+              const lastToPlay = this.gameClient.game?.gameState?.lastPlayerToPlay;
+              if (i === lastToPlay) {
+                playerHandDiv.classList.add("round-winner");
+              } else {
+                playerHandDiv.classList.remove("round-winner");
+              }
+              playerHandDiv.classList.remove("resigned");
             }
           } else {
             playerHandDiv.classList.remove("round-winner");
+            playerHandDiv.classList.remove("resigned");
           }
 
           this.renderPlayerHand(i, playerHandDiv);
@@ -548,17 +567,19 @@ export class UI {
   }
 
   /**
-   * Updates the state of the play, pass, cancel, reset, and AI management buttons.
+   * Updates the state of the play, pass, cancel, resign, reset, and AI management buttons.
    */
   updateButtonStates(): void {
     const currentPlayer = this.gameClient.getCurrentPlayer() as Player | undefined;
     if (!currentPlayer) return;
     const isHumanPlayerTurn = currentPlayer.type === PLAYER_TYPES.HUMAN;
     const numAIPlayers = this.gameClient.getNumAIPlayers();
+    const resignConfirming = this.gameClient.game?.gameState?.resignConfirming ?? false;
 
     if (this.gameClient.isGameOver()) {
       this.#setButtonDisplay(this.playButton, "none");
       this.#setButtonDisplay(this.passButton, "none");
+      this.#setButtonDisplay(this.resignButton, "none");
       this.#setButtonDisplay(this.cancelButton, "none");
       this.#setButtonDisplay(this.newGameButton, "block");
       this.#setButtonDisplay(this.startGameButton, "none");
@@ -571,6 +592,7 @@ export class UI {
     } else if (!this.gameClient.isGameStarted()) {
       this.#setButtonDisplay(this.playButton, "none");
       this.#setButtonDisplay(this.passButton, "none");
+      this.#setButtonDisplay(this.resignButton, "none");
       this.#setButtonDisplay(this.cancelButton, "none");
       this.#setButtonDisplay(this.newGameButton, "none");
       this.#setButtonDisplay(this.startGameButton, "block");
@@ -588,13 +610,29 @@ export class UI {
         (this.removeAIPlayerButton as HTMLButtonElement).disabled = numAIPlayers <= 1;
       }
     } else {
+      // Active game
       if (this.playButton) {
         this.#setButtonDisplay(this.playButton, "block");
-        (this.playButton as HTMLButtonElement).disabled = !isHumanPlayerTurn;
+        (this.playButton as HTMLButtonElement).disabled = resignConfirming || !isHumanPlayerTurn;
       }
       if (this.passButton) {
         this.#setButtonDisplay(this.passButton, "block");
-        (this.passButton as HTMLButtonElement).disabled = !isHumanPlayerTurn;
+        (this.passButton as HTMLButtonElement).disabled = resignConfirming || !isHumanPlayerTurn;
+      }
+      if (this.resignButton) {
+        if (resignConfirming) {
+          this.#setButtonDisplay(this.resignButton, "block");
+          (this.resignButton as HTMLButtonElement).disabled = false;
+          (this.resignButton as HTMLButtonElement).textContent = "Confirm?";
+        } else if (isHumanPlayerTurn) {
+          this.#setButtonDisplay(this.resignButton, "block");
+          (this.resignButton as HTMLButtonElement).disabled = false;
+          (this.resignButton as HTMLButtonElement).textContent = "Resign";
+        } else {
+          this.#setButtonDisplay(this.resignButton, "block");
+          (this.resignButton as HTMLButtonElement).disabled = true;
+          (this.resignButton as HTMLButtonElement).textContent = "Resign";
+        }
       }
       if (this.cancelButton) {
         this.#setButtonDisplay(this.cancelButton, "block");

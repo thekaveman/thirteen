@@ -362,6 +362,7 @@ export class MockUI {
     this._listeners = {};
     this.playButton = { style: { display: "" } };
     this.passButton = { style: { display: "" } };
+    this.resignButton = { style: { display: "none" }, textContent: "Resign", disabled: false } as unknown as HTMLButtonElement;
     this.newGameButton = { style: { display: "" } };
     this.startGameButton = { style: { display: "" } };
     this.cancelButton = { style: { display: "" } };

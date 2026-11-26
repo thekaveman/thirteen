@@ -51,6 +51,7 @@ export class App {
     this.ui.on("passClicked", () => this.handleHumanPass());
     this.ui.on("newGameClicked", () => this.handleNewGameClick());
     this.ui.on("cancelClicked", () => this.handleCancelClick());
+    this.ui.on("resignClicked", () => this.handleResignClick());
     this.ui.on("resetClicked", () => this.handleResetButtonClick());
     this.ui.on("startClicked", () => this.handleStartGameClick());
     this.ui.on("aiChanged", (data: unknown) => {
@@ -142,6 +143,8 @@ export class App {
    * Round winner gets green ONLY (no blue highlight).
    */
   highlightRoundWinner(): void {
+    // Skip highlighting if the game ended via resignation
+    if (this.gameClient.game?.gameState?.resigned) return;
     // Only highlight when a round just ended
     if (!this.gameClient.game?.gameState?.roundEnded) return;
     // Clear the flag so we don't keep highlighting on subsequent renders
@@ -215,9 +218,47 @@ export class App {
   }
 
   handleCancelClick(): void {
+    // If during resignation confirmation, cancel the resignation flow
+    const game = this.gameClient.game;
+    if (game && game.gameState && game.gameState.resignConfirming) {
+      log("Cancel clicked - dismissing resignation confirmation");
+      game.gameState.resignConfirming = false;
+      this.ui.updateButtonStates();
+      return;
+    }
     log("Cancel clicked - clearing selected cards");
     this.gameClient.clearSelectedCards();
     this.ui.renderSelectedCards();
+  }
+
+  /**
+   * Handles the resign button click:
+   * - First click: toggles resignConfirming to show confirmation state
+   * - Second click (when confirming): calls game.resign()
+   */
+  handleResignClick(): void {
+    const game = this.gameClient.game;
+    if (!game) {
+      log("Cannot resign: game not available");
+      return;
+    }
+    const gameState = game.gameState;
+    if (gameState.resignConfirming) {
+      // Confirming: actually resign
+      log("Resign confirmed");
+      const playerIndex = this.gameClient.getCurrentPlayerIndex();
+      this.gameClient.resign(playerIndex);
+      gameState.resignConfirming = false;
+      this.ui.updateButtonStates();
+      this.ui.render();
+      this.ui.displayMessage("You resigned", "resign");
+      this.clearRoundWinnerHighlight();
+    } else {
+      // First click: show confirmation
+      log("Resign clicked - showing confirmation");
+      gameState.resignConfirming = true;
+      this.ui.updateButtonStates();
+    }
   }
 
   handleResetButtonClick(): void {
