@@ -24,12 +24,16 @@ export interface GameState {
   roundsWon: number[];
   gamesWon: number[];
   gamesPlayed: number[];
+  gamesResigned: number[];
   aiPersonas: (string | null)[];
   gameOver: boolean;
   gameStarted: boolean;
   playerTypes: string[];
   playerPassed: boolean[];
   roundEnded: boolean;
+  resigned: boolean;
+  resignedPlayer: number;
+  resignConfirming: boolean;
 }
 
 export interface GameHooks {
@@ -92,12 +96,16 @@ export class Game {
       roundsWon: [],
       gamesWon: [],
       gamesPlayed: [],
+      gamesResigned: [],
       aiPersonas: [],
       gameOver: false,
       gameStarted: false,
       playerTypes: [],
       playerPassed: [],
       roundEnded: false,
+      resigned: false,
+      resignedPlayer: -1,
+      resignConfirming: false,
     };
     this.id = crypto.randomUUID();
     this.rules = new Rules();
@@ -129,6 +137,9 @@ export class Game {
     this.gameState.selectedCards = [];
     this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
     this.gameState.roundEnded = false;
+    this.gameState.resigned = false;
+    this.gameState.resignedPlayer = -1;
+    this.gameState.resignConfirming = false;
   }
 
   /**
@@ -137,6 +148,7 @@ export class Game {
   init(): void {
     this.#resetForNewGame();
     this.gameState.roundsWon = new Array(this.gameState.numPlayers).fill(0);
+    this.gameState.gamesResigned = new Array(this.gameState.numPlayers).fill(0);
     this.hooks.onGameInit(new GameClient(this));
   }
 
@@ -391,6 +403,7 @@ export class Game {
       if (!skipDeal) {
         this.#resizeStatsArray(this.gameState.gamesWon, players.length);
         this.#resizeStatsArray(this.gameState.gamesPlayed, players.length);
+        this.#resizeStatsArray(this.gameState.gamesResigned, players.length);
         this.#resetForNewGame();
         this.gameState.playerHands = players.map(() => []);
         this.gameState.roundsWon = new Array(players.length).fill(0);
@@ -444,5 +457,30 @@ export class Game {
     }
     this.save();
     this.hooks.onGameWon(new GameClient(this));
+  }
+
+  /**
+   * Handles a player resignation. Marks the game as over without counting it as a win.
+   * @param playerIndex The index of the resigning player.
+   */
+  resign(playerIndex: number): void {
+    this.gameState.gameOver = true;
+    this.gameState.resigned = true;
+    this.gameState.resignedPlayer = playerIndex;
+    this.gameState.gameStarted = false;
+    // Increment games played for all players (resignation counts as participation)
+    const numPlayers = this.gameState.numPlayers;
+    if (this.gameState.gamesPlayed.length < numPlayers) {
+      this.gameState.gamesPlayed = new Array(numPlayers).fill(0);
+    }
+    for (let i = 0; i < numPlayers; i++) {
+      this.gameState.gamesPlayed[i]++;
+    }
+    // Increment gamesResigned for the resigning player only
+    if (this.gameState.gamesResigned.length < numPlayers) {
+      this.gameState.gamesResigned = new Array(numPlayers).fill(0);
+    }
+    this.gameState.gamesResigned[playerIndex]++;
+    this.save();
   }
 }

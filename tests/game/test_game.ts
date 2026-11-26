@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, it } from "mocha";
 import { expect } from "chai";
+import * as sinon from "sinon";
 import { AI_PERSONAS } from "../../src/app/ai/personas.js";
 import { Card, Game } from "../../src/app/game/index.js";
 import { HumanPlayer, AIPlayer } from "../../src/app/player/index.js";
@@ -50,6 +51,9 @@ describe("Game", () => {
       game.gameState.gameStarted = true;
       game.gameState.gameOver = true;
       game.gameState.roundEnded = true;
+      game.gameState.resignConfirming = true;
+      game.gameState.resigned = true;
+      game.gameState.resignedPlayer = 0;
 
       game.init();
 
@@ -67,6 +71,9 @@ describe("Game", () => {
       expect(game.gameState.gameStarted).to.be.false;
       expect(game.gameState.gameOver).to.be.false;
       expect(game.gameState.roundEnded).to.be.false;
+      expect(game.gameState.resignConfirming).to.be.false;
+      expect(game.gameState.resigned).to.be.false;
+      expect(game.gameState.resignedPlayer).to.equal(-1);
     });
 
     it("start() should initialize the game state for starting", () => {
@@ -1052,6 +1059,139 @@ describe("Game", () => {
       ]);
     });
   });
+
+  describe("Resignation", () => {
+    let sandbox;
+
+    beforeEach(() => {
+      sandbox = sinon.createSandbox();
+      game.gameState.numPlayers = 2;
+      game.gameState.players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
+      game.setPlayers(game.gameState.players);
+      game.gameState.gamesPlayed = [0, 0];
+    });
+
+    afterEach(() => {
+      sandbox.restore();
+    });
+
+    it("should initialize gamesResigned array in init()", () => {
+      game.init();
+
+      expect(game.gameState.gamesResigned).to.be.an("array").that.has.lengthOf(2);
+      expect(game.gameState.gamesResigned).to.deep.equal([0, 0]);
+    });
+
+    it("should initialize gamesResigned array in setPlayers()", () => {
+      expect(game.gameState.gamesResigned).to.be.an("array").that.has.lengthOf(2);
+      expect(game.gameState.gamesResigned).to.deep.equal([0, 0]);
+    });
+
+    it("should initialize resigned to false in init()", () => {
+      game.init();
+
+      expect(game.gameState.resigned).to.be.false;
+    });
+
+    it("resign() should set gameOver and resigned to true", () => {
+      game.init();
+      game.gameState.currentPlayer = 0;
+      game.gameState.gamesPlayed = [1, 1];
+
+      game.resign(0);
+
+      expect(game.gameState.gameOver).to.be.true;
+      expect(game.gameState.resigned).to.be.true;
+    });
+
+    it("resign() should increment gamesPlayed for all players but NOT gamesWon", () => {
+      game.init();
+      game.gameState.currentPlayer = 0;
+      game.gameState.gamesPlayed = [1, 1];
+      game.gameState.gamesWon = [2, 1];
+
+      game.resign(0);
+
+      expect(game.gameState.gamesPlayed).to.deep.equal([2, 2]);
+      expect(game.gameState.gamesWon).to.deep.equal([2, 1]);
+    });
+
+    it("resign() should increment gamesResigned for the resigning player", () => {
+      game.init();
+      game.gameState.currentPlayer = 0;
+      game.gameState.gamesResigned = [0, 0];
+
+      game.resign(0);
+
+      expect(game.gameState.gamesResigned).to.deep.equal([1, 0]);
+    });
+
+    it("resign() should trigger onGameResigned hook", () => {
+      game.init();
+      game.gameState.currentPlayer = 0;
+      const hookSpy = sandbox.spy(game.hooks, "onGameResigned");
+
+      game.resign(0);
+
+      expect(hookSpy.called).to.be.true;
+    });
+
+    it("resign() should save to localStorage", () => {
+      const saveSpy = sandbox.spy(game, "save");
+      game.gameState.currentPlayer = 0;
+
+      game.resign(0);
+
+      expect(saveSpy.called).to.be.true;
+    });
+
+    it("init() should reset resignConfirming to false", () => {
+      game.init();
+      game.gameState.resignConfirming = true;
+
+      game.init();
+
+      expect(game.gameState.resignConfirming).to.be.false;
+    });
+
+    it("setPlayers() should reset resignConfirming to false", () => {
+      game.gameState.resignConfirming = true;
+
+      game.setPlayers(game.gameState.players);
+
+      expect(game.gameState.resignConfirming).to.be.false;
+    });
+
+    describe("resign() defensive array initialization", () => {
+      beforeEach(() => {
+        // Set up game state directly without calling setPlayers/init
+        game.gameState.numPlayers = 2;
+        game.gameState.players = [new HumanPlayer(new GameClient(game), 0), new HumanPlayer(new GameClient(game), 1)];
+        game.gameState.gamesResigned = [];
+        game.gameState.gamesPlayed = [];
+      });
+
+      it("resign() should grow gamesPlayed when shorter than numPlayers", () => {
+        game.resign(0);
+
+        expect(game.gameState.gamesPlayed).to.have.lengthOf(2);
+        expect(game.gameState.gamesPlayed).to.deep.equal([1, 1]);
+      });
+
+      it("resign() should grow gamesResigned when shorter than numPlayers", () => {
+        game.resign(0);
+
+        expect(game.gameState.gamesResigned).to.have.lengthOf(2);
+        expect(game.gameState.gamesResigned).to.deep.equal([1, 0]);
+      });
+
+      it("resign() should work with pre-sized gamesPlayed but not gamesResigned", () => {
+        game.gameState.gamesPlayed = [0, 0];
+        game.resign(0);
+
+        expect(game.gameState.gamesPlayed).to.deep.equal([1, 1]);
+        expect(game.gameState.gamesResigned).to.deep.equal([1, 0]);
+      });
     });
   });
 

@@ -300,6 +300,10 @@ export class MockGame extends Game {
     this.startCalled = true;
     super.start();
   }
+  resign(playerIndex) {
+    this.resignCalled = true;
+    super.resign(playerIndex);
+  }
 }
 
 export class MockLocalStorage {
