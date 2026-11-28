@@ -1,4 +1,5 @@
 import type { Card } from "./deck.js";
+import { Deck } from "./deck.js";
 import type { Player } from "../player/base.js";
 import { log } from "../utils.js";
 import { VERSION } from "../version.js";
@@ -100,13 +101,13 @@ export class StateManager {
     };
   }
 
-  save(gameState: GameState, deck: { cards: { rank: string; suit: string }[] }, id: string): void {
+  save(gameState: GameState, deck: Deck, id: string): void {
     const serializableGameState: SerializableGameState = { ...gameState };
     serializableGameState.players = gameState.players.map((p) => p.data());
 
     const data: SerializedState = {
       id,
-      deck: { cards: deck.cards },
+      deck: { cards: deck.cards.map((c) => ({ rank: c.rank, suit: c.suit })) },
       gameState: serializableGameState,
       stateKey: this.stateKey,
     };

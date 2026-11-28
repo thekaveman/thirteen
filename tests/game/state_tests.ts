@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, afterEach } from "mocha";
 import { expect } from "chai";
 import { StateManager, type GameState } from "../../src/app/game/state.js";
-import { Card, Game } from "../../src/app/game/index.js";
+import { Card, Deck, Game } from "../../src/app/game/index.js";
 
 const TEST_STATE_KEY = `${StateManager.STATE_KEY}-tests`;
 
@@ -211,7 +211,7 @@ describe("StateManager", () => {
   describe("save()", () => {
     it("should save the game state to localStorage", () => {
       const mockGameState = StateManager.createDefault();
-      const mockDeck = { cards: [{ rank: "A", suit: "♠" }] };
+      const mockDeck = new Deck([{ rank: "A", suit: "♠" }]);
       const mockPlayers = [
         { id: "player-1", type: "human", data: () => ({ id: "player-1", type: "human", name: "Test", isHuman: true, game: "test", number: 0 }) },
       ] as unknown as GameState["players"];
@@ -247,7 +247,7 @@ describe("StateManager", () => {
         gameOver: false,
       };
 
-      const mockDeck = { cards: [{ rank: "A", suit: "♠" }] };
+      const mockDeck = new Deck([{ rank: "A", suit: "♠" }]);
       stateManager.save(mockGameState, mockDeck, "test-id");
 
       const result = await stateManager.load();
@@ -270,7 +270,7 @@ describe("StateManager", () => {
         gameOver: false,
       } as unknown as GameState;
 
-      const mockDeck = { cards: [] };
+      const mockDeck = new Deck([]);
       stateManager.save(mockGameState, mockDeck, "test-id");
 
       // Simulate an old save format by removing playerPassed
@@ -294,7 +294,7 @@ describe("StateManager", () => {
         gameOver: false,
       } as unknown as GameState;
 
-      const mockDeck = { cards: [] };
+      const mockDeck = new Deck([]);
       stateManager.save(mockGameState, mockDeck, "test-id");
 
       // Simulate an old save format by removing several fields
@@ -325,7 +325,7 @@ describe("StateManager", () => {
         consecutivePasses: 5,
       };
 
-      const mockDeck = { cards: [] };
+      const mockDeck = new Deck([]);
       stateManager.save(mockGameState, mockDeck, "test-id");
 
       // Remove some fields to simulate old save, but keep resigned/consecutivePasses
