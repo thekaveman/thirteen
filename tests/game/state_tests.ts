@@ -3,6 +3,8 @@ import { expect } from "chai";
 import { StateManager, type GameState } from "../../src/app/game/state.js";
 import { Card, Game } from "../../src/app/game/index.js";
 
+const TEST_STATE_KEY = `${StateManager.STATE_KEY}-tests`;
+
 describe("GameState defaults (StateManager.createDefault)", () => {
   let game: Game;
 
@@ -12,7 +14,7 @@ describe("GameState defaults (StateManager.createDefault)", () => {
       cards = [];
       shuffle() {}
       deal() { return []; }
-    } as unknown as typeof Card)(), `${StateManager.STATE_KEY}-tests`);
+    } as unknown as typeof Card)(), TEST_STATE_KEY);
   });
 
   afterEach(() => {
@@ -198,8 +200,8 @@ describe("StateManager", () => {
       cards = [];
       shuffle() {}
       deal() { return []; }
-    } as unknown as typeof Card)(), `${StateManager.STATE_KEY}-tests`);
-    stateManager = new StateManager(game.stateKey);
+    } as unknown as typeof Card)(), TEST_STATE_KEY);
+    stateManager = new StateManager(TEST_STATE_KEY);
   });
 
   afterEach(() => {
@@ -216,7 +218,7 @@ describe("StateManager", () => {
 
       stateManager.save({ ...mockGameState, players: mockPlayers }, mockDeck, "test-id");
 
-      const saved = localStorage.getItem(game.stateKey);
+      const saved = localStorage.getItem(TEST_STATE_KEY);
       expect(saved).to.exist;
       const parsed = JSON.parse(saved);
       expect(parsed.id).to.equal("test-id");
@@ -272,9 +274,9 @@ describe("StateManager", () => {
       stateManager.save(mockGameState, mockDeck, "test-id");
 
       // Simulate an old save format by removing playerPassed
-      const saved = JSON.parse(localStorage.getItem(game.stateKey)!);
+      const saved = JSON.parse(localStorage.getItem(TEST_STATE_KEY)!);
       delete saved.gameState.playerPassed;
-      localStorage.setItem(game.stateKey, JSON.stringify(saved));
+      localStorage.setItem(TEST_STATE_KEY, JSON.stringify(saved));
 
       const result = await stateManager.load();
 
@@ -296,11 +298,11 @@ describe("StateManager", () => {
       stateManager.save(mockGameState, mockDeck, "test-id");
 
       // Simulate an old save format by removing several fields
-      const saved = JSON.parse(localStorage.getItem(game.stateKey)!);
+      const saved = JSON.parse(localStorage.getItem(TEST_STATE_KEY)!);
       delete saved.gameState.resigned;
       delete saved.gameState.roundEnded;
       delete saved.gameState.currentPlayer;
-      localStorage.setItem(game.stateKey, JSON.stringify(saved));
+      localStorage.setItem(TEST_STATE_KEY, JSON.stringify(saved));
 
       const result = await stateManager.load();
 
@@ -327,9 +329,9 @@ describe("StateManager", () => {
       stateManager.save(mockGameState, mockDeck, "test-id");
 
       // Remove some fields to simulate old save, but keep resigned/consecutivePasses
-      const saved = JSON.parse(localStorage.getItem(game.stateKey)!);
+      const saved = JSON.parse(localStorage.getItem(TEST_STATE_KEY)!);
       delete saved.gameState.roundEnded;
-      localStorage.setItem(game.stateKey, JSON.stringify(saved));
+      localStorage.setItem(TEST_STATE_KEY, JSON.stringify(saved));
 
       const result = await stateManager.load();
 

@@ -26,7 +26,6 @@ export class Game {
   gameState: GameState;
   id: string;
   rules: Rules;
-  stateKey: string;
   private stateManager: StateManager;
 
   /**
@@ -50,7 +49,6 @@ export class Game {
     this.gameState = StateManager.createDefault();
     this.id = crypto.randomUUID();
     this.rules = new Rules();
-    this.stateKey = stateKey;
   }
 
   /**
@@ -109,8 +107,6 @@ export class Game {
     if (!ui) return { loaded: false };
 
     this.id = saved.id;
-    this.stateKey = saved.stateKey;
-
     this.deck = new Deck(saved.deck.cards);
     this.gameState = saved.gameState;
     this.gameState.playerHands = [...this.gameState.playerHands].map((h) => CardClass.objectsToList(h));
