@@ -4,10 +4,16 @@ import { Card as CardClass, Deck } from "./deck.js";
 import type { Player } from "../player/base.js";
 import { createPlayer, PLAYER_TYPES } from "../player/index.js";
 import { Rules } from "./rules.js";
-import { StateManager, type GameState, type LoadResult } from "./state.js";
+import { StateManager, type GameState, type LoadedState } from "./state.js";
 import { log } from "../utils.js";
 
-export type { GameState, LoadResult } from "./state.js";
+export type { GameState, LoadedState } from "./state.js";
+
+export interface LoadResult {
+  loaded: boolean;
+  loadedPlayerTypes?: string[];
+  gameOver?: boolean;
+}
 
 export interface GameHooks {
   onGameInit: (_gameClient: GameClient) => void;

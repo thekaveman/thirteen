@@ -44,10 +44,16 @@ interface SerializedState {
   stateKey: string;
 }
 
-export interface LoadResult {
-  loaded: boolean;
-  loadedPlayerTypes?: string[];
-  gameOver?: boolean;
+/**
+ * Result of a successful state load from localStorage.
+ */
+export interface LoadedState {
+  id: string;
+  stateKey: string;
+  gameState: GameState;
+  loadedPlayerTypes: string[];
+  gameOver: boolean;
+  deck: { cards: { rank: string; suit: string }[] };
 }
 
 /**
@@ -108,14 +114,7 @@ export class StateManager {
     log("Game saved to localStorage.");
   }
 
-  async load(): Promise<{
-    id: string;
-    stateKey: string;
-    gameState: GameState;
-    loadedPlayerTypes: string[];
-    gameOver: boolean;
-    deck: { cards: { rank: string; suit: string }[] };
-  }> {
+  async load(): Promise<LoadedState> {
     const raw = localStorage.getItem(this.stateKey);
     if (!raw) {
       throw new Error("No saved state found");
