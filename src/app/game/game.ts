@@ -411,6 +411,13 @@ export class Game {
     this.gameState.resignedPlayer = playerIndex;
     this.gameState.gameStarted = false;
 
+    // Clear the board and turn state so the UI renders cleanly
+    this.gameState.playPile = [];
+    this.#clearSelectedCards();
+    this.gameState.consecutivePasses = 0;
+    this.gameState.currentTurn++;
+    this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
+    this.gameState.lastPlayerToPlay = -1;
     // Increment games played for all players (resignation counts as participation)
     this.#incrementGamesPlayed();
     // Increment gamesResigned for the resigning player only
