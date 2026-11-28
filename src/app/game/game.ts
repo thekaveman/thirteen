@@ -94,16 +94,6 @@ export class Game {
   }
 
   /**
-   * Migrates a loaded (potentially outdated) gameState to the current schema.
-   * Missing fields are filled in with sensible defaults; existing values are never overwritten.
-   * @param gameState The gameState loaded from localStorage.
-   * @returns The migrated gameState.
-   */
-  migrate(gameState: Partial<GameState>): GameState {
-    return this.stateManager.migrate(gameState);
-  }
-
-  /**
    * Loads the game state from localStorage.
    * @param ui An instance of the UI class.
    * @returns True if a saved game was loaded, false otherwise.
