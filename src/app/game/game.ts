@@ -79,7 +79,7 @@ export class Game {
     this.gameState.playPile = [];
     this.gameState.roundNumber = 1;
     this.gameState.playerTurns = new Array(this.gameState.numPlayers).fill(0);
-    this.gameState.selectedCards = [];
+    this.#clearSelectedCards();
     this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
     this.gameState.roundEnded = false;
     this.gameState.resigned = false;
@@ -189,7 +189,7 @@ export class Game {
     this.gameState.playerTurns[this.gameState.currentPlayer]++;
     this.gameState.consecutivePasses++;
     this.gameState.playerPassed[this.gameState.currentPlayer] = true;
-    this.gameState.selectedCards = []; // Clear selected cards on pass
+    this.#clearSelectedCards();
 
     this.hooks.onPlayerPassed(new GameClient(this));
 
@@ -205,12 +205,7 @@ export class Game {
     }
 
     // Skip passed players to find the next active player, then switch to them
-    const numPlayers = this.gameState.numPlayers;
-    let nextPlayer = (this.gameState.currentPlayer + 1) % numPlayers;
-    while (nextPlayer !== this.gameState.lastPlayerToPlay && this.gameState.playerPassed[nextPlayer]) {
-      nextPlayer = (nextPlayer + 1) % numPlayers;
-    }
-
+    const nextPlayer = this.#findNextActivePlayer(this.gameState.currentPlayer, this.gameState.lastPlayerToPlay);
     this.gameState.currentPlayer = nextPlayer;
     this.gameState.currentTurn++;
     this.save();
@@ -248,7 +243,7 @@ export class Game {
       this.gameState.roundEnded = true;
       this.win();
       // Clear selected cards
-      this.gameState.selectedCards = [];
+      this.#clearSelectedCards();
       this.gameState.currentTurn++;
       this.save();
       return;
@@ -259,7 +254,7 @@ export class Game {
     this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
 
     // Clear selected cards
-    this.gameState.selectedCards = [];
+    this.#clearSelectedCards();
 
     // Check if round should end (all other players have passed)
     // This must happen AFTER consecutivePasses is reset (play cycle started) but BEFORE
@@ -275,12 +270,7 @@ export class Game {
 
     // Switch to next non-passed player after the last player to play
     if (!this.gameState.gameOver) {
-      const numPlayers = this.gameState.numPlayers;
-      let next = (this.gameState.lastPlayerToPlay + 1) % numPlayers;
-      while (this.gameState.playerPassed[next]) {
-        next = (next + 1) % numPlayers;
-      }
-      this.gameState.currentPlayer = next;
+      this.gameState.currentPlayer = this.#findNextActivePlayer(this.gameState.lastPlayerToPlay);
     }
     this.gameState.currentTurn++;
     this.save();
@@ -353,6 +343,40 @@ export class Game {
     }
   }
 
+  /**
+   * Resizes the gamesPlayed array if needed and increments every player's count by 1.
+   */
+  #incrementGamesPlayed(): void {
+    const numPlayers = this.gameState.numPlayers;
+    if (this.gameState.gamesPlayed.length < numPlayers) {
+      this.gameState.gamesPlayed = new Array(numPlayers).fill(0);
+    }
+    for (let i = 0; i < numPlayers; i++) {
+      this.gameState.gamesPlayed[i]++;
+    }
+  }
+
+  /**
+   * Clears the selected cards array.
+   */
+  #clearSelectedCards(): void {
+    this.gameState.selectedCards = [];
+  }
+
+  /**
+   * Finds the next active (non-passed) player, wrapping around and stopping at stopIndex.
+   * @param startIndex The index to start searching from.
+   * @param stopIndex The index to stop at (exclusive). Use -1 for no stop.
+   * @returns The next active player index.
+   */
+  #findNextActivePlayer(startIndex: number, stopIndex: number = -1): number {
+    let next = (startIndex + 1) % this.gameState.numPlayers;
+    while (next !== stopIndex && this.gameState.playerPassed[next]) {
+      next = (next + 1) % this.gameState.numPlayers;
+    }
+    return next;
+  }
+
   start(): void {
     if (!this.gameState.gameStarted) {
       this.deal();
@@ -372,14 +396,7 @@ export class Game {
     this.gameState.roundsWon[this.gameState.currentPlayer]++; // Increment roundsWon here too, for the current round
     this.gameState.gameOver = true;
     this.gameState.gameStarted = false;
-    // Increment games played for all participating players
-    const numPlayers = this.gameState.numPlayers;
-    if (this.gameState.gamesPlayed.length < numPlayers) {
-      this.gameState.gamesPlayed = new Array(numPlayers).fill(0);
-    }
-    for (let i = 0; i < numPlayers; i++) {
-      this.gameState.gamesPlayed[i]++;
-    }
+    this.#incrementGamesPlayed();
     this.save();
     this.hooks.onGameWon(new GameClient(this));
   }
@@ -393,17 +410,12 @@ export class Game {
     this.gameState.resigned = true;
     this.gameState.resignedPlayer = playerIndex;
     this.gameState.gameStarted = false;
+
     // Increment games played for all players (resignation counts as participation)
-    const numPlayers = this.gameState.numPlayers;
-    if (this.gameState.gamesPlayed.length < numPlayers) {
-      this.gameState.gamesPlayed = new Array(numPlayers).fill(0);
-    }
-    for (let i = 0; i < numPlayers; i++) {
-      this.gameState.gamesPlayed[i]++;
-    }
+    this.#incrementGamesPlayed();
     // Increment gamesResigned for the resigning player only
-    if (this.gameState.gamesResigned.length < numPlayers) {
-      this.gameState.gamesResigned = new Array(numPlayers).fill(0);
+    if (this.gameState.gamesResigned.length < this.gameState.numPlayers) {
+      this.gameState.gamesResigned = new Array(this.gameState.numPlayers).fill(0);
     }
     this.gameState.gamesResigned[playerIndex]++;
     this.save();
