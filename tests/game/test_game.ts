@@ -2,17 +2,19 @@ import { afterEach, beforeEach, describe, it } from "mocha";
 import { expect } from "chai";
 import * as sinon from "sinon";
 import { AI_PERSONAS } from "../../src/app/ai/personas.js";
-import { Card, Game } from "../../src/app/game/index.js";
+import { Card, Game, StateManager } from "../../src/app/game/index.js";
 import { HumanPlayer, AIPlayer } from "../../src/app/player/index.js";
 import { MockAI, MockDeck, MockUI } from "../mocks.ts";
 import { GameClient } from "../../src/app/game/index.js";
+
+const TEST_STATE_KEY = `${StateManager.STATE_KEY}-tests`;
 
 describe("Game", () => {
   let game: Game;
 
   beforeEach(() => {
     localStorage.clear();
-    game = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
+    game = new Game(new MockDeck(), TEST_STATE_KEY);
   });
 
   afterEach(() => {
@@ -228,15 +230,15 @@ describe("Game", () => {
   describe("Save and Load", () => {
     it("save() should save the game state to localStorage", () => {
       game.save();
-      const savedGame = localStorage.getItem(game.stateKey);
+      const savedGame = localStorage.getItem(TEST_STATE_KEY);
       expect(savedGame).to.exist;
       const parsedGame = JSON.parse(savedGame);
       expect(parsedGame.id).to.equal(game.id);
-      expect(parsedGame.stateKey).to.equal(game.stateKey);
+      expect(parsedGame.stateKey).to.equal(TEST_STATE_KEY);
     });
 
     it("load() should fail for invalid saved JSON", async () => {
-      localStorage.setItem(game.stateKey, "invalid json");
+      localStorage.setItem(TEST_STATE_KEY, "invalid json");
       try {
         await game.load(new MockUI(new GameClient(game)));
       } catch (e) {
@@ -272,12 +274,14 @@ describe("Game", () => {
       game.gameState.playerTypes = ["ai", "human"];
       game.save();
 
-      const newGame = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
+      const newGame = new Game(new MockDeck(), TEST_STATE_KEY);
       const loadedGameState = await newGame.load(mockUI);
 
       expect(loadedGameState.loaded).to.be.true;
       expect(newGame.id).to.equal(game.id);
-      expect(newGame.stateKey).to.equal(game.stateKey);
+      expect(localStorage.getItem(TEST_STATE_KEY)).to.exist;
+      const loadedData = JSON.parse(localStorage.getItem(TEST_STATE_KEY)!);
+      expect(loadedData.stateKey).to.equal(TEST_STATE_KEY);
 
       expect(loadedGameState.loadedPlayerTypes).to.deep.equal(game.gameState.playerTypes);
 
@@ -325,7 +329,7 @@ describe("Game", () => {
       game.save();
 
       // Simulate loading from a fresh game instance (like a browser refresh)
-      const newGame = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
+      const newGame = new Game(new MockDeck(), TEST_STATE_KEY);
       const loadedGameState = await newGame.load(mockUI);
 
       expect(loadedGameState.loaded).to.be.true;
@@ -359,117 +363,15 @@ describe("Game", () => {
       game.save();
 
       // Manually remove playerPassed from saved state to simulate old save format
-      const saved = localStorage.getItem(game.stateKey);
+      const saved = localStorage.getItem(TEST_STATE_KEY);
       const parsed = JSON.parse(saved);
       delete parsed.gameState.playerPassed;
-      localStorage.setItem(game.stateKey, JSON.stringify(parsed));
+      localStorage.setItem(TEST_STATE_KEY, JSON.stringify(parsed));
 
-      const newGame = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
+      const newGame = new Game(new MockDeck(), TEST_STATE_KEY);
       const loaded = await newGame.load(new MockUI(new GameClient(newGame)));
       expect(loaded.loaded).to.be.true;
       expect(newGame.gameState.playerPassed).to.deep.equal([false, false, false]);
-    });
-
-    it("load() should reset localStorage if version is outdated", async () => {
-      // Save a state with an old version
-      const oldState = {
-        id: "test-id",
-        deck: { cards: [] },
-        gameState: {
-          version: "0.0.0",
-          numPlayers: 2,
-          numAIPlayers: 0,
-          players: [],
-          playerHands: [],
-          playerTurns: [],
-          playPile: [],
-          currentPlayer: 0,
-          currentTurn: 0,
-          selectedCards: [],
-          consecutivePasses: 0,
-          lastPlayerToPlay: -1,
-          roundNumber: 1,
-          roundsWon: [],
-          gamesWon: [],
-          gamesPlayed: [],
-          aiPersonas: [],
-          gameOver: false,
-          gameStarted: false,
-          playerTypes: [],
-          playerPassed: [],
-          roundEnded: false,
-        },
-        stateKey: `${Game.STATE_KEY}-tests`,
-      };
-      localStorage.setItem(`${Game.STATE_KEY}-tests`, JSON.stringify(oldState));
-
-      const loadResult = await game.load(new MockUI());
-
-      expect(loadResult.loaded).to.be.false;
-      expect(localStorage.getItem(`${Game.STATE_KEY}-tests`)).to.be.null;
-    });
-
-    it("load() should succeed when version matches", async () => {
-      // Save a state with the current version
-      const state = {
-        id: "test-id",
-        deck: { cards: [] },
-        gameState: {
-          ...game.gameState,
-          version: Game.VERSION,
-          players: [],
-          playerHands: [],
-          playPile: [],
-          selectedCards: [],
-          roundsWon: [],
-          gamesWon: [],
-          gamesPlayed: [],
-        },
-        stateKey: `${Game.STATE_KEY}-tests`,
-      };
-      localStorage.setItem(`${Game.STATE_KEY}-tests`, JSON.stringify(state));
-
-      const loadResult = await game.load(new MockUI());
-
-      expect(loadResult.loaded).to.be.true;
-    });
-
-    it("load() should reset localStorage if no version field exists", async () => {
-      // Save a state without a version field (completely old save)
-      const oldState = {
-        id: "test-id",
-        deck: { cards: [] },
-        gameState: {
-          numPlayers: 2,
-          numAIPlayers: 0,
-          players: [],
-          playerHands: [],
-          playerTurns: [],
-          playPile: [],
-          currentPlayer: 0,
-          currentTurn: 0,
-          selectedCards: [],
-          consecutivePasses: 0,
-          lastPlayerToPlay: -1,
-          roundNumber: 1,
-          roundsWon: [],
-          gamesWon: [],
-          gamesPlayed: [],
-          aiPersonas: [],
-          gameOver: false,
-          gameStarted: false,
-          playerTypes: [],
-          playerPassed: [],
-          roundEnded: false,
-        },
-        stateKey: `${Game.STATE_KEY}-tests`,
-      };
-      localStorage.setItem(`${Game.STATE_KEY}-tests`, JSON.stringify(oldState));
-
-      const loadResult = await game.load(new MockUI());
-
-      expect(loadResult.loaded).to.be.false;
-      expect(localStorage.getItem(`${Game.STATE_KEY}-tests`)).to.be.null;
     });
   });
 

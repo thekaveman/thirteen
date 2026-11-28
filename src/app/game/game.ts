@@ -2,38 +2,17 @@ import { GameClient } from "./client.js";
 import type { Card } from "./deck.js";
 import { Card as CardClass, Deck } from "./deck.js";
 import type { Player } from "../player/base.js";
-import { PLAYER_TYPES, createPlayer } from "../player/index.js";
+import { createPlayer, PLAYER_TYPES } from "../player/index.js";
 import { Rules } from "./rules.js";
+import { StateManager, type GameState, type LoadedState } from "./state.js";
 import { log } from "../utils.js";
-import { VERSION } from "../version.js";
 
-export interface GameState {
-  version: string;
-  numPlayers: number;
-  numAIPlayers: number;
-  players: Player[];
-  playerHands: Card[][];
-  playerTurns: number[];
-  playPile: Card[];
-  currentPlayer: number;
-  currentTurn: number;
-  selectedCards: Card[];
-  consecutivePasses: number;
-  lastPlayerToPlay: number;
-  roundNumber: number;
-  roundsWon: number[];
-  gamesWon: number[];
-  gamesPlayed: number[];
-  gamesResigned: number[];
-  aiPersonas: (string | null)[];
-  gameOver: boolean;
-  gameStarted: boolean;
-  playerTypes: string[];
-  playerPassed: boolean[];
-  roundEnded: boolean;
-  resigned: boolean;
-  resignedPlayer: number;
-  resignConfirming: boolean;
+export type { GameState, LoadedState } from "./state.js";
+
+export interface LoadResult {
+  loaded: boolean;
+  loadedPlayerTypes?: string[];
+  gameOver?: boolean;
 }
 
 export interface GameHooks {
@@ -47,29 +26,20 @@ export interface GameHooks {
   onRoundPlayed: (_gameClient: GameClient) => void;
 }
 
-export interface LoadResult {
-  loaded: boolean;
-  loadedPlayerTypes?: string[];
-  gameOver?: boolean;
-}
-
 export class Game {
-  static readonly VERSION = VERSION;
-  static STATE_KEY = "13gs";
-
   deck: Deck;
   hooks: GameHooks;
   gameState: GameState;
   id: string;
   rules: Rules;
-  stateKey: string;
+  private stateManager: StateManager;
 
   /**
    * Initializes a new game.
    * @param deck The Deck instance for this game.
    * @param stateKey The key used to save and load state in localStorage.
    */
-  constructor(deck: Deck, stateKey: string = Game.STATE_KEY) {
+  constructor(deck: Deck, stateKey: string = StateManager.STATE_KEY) {
     this.deck = deck;
     this.hooks = {
       onGameInit: () => {},
@@ -81,37 +51,10 @@ export class Game {
       onPlayerPassed: () => {},
       onRoundPlayed: () => {},
     };
-    this.gameState = {
-      version: Game.VERSION,
-      numPlayers: 0,
-      numAIPlayers: 0,
-      players: [],
-      playerHands: [],
-      playerTurns: [],
-      playPile: [],
-      currentPlayer: 0,
-      currentTurn: 0,
-      selectedCards: [],
-      consecutivePasses: 0,
-      lastPlayerToPlay: -1,
-      roundNumber: 1,
-      roundsWon: [],
-      gamesWon: [],
-      gamesPlayed: [],
-      gamesResigned: [],
-      aiPersonas: [],
-      gameOver: false,
-      gameStarted: false,
-      playerTypes: [],
-      playerPassed: [],
-      roundEnded: false,
-      resigned: false,
-      resignedPlayer: -1,
-      resignConfirming: false,
-    };
+    this.stateManager = new StateManager(stateKey);
+    this.gameState = StateManager.createDefault();
     this.id = crypto.randomUUID();
     this.rules = new Rules();
-    this.stateKey = stateKey;
   }
 
   /**
@@ -136,7 +79,7 @@ export class Game {
     this.gameState.playPile = [];
     this.gameState.roundNumber = 1;
     this.gameState.playerTurns = new Array(this.gameState.numPlayers).fill(0);
-    this.gameState.selectedCards = [];
+    this.#clearSelectedCards();
     this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
     this.gameState.roundEnded = false;
     this.gameState.resigned = false;
@@ -160,56 +103,39 @@ export class Game {
    * @returns True if a saved game was loaded, false otherwise.
    */
   async load(ui: unknown): Promise<LoadResult> {
-    const savedState = localStorage.getItem(this.stateKey);
-    const parsedState = savedState ? JSON.parse(savedState) : null;
-
-    // Check version — must happen before we overwrite this.gameState
-    const isOutdated =
-      parsedState &&
-      (parsedState.gameState?.version === undefined || parsedState.gameState?.version !== Game.VERSION);
-    if (isOutdated) {
-      log("Outdated game state schema detected, resetting.");
-      localStorage.removeItem(this.stateKey);
+    let saved: Awaited<ReturnType<typeof this.stateManager.load>>;
+    try {
+      saved = await this.stateManager.load();
+    } catch {
       return { loaded: false };
     }
-    if (parsedState && ui) {
-      // Store data from the parsed state before overwriting this.gameState
-      const loadedPlayerIds = parsedState.gameState.players.map((p: { id: string }) => p.id);
-      const loadedPlayerTypes = parsedState.gameState.players.map((p: { type: string }) => p.type);
 
-      this.id = parsedState.id;
-      this.stateKey = parsedState.stateKey;
-      this.gameState = parsedState.gameState;
-      // Re-hydrate deck
-      this.deck = new Deck(parsedState.deck.cards);
-      // Re-hydrate cards
-      this.gameState.playerHands = [...this.gameState.playerHands].map((h) => CardClass.objectsToList(h));
-      this.gameState.playPile = CardClass.objectsToList([...this.gameState.playPile]);
-      this.gameState.selectedCards = CardClass.objectsToList([...this.gameState.selectedCards]);
-      // Re-hydrate players (async due to dynamic AI persona loading)
-      this.gameState.players = await Promise.all(
-        parsedState.gameState.players.map(async (p: { id: string }, i: number) =>
-          createPlayer({
-            id: loadedPlayerIds[i],
-            gameClient: new GameClient(this),
-            type: loadedPlayerTypes[i],
-            number: i,
-            ui: ui as any,
-            persona: parsedState.gameState.players[i].type === PLAYER_TYPES.AI ? parsedState.gameState.players[i].persona : null,
-          })
-        )
-      );
-      // Assign the stored playerTypes back to gameState
-      this.gameState.playerTypes = loadedPlayerTypes;
-      // Initialize playerPassed if missing (backward compat with old saves)
-      const pp = this.gameState.playerPassed;
-      if (!pp || !Array.isArray(pp) || pp.length !== this.gameState.numPlayers) {
-        this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
-      }
-      log("Game loaded from localStorage.");
-      return { loaded: true, loadedPlayerTypes, gameOver: this.gameState.gameOver };
-    }
-    return { loaded: false };
+    if (!ui) return { loaded: false };
+
+    this.id = saved.id;
+    this.deck = new Deck(saved.deck.cards);
+    this.gameState = saved.gameState;
+    this.gameState.playerHands = [...this.gameState.playerHands].map((h) => CardClass.objectsToList(h));
+    this.gameState.playPile = CardClass.objectsToList([...this.gameState.playPile]);
+    this.gameState.selectedCards = CardClass.objectsToList([...this.gameState.selectedCards]);
+
+    const loadedPlayerIds = saved.gameState.players.map((p: { id: string }) => p.id);
+    this.gameState.players = await Promise.all(
+      saved.gameState.players.map(async (p: any, i: number) =>
+        createPlayer({
+          id: loadedPlayerIds[i],
+          gameClient: new GameClient(this),
+          type: saved.loadedPlayerTypes[i],
+          number: i,
+          ui: ui as any,
+          persona: p.type === PLAYER_TYPES.AI ? p.persona : undefined,
+        })
+      )
+    );
+
+    this.gameState.playerTypes = saved.loadedPlayerTypes;
+    log("Game loaded from localStorage.");
+    return { loaded: true, loadedPlayerTypes: saved.loadedPlayerTypes, gameOver: this.gameState.gameOver };
   }
 
   /**
@@ -263,7 +189,7 @@ export class Game {
     this.gameState.playerTurns[this.gameState.currentPlayer]++;
     this.gameState.consecutivePasses++;
     this.gameState.playerPassed[this.gameState.currentPlayer] = true;
-    this.gameState.selectedCards = []; // Clear selected cards on pass
+    this.#clearSelectedCards();
 
     this.hooks.onPlayerPassed(new GameClient(this));
 
@@ -279,12 +205,7 @@ export class Game {
     }
 
     // Skip passed players to find the next active player, then switch to them
-    const numPlayers = this.gameState.numPlayers;
-    let nextPlayer = (this.gameState.currentPlayer + 1) % numPlayers;
-    while (nextPlayer !== this.gameState.lastPlayerToPlay && this.gameState.playerPassed[nextPlayer]) {
-      nextPlayer = (nextPlayer + 1) % numPlayers;
-    }
-
+    const nextPlayer = this.#findNextActivePlayer(this.gameState.currentPlayer, this.gameState.lastPlayerToPlay);
     this.gameState.currentPlayer = nextPlayer;
     this.gameState.currentTurn++;
     this.save();
@@ -322,7 +243,7 @@ export class Game {
       this.gameState.roundEnded = true;
       this.win();
       // Clear selected cards
-      this.gameState.selectedCards = [];
+      this.#clearSelectedCards();
       this.gameState.currentTurn++;
       this.save();
       return;
@@ -333,7 +254,7 @@ export class Game {
     this.gameState.lastPlayerToPlay = this.gameState.currentPlayer;
 
     // Clear selected cards
-    this.gameState.selectedCards = [];
+    this.#clearSelectedCards();
 
     // Check if round should end (all other players have passed)
     // This must happen AFTER consecutivePasses is reset (play cycle started) but BEFORE
@@ -349,12 +270,7 @@ export class Game {
 
     // Switch to next non-passed player after the last player to play
     if (!this.gameState.gameOver) {
-      const numPlayers = this.gameState.numPlayers;
-      let next = (this.gameState.lastPlayerToPlay + 1) % numPlayers;
-      while (this.gameState.playerPassed[next]) {
-        next = (next + 1) % numPlayers;
-      }
-      this.gameState.currentPlayer = next;
+      this.gameState.currentPlayer = this.#findNextActivePlayer(this.gameState.lastPlayerToPlay);
     }
     this.gameState.currentTurn++;
     this.save();
@@ -377,15 +293,7 @@ export class Game {
    * Saves the current game state to localStorage.
    */
   save(): void {
-    const serializableGameState = {
-      id: this.id,
-      deck: { ...this.deck },
-      gameState: { ...this.gameState },
-      stateKey: this.stateKey,
-    };
-    serializableGameState.gameState.players = this.gameState.players.map((p) => p.data()) as unknown as Player[];
-    localStorage.setItem(this.stateKey, JSON.stringify(serializableGameState));
-    log("Game saved to localStorage.");
+    this.stateManager.save(this.gameState, this.deck, this.id);
   }
 
   /**
@@ -403,14 +311,16 @@ export class Game {
       this.gameState.numAIPlayers = players.length - 1;
       this.gameState.aiPersonas = players.slice(1).map((p) => p.persona);
 
+      // Always resize stats arrays to match current player count
+      this.#resizeStatsArray(this.gameState.gamesWon, players.length);
+      this.#resizeStatsArray(this.gameState.gamesPlayed, players.length);
+      this.#resizeStatsArray(this.gameState.gamesResigned, players.length);
+      this.#resizeStatsArray(this.gameState.roundsWon, players.length);
+
       const skipDeal = options?.skipDeal ?? false;
       if (!skipDeal) {
-        this.#resizeStatsArray(this.gameState.gamesWon, players.length);
-        this.#resizeStatsArray(this.gameState.gamesPlayed, players.length);
-        this.#resizeStatsArray(this.gameState.gamesResigned, players.length);
         this.#resetForNewGame();
         this.gameState.playerHands = players.map(() => []);
-        this.gameState.roundsWon = new Array(players.length).fill(0);
       }
       this.save();
     }
@@ -432,6 +342,41 @@ export class Game {
       statsArray.length = targetLength;
     }
   }
+
+  /**
+   * Resizes the gamesPlayed array if needed and increments every player's count by 1.
+   */
+  #incrementGamesPlayed(): void {
+    const numPlayers = this.gameState.numPlayers;
+    if (this.gameState.gamesPlayed.length < numPlayers) {
+      this.gameState.gamesPlayed = new Array(numPlayers).fill(0);
+    }
+    for (let i = 0; i < numPlayers; i++) {
+      this.gameState.gamesPlayed[i]++;
+    }
+  }
+
+  /**
+   * Clears the selected cards array.
+   */
+  #clearSelectedCards(): void {
+    this.gameState.selectedCards = [];
+  }
+
+  /**
+   * Finds the next active (non-passed) player, wrapping around and stopping at stopIndex.
+   * @param startIndex The index to start searching from.
+   * @param stopIndex The index to stop at (exclusive). Use -1 for no stop.
+   * @returns The next active player index.
+   */
+  #findNextActivePlayer(startIndex: number, stopIndex: number = -1): number {
+    let next = (startIndex + 1) % this.gameState.numPlayers;
+    while (next !== stopIndex && this.gameState.playerPassed[next]) {
+      next = (next + 1) % this.gameState.numPlayers;
+    }
+    return next;
+  }
+
   start(): void {
     if (!this.gameState.gameStarted) {
       this.deal();
@@ -451,14 +396,7 @@ export class Game {
     this.gameState.roundsWon[this.gameState.currentPlayer]++; // Increment roundsWon here too, for the current round
     this.gameState.gameOver = true;
     this.gameState.gameStarted = false;
-    // Increment games played for all participating players
-    const numPlayers = this.gameState.numPlayers;
-    if (this.gameState.gamesPlayed.length < numPlayers) {
-      this.gameState.gamesPlayed = new Array(numPlayers).fill(0);
-    }
-    for (let i = 0; i < numPlayers; i++) {
-      this.gameState.gamesPlayed[i]++;
-    }
+    this.#incrementGamesPlayed();
     this.save();
     this.hooks.onGameWon(new GameClient(this));
   }
@@ -472,17 +410,19 @@ export class Game {
     this.gameState.resigned = true;
     this.gameState.resignedPlayer = playerIndex;
     this.gameState.gameStarted = false;
+
+    // Clear the board and turn state so the UI renders cleanly
+    this.gameState.playPile = [];
+    this.#clearSelectedCards();
+    this.gameState.consecutivePasses = 0;
+    this.gameState.currentTurn++;
+    this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
+    this.gameState.lastPlayerToPlay = -1;
     // Increment games played for all players (resignation counts as participation)
-    const numPlayers = this.gameState.numPlayers;
-    if (this.gameState.gamesPlayed.length < numPlayers) {
-      this.gameState.gamesPlayed = new Array(numPlayers).fill(0);
-    }
-    for (let i = 0; i < numPlayers; i++) {
-      this.gameState.gamesPlayed[i]++;
-    }
+    this.#incrementGamesPlayed();
     // Increment gamesResigned for the resigning player only
-    if (this.gameState.gamesResigned.length < numPlayers) {
-      this.gameState.gamesResigned = new Array(numPlayers).fill(0);
+    if (this.gameState.gamesResigned.length < this.gameState.numPlayers) {
+      this.gameState.gamesResigned = new Array(this.gameState.numPlayers).fill(0);
     }
     this.gameState.gamesResigned[playerIndex]++;
     this.save();
