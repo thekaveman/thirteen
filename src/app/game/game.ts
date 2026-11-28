@@ -4,7 +4,7 @@ import { Card as CardClass, Deck } from "./deck.js";
 import type { Player } from "../player/base.js";
 import { createPlayer, PLAYER_TYPES } from "../player/index.js";
 import { Rules } from "./rules.js";
-import { createDefaultGameState, type GameState } from "./state.js";
+import { createDefaultGameState, type GameState, StateManager } from "./state.js";
 import { log } from "../utils.js";
 import { VERSION } from "../version.js";
 
@@ -37,6 +37,7 @@ export class Game {
   id: string;
   rules: Rules;
   stateKey: string;
+  private stateManager: StateManager;
 
   /**
    * Initializes a new game.
@@ -59,6 +60,7 @@ export class Game {
     this.id = crypto.randomUUID();
     this.rules = new Rules();
     this.stateKey = stateKey;
+    this.stateManager = new StateManager(stateKey);
   }
 
   /**
@@ -108,82 +110,7 @@ export class Game {
    * @returns The migrated gameState.
    */
   migrate(gameState: Partial<GameState>): GameState {
-    const defaults: Partial<GameState> = {
-      version: Game.VERSION,
-      numPlayers: gameState.numPlayers ?? 0,
-      numAIPlayers: gameState.numAIPlayers ?? 0,
-      players: [],
-      playerHands: [],
-      playerTurns: [],
-      playPile: [],
-      currentPlayer: 0,
-      currentTurn: 0,
-      selectedCards: [],
-      consecutivePasses: 0,
-      lastPlayerToPlay: -1,
-      roundNumber: 1,
-      roundsWon: [],
-      gamesWon: [],
-      gamesPlayed: [],
-      gamesResigned: [],
-      aiPersonas: [],
-      gameOver: false,
-      gameStarted: false,
-      playerTypes: [],
-      playerPassed: [],
-      roundEnded: false,
-      resigned: false,
-      resignedPlayer: -1,
-      resignConfirming: false,
-    };
-
-    // Fill in any missing scalar/boolean/object fields
-    for (const key of Object.keys(defaults) as (keyof GameState)[]) {
-      if (!(key in gameState) || gameState[key] === undefined) {
-        gameState[key] = defaults[key] as any;
-      }
-    }
-
-    // Special-casing for arrays that depend on numPlayers
-    const n = gameState.numPlayers ?? 0;
-
-    const arraysThatNeedPlayerSize = [
-      "playerTurns",
-      "playerPassed",
-      "roundsWon",
-      "gamesWon",
-      "gamesPlayed",
-      "gamesResigned",
-      "aiPersonas",
-    ] as const;
-
-    for (const arrName of arraysThatNeedPlayerSize) {
-      const arr = gameState[arrName];
-      if (!Array.isArray(arr)) {
-        if (arrName === "aiPersonas") {
-          gameState[arrName] = new Array(n).fill(null);
-        } else if (arrName === "playerPassed") {
-          gameState[arrName] = new Array(n).fill(false);
-        } else {
-          gameState[arrName] = new Array(n).fill(0);
-        }
-      } else if (arr.length < n) {
-        while (arr.length < n) {
-          if (arrName === "playerPassed") {
-            (arr as unknown[]).push(false);
-          } else if (arrName === "aiPersonas") {
-            (arr as unknown[]).push(null);
-          } else {
-            (arr as unknown[]).push(0);
-          }
-        }
-      } else if (arr.length > n) {
-        arr.length = n;
-      }
-    }
-
-    gameState.version = Game.VERSION;
-    return gameState as GameState;
+    return this.stateManager.migrate(gameState);
   }
 
   /**
@@ -196,25 +123,23 @@ export class Game {
     const parsedState = savedState ? JSON.parse(savedState) : null;
 
     if (parsedState && ui) {
-      // Store data from the parsed state before overwriting this.gameState
-      const loadedPlayerIds = parsedState.gameState.players.map((p: { id: string }) => p.id);
-      const loadedPlayerTypes = parsedState.gameState.players.map((p: { type: string }) => p.type);
+      // Delegate persistence and migration to StateManager
+      const { gameState, loadedPlayerTypes, gameOver } = await this.stateManager.load(parsedState, ui);
 
       this.id = parsedState.id;
       this.stateKey = parsedState.stateKey;
 
-      // Migrate the loaded state to the current schema (fills in missing fields)
-      this.gameState = this.migrate(parsedState.gameState);
-
       // Re-hydrate deck and object references
       this.deck = new Deck(parsedState.deck.cards);
+      this.gameState = gameState;
       this.gameState.playerHands = [...this.gameState.playerHands].map((h) => CardClass.objectsToList(h));
       this.gameState.playPile = CardClass.objectsToList([...this.gameState.playPile]);
       this.gameState.selectedCards = CardClass.objectsToList([...this.gameState.selectedCards]);
 
       // Re-hydrate players (async due to dynamic AI persona loading)
+      const loadedPlayerIds = gameState.players.map((p) => p.id);
       this.gameState.players = await Promise.all(
-        parsedState.gameState.players.map(async (p: { id: string }, i: number) =>
+        gameState.players.map(async (p: { id: string }, i: number) =>
           createPlayer({
             id: loadedPlayerIds[i],
             gameClient: new GameClient(this),
@@ -399,15 +324,7 @@ export class Game {
    * Saves the current game state to localStorage.
    */
   save(): void {
-    const serializableGameState = {
-      id: this.id,
-      deck: { ...this.deck },
-      gameState: { ...this.gameState },
-      stateKey: this.stateKey,
-    };
-    serializableGameState.gameState.players = this.gameState.players.map((p) => p.data()) as unknown as Player[];
-    localStorage.setItem(this.stateKey, JSON.stringify(serializableGameState));
-    log("Game saved to localStorage.");
+    this.stateManager.save(this.gameState, this.deck, this.id);
   }
 
   /**
