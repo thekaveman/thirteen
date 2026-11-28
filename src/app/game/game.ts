@@ -4,11 +4,10 @@ import { Card as CardClass, Deck } from "./deck.js";
 import type { Player } from "../player/base.js";
 import { createPlayer, PLAYER_TYPES } from "../player/index.js";
 import { Rules } from "./rules.js";
-import { StateManager, type GameState } from "./state.js";
+import { StateManager, type GameState, type LoadResult } from "./state.js";
 import { log } from "../utils.js";
-import { VERSION } from "../version.js";
 
-export type { GameState } from "./state.js";
+export type { GameState, LoadResult } from "./state.js";
 
 export interface GameHooks {
   onGameInit: (_gameClient: GameClient) => void;
@@ -21,15 +20,9 @@ export interface GameHooks {
   onRoundPlayed: (_gameClient: GameClient) => void;
 }
 
-export interface LoadResult {
-  loaded: boolean;
-  loadedPlayerTypes?: string[];
-  gameOver?: boolean;
-}
-
 export class Game {
-  static readonly VERSION = VERSION;
-  static STATE_KEY = "13gs";
+  static readonly VERSION = StateManager.VERSION;
+  static STATE_KEY = StateManager.STATE_KEY;
 
   deck: Deck;
   hooks: GameHooks;

@@ -1,12 +1,9 @@
 import { describe, it, beforeEach, afterEach } from "mocha";
 import { expect } from "chai";
-import { VERSION } from "../../src/app/version.js";
-import { StateManager, migrateGameState } from "../../src/app/game/state.js";
+import { StateManager, type GameState } from "../../src/app/game/state.js";
 import { GameClient } from "../../src/app/game/index.js";
 import { Card, Game } from "../../src/app/game/index.js";
 import { MockUI } from "../mocks.ts";
-import { AIPlayer } from "../../src/app/player/index.js";
-import { MockAI } from "../mocks.ts";
 
 describe("GameState defaults (StateManager.createDefault)", () => {
   let game: Game;
@@ -26,7 +23,7 @@ describe("GameState defaults (StateManager.createDefault)", () => {
 
   it("should return a fresh GameState with correct version", () => {
     const state = StateManager.createDefault();
-    expect(state.version).to.equal(VERSION);
+    expect(state.version).to.equal(StateManager.VERSION);
   });
 
   it("should return a fresh GameState with all default values", () => {
@@ -59,10 +56,16 @@ describe("GameState defaults (StateManager.createDefault)", () => {
   });
 });
 
-describe("migrateGameState", () => {
+describe("StateManager.migrate", () => {
+  let sm: StateManager;
+
+  beforeEach(() => {
+    sm = new StateManager("test");
+  });
+
   it("should fill in missing scalar and boolean fields with defaults", () => {
     const partialState = {};
-    const migrated = migrateGameState(partialState as never);
+    const migrated = sm.migrate(partialState as Partial<GameState>);
 
     expect(migrated.resigned).to.be.false;
     expect(migrated.resignedPlayer).to.equal(-1);
@@ -75,7 +78,7 @@ describe("migrateGameState", () => {
     expect(migrated.currentPlayer).to.equal(0);
     expect(migrated.currentTurn).to.equal(0);
     expect(migrated.consecutivePasses).to.equal(0);
-    expect(migrated.version).to.equal(VERSION);
+    expect(migrated.version).to.equal(StateManager.VERSION);
   });
 
   it("should never overwrite existing values", () => {
@@ -88,7 +91,7 @@ describe("migrateGameState", () => {
       version: "old-version",
     } as Partial<ReturnType<typeof StateManager.createDefault>>;
 
-    const migrated = migrateGameState(existingState);
+    const migrated = sm.migrate(existingState);
 
     expect(migrated.resigned).to.be.true;
     expect(migrated.resignedPlayer).to.equal(1);
@@ -96,12 +99,12 @@ describe("migrateGameState", () => {
     expect(migrated.consecutivePasses).to.equal(5);
     expect(migrated.gameOver).to.be.true;
     // Version should be updated to current
-    expect(migrated.version).to.equal(VERSION);
+    expect(migrated.version).to.equal(StateManager.VERSION);
   });
 
   it("should initialize aiPersonas array to match numPlayers", () => {
     const state = { numPlayers: 3 } as Partial<ReturnType<typeof StateManager.createDefault>>;
-    const migrated = migrateGameState(state);
+    const migrated = sm.migrate(state);
     expect((migrated.aiPersonas as (string | null)[]).length).to.equal(3);
     expect(migrated.aiPersonas).to.deep.equal([null, null, null]);
   });
@@ -109,9 +112,9 @@ describe("migrateGameState", () => {
   it("should grow aiPersonas to match numPlayers when shorter", () => {
     const state = {
       numPlayers: 3,
-      aiPersonas: ["random" as never],
+      aiPersonas: ["random" as Partial<GameState>],
     } as Partial<ReturnType<typeof StateManager.createDefault>>;
-    const migrated = migrateGameState(state);
+    const migrated = sm.migrate(state);
     expect((migrated.aiPersonas as (string | null)[]).length).to.equal(3);
     expect(migrated.aiPersonas).to.deep.equal(["random", null, null]);
   });
@@ -119,16 +122,16 @@ describe("migrateGameState", () => {
   it("should truncate aiPersonas when longer than numPlayers", () => {
     const state = {
       numPlayers: 1,
-      aiPersonas: ["random" as never, "prioritized" as never],
+      aiPersonas: ["random" as Partial<GameState>, "prioritized" as never],
     } as Partial<ReturnType<typeof StateManager.createDefault>>;
-    const migrated = migrateGameState(state);
+    const migrated = sm.migrate(state);
     expect((migrated.aiPersonas as (string | null)[]).length).to.equal(1);
     expect(migrated.aiPersonas).to.deep.equal(["random"]);
   });
 
   it("should initialize playerTurns to match numPlayers", () => {
     const state = { numPlayers: 2 } as Partial<ReturnType<typeof StateManager.createDefault>>;
-    const migrated = migrateGameState(state);
+    const migrated = sm.migrate(state);
     expect(migrated.playerTurns).to.deep.equal([0, 0]);
   });
 
@@ -137,7 +140,7 @@ describe("migrateGameState", () => {
       numPlayers: 3,
       playerTurns: [1, 2] as unknown[],
     } as Partial<ReturnType<typeof StateManager.createDefault>>;
-    const migrated = migrateGameState(state);
+    const migrated = sm.migrate(state);
     expect(migrated.playerTurns).to.deep.equal([1, 2, 0]);
   });
 
@@ -149,7 +152,7 @@ describe("migrateGameState", () => {
       gamesResigned: [1] as unknown[],
       roundsWon: [1] as unknown[],
     } as Partial<ReturnType<typeof StateManager.createDefault>>;
-    const migrated = migrateGameState(state);
+    const migrated = sm.migrate(state);
     expect(migrated.gamesWon).to.deep.equal([2, 0, 0]);
     expect(migrated.gamesPlayed).to.deep.equal([1, 0, 0]);
     expect(migrated.gamesResigned).to.deep.equal([1, 0, 0]);
@@ -158,7 +161,7 @@ describe("migrateGameState", () => {
 
   it("should initialize playerPassed to match numPlayers", () => {
     const state = { numPlayers: 3 } as Partial<ReturnType<typeof StateManager.createDefault>>;
-    const migrated = migrateGameState(state);
+    const migrated = sm.migrate(state);
     expect(migrated.playerPassed).to.deep.equal([false, false, false]);
   });
 
@@ -167,7 +170,7 @@ describe("migrateGameState", () => {
       numPlayers: 4,
       playerTurns: [3, 5, 2] as unknown[],
     } as Partial<ReturnType<typeof StateManager.createDefault>>;
-    const migrated = migrateGameState(state);
+    const migrated = sm.migrate(state);
     expect(migrated.playerTurns).to.deep.equal([3, 5, 2, 0]);
   });
 
@@ -179,7 +182,7 @@ describe("migrateGameState", () => {
       gamesResigned: [1] as unknown[],
       roundsWon: [2, 1] as unknown[],
     } as Partial<ReturnType<typeof StateManager.createDefault>>;
-    const migrated = migrateGameState(state);
+    const migrated = sm.migrate(state);
     expect(migrated.gamesWon).to.deep.equal([5]);
     expect(migrated.gamesPlayed).to.deep.equal([4]);
     expect(migrated.gamesResigned).to.deep.equal([1]);
@@ -220,7 +223,7 @@ describe("StateManager", () => {
       const parsed = JSON.parse(saved);
       expect(parsed.id).to.equal("test-id");
       expect(parsed.deck.cards).to.deep.equal([{ rank: "A", suit: "♠" }]);
-      expect(parsed.gameState.version).to.equal(VERSION);
+      expect(parsed.gameState.version).to.equal(StateManager.VERSION);
     });
   });
 
@@ -365,13 +368,13 @@ describe("StateManager", () => {
   });
 
   describe("migrate()", () => {
-    it("should delegate to migrateGameState", () => {
+    it("should fill in missing fields from partial state", () => {
       const partialState = { resigned: true, resignedPlayer: 1 } as Partial<GameState>;
       const migrated = stateManager.migrate(partialState);
 
       expect(migrated.resigned).to.be.true;
       expect(migrated.resignedPlayer).to.equal(1);
-      expect(migrated.version).to.equal(VERSION);
+      expect(migrated.version).to.equal(StateManager.VERSION);
     });
   });
 });
