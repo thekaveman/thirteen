@@ -21,9 +21,6 @@ export interface GameHooks {
 }
 
 export class Game {
-  static readonly VERSION = StateManager.VERSION;
-  static STATE_KEY = StateManager.STATE_KEY;
-
   deck: Deck;
   hooks: GameHooks;
   gameState: GameState;
@@ -37,7 +34,7 @@ export class Game {
    * @param deck The Deck instance for this game.
    * @param stateKey The key used to save and load state in localStorage.
    */
-  constructor(deck: Deck, stateKey: string = Game.STATE_KEY) {
+  constructor(deck: Deck, stateKey: string = StateManager.STATE_KEY) {
     this.deck = deck;
     this.hooks = {
       onGameInit: () => {},

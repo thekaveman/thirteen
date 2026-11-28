@@ -4,7 +4,7 @@ import type { Card } from "./game/deck.js";
 import type { Deck } from "./game/deck.js";
 import type { Game } from "./game/game.js";
 import type { GameClient } from "./game/client.js";
-import { Deck as DeckClass, Game as GameClass, GameClient as GameClientClass } from "./game/index.js";
+import { Deck as DeckClass, Game as GameClass, GameClient as GameClientClass, StateManager } from "./game/index.js";
 import type { Player } from "./player/base.js";
 import type { AIPlayer } from "./player/ai.js";
 import { createPlayer, PLAYER_TYPES } from "./player/index.js";
@@ -430,7 +430,7 @@ export class App {
    */
   static async create(options: AppOptions = {}): Promise<App> {
     const {
-      stateKey = GameClass.STATE_KEY,
+      stateKey = StateManager.STATE_KEY,
       DeckClass: DeckCls = DeckClass,
       GameClass: GameCls = GameClass,
       UIClass: UICls = UI,

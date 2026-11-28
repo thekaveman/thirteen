@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, it } from "mocha";
 import { expect } from "chai";
 import * as sinon from "sinon";
 import { AI_PERSONAS } from "../../src/app/ai/personas.js";
-import { Card, Game } from "../../src/app/game/index.js";
+import { Card, Game, StateManager } from "../../src/app/game/index.js";
 import { HumanPlayer, AIPlayer } from "../../src/app/player/index.js";
 import { MockAI, MockDeck, MockUI } from "../mocks.ts";
 import { GameClient } from "../../src/app/game/index.js";
@@ -12,7 +12,7 @@ describe("Game", () => {
 
   beforeEach(() => {
     localStorage.clear();
-    game = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
+    game = new Game(new MockDeck(), `${StateManager.STATE_KEY}-tests`);
   });
 
   afterEach(() => {
@@ -272,7 +272,7 @@ describe("Game", () => {
       game.gameState.playerTypes = ["ai", "human"];
       game.save();
 
-      const newGame = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
+      const newGame = new Game(new MockDeck(), `${StateManager.STATE_KEY}-tests`);
       const loadedGameState = await newGame.load(mockUI);
 
       expect(loadedGameState.loaded).to.be.true;
@@ -325,7 +325,7 @@ describe("Game", () => {
       game.save();
 
       // Simulate loading from a fresh game instance (like a browser refresh)
-      const newGame = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
+      const newGame = new Game(new MockDeck(), `${StateManager.STATE_KEY}-tests`);
       const loadedGameState = await newGame.load(mockUI);
 
       expect(loadedGameState.loaded).to.be.true;
@@ -364,7 +364,7 @@ describe("Game", () => {
       delete parsed.gameState.playerPassed;
       localStorage.setItem(game.stateKey, JSON.stringify(parsed));
 
-      const newGame = new Game(new MockDeck(), `${Game.STATE_KEY}-tests`);
+      const newGame = new Game(new MockDeck(), `${StateManager.STATE_KEY}-tests`);
       const loaded = await newGame.load(new MockUI(new GameClient(newGame)));
       expect(loaded.loaded).to.be.true;
       expect(newGame.gameState.playerPassed).to.deep.equal([false, false, false]);

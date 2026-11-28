@@ -14,7 +14,7 @@ describe("GameState defaults (StateManager.createDefault)", () => {
       cards = [];
       shuffle() {}
       deal() { return []; }
-    } as unknown as typeof Card)(), `${Game.STATE_KEY}-tests`);
+    } as unknown as typeof Card)(), `${StateManager.STATE_KEY}-tests`);
   });
 
   afterEach(() => {
@@ -200,7 +200,7 @@ describe("StateManager", () => {
       cards = [];
       shuffle() {}
       deal() { return []; }
-    } as unknown as typeof Card)(), `${Game.STATE_KEY}-tests`);
+    } as unknown as typeof Card)(), `${StateManager.STATE_KEY}-tests`);
     stateManager = new StateManager(game.stateKey);
   });
 

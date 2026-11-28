@@ -1,6 +1,7 @@
 import { AI } from "./app/ai/index.js";
 import { AI_PERSONAS } from "./app/ai/personas.js";
 import { Card, Deck, Game, COMBINATION_TYPES, RANKS, SUITS, GameClient } from "./app/game/index.js";
+import { StateManager } from "./app/game/index.js";
 import { UI } from "./app/ui.js";
 
 interface TryItState {
@@ -18,7 +19,7 @@ class Help {
 
   constructor() {
     this.deck = new Deck();
-    this.game = new Game(this.deck, Game.STATE_KEY + "-help");
+    this.game = new Game(this.deck, StateManager.STATE_KEY + "-help");
     this.gameClient = new GameClient(this.game);
     this.ai = new AI(this.gameClient, "lowest_card");
 
