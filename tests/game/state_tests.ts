@@ -1,9 +1,7 @@
 import { describe, it, beforeEach, afterEach } from "mocha";
 import { expect } from "chai";
 import { StateManager, type GameState } from "../../src/app/game/state.js";
-import { GameClient } from "../../src/app/game/index.js";
 import { Card, Game } from "../../src/app/game/index.js";
-import { MockUI } from "../mocks.ts";
 
 describe("GameState defaults (StateManager.createDefault)", () => {
   let game: Game;
@@ -228,11 +226,10 @@ describe("StateManager", () => {
   });
 
   describe("load()", () => {
-    it("should return null for no saved state (load is delegated)", () => {
-      // Game.load() returns { loaded: false } when no saved state exists
-      // This test verifies StateManager is correctly integrated
-      const result = { loaded: false };
-      expect(result.loaded).to.be.false;
+    it("should throw when no saved state exists", async () => {
+      let threw = false;
+      try { await stateManager.load(); } catch { threw = true; }
+      expect(threw).to.be.true;
     });
 
     it("should load and migrate a valid saved state", async () => {
@@ -251,15 +248,13 @@ describe("StateManager", () => {
       const mockDeck = { cards: [{ rank: "A", suit: "♠" }] };
       stateManager.save(mockGameState, mockDeck, "test-id");
 
-      const saved = localStorage.getItem(game.stateKey);
-      const parsedState = JSON.parse(saved!);
-
-      const ui = new MockUI(new GameClient(game));
-      const result = await stateManager.load(parsedState, ui);
+      const result = await stateManager.load();
 
       expect(result.gameState).to.exist;
       expect(result.loadedPlayerTypes).to.deep.equal(["human", "ai"]);
       expect(result.gameOver).to.be.false;
+      expect(result.id).to.equal("test-id");
+      expect(result.deck.cards).to.deep.equal([{ rank: "A", suit: "♠" }]);
     });
 
     it("should migrate missing fields during load", async () => {
@@ -276,19 +271,12 @@ describe("StateManager", () => {
       const mockDeck = { cards: [] };
       stateManager.save(mockGameState, mockDeck, "test-id");
 
-      const saved = localStorage.getItem(game.stateKey);
-      const parsedState = JSON.parse(saved!);
-
       // Simulate an old save format by removing playerPassed
-      delete (parsedState.gameState as any).playerPassed;
-      localStorage.setItem(game.stateKey, JSON.stringify(parsedState));
+      const saved = JSON.parse(localStorage.getItem(game.stateKey)!);
+      delete saved.gameState.playerPassed;
+      localStorage.setItem(game.stateKey, JSON.stringify(saved));
 
-      // Reload and verify migration
-      const savedAgain = localStorage.getItem(game.stateKey);
-      const reloadedParsed = JSON.parse(savedAgain!);
-
-      const ui = new MockUI(new GameClient(game));
-      const result = await stateManager.load(reloadedParsed, ui);
+      const result = await stateManager.load();
 
       expect(result.gameState.playerPassed).to.deep.equal([false]);
     });
@@ -307,21 +295,14 @@ describe("StateManager", () => {
       const mockDeck = { cards: [] };
       stateManager.save(mockGameState, mockDeck, "test-id");
 
-      const saved = localStorage.getItem(game.stateKey);
-      const parsedState = JSON.parse(saved!);
-
       // Simulate an old save format by removing several fields
-      delete (parsedState.gameState as any).resigned;
-      delete (parsedState.gameState as any).roundEnded;
-      delete (parsedState.gameState as any).currentPlayer;
+      const saved = JSON.parse(localStorage.getItem(game.stateKey)!);
+      delete saved.gameState.resigned;
+      delete saved.gameState.roundEnded;
+      delete saved.gameState.currentPlayer;
+      localStorage.setItem(game.stateKey, JSON.stringify(saved));
 
-      localStorage.setItem(game.stateKey, JSON.stringify(parsedState));
-
-      const savedAgain = localStorage.getItem(game.stateKey);
-      const reloadedParsed = JSON.parse(savedAgain!);
-
-      const ui = new MockUI(new GameClient(game));
-      const result = await stateManager.load(reloadedParsed, ui);
+      const result = await stateManager.load();
 
       expect(result.gameState.resigned).to.be.false;
       expect(result.gameState.roundEnded).to.be.false;
@@ -345,18 +326,12 @@ describe("StateManager", () => {
       const mockDeck = { cards: [] };
       stateManager.save(mockGameState, mockDeck, "test-id");
 
-      const saved = localStorage.getItem(game.stateKey);
-      const parsedState = JSON.parse(saved!);
-
       // Remove some fields to simulate old save, but keep resigned/consecutivePasses
-      delete (parsedState.gameState as any).roundEnded;
-      localStorage.setItem(game.stateKey, JSON.stringify(parsedState));
+      const saved = JSON.parse(localStorage.getItem(game.stateKey)!);
+      delete saved.gameState.roundEnded;
+      localStorage.setItem(game.stateKey, JSON.stringify(saved));
 
-      const savedAgain = localStorage.getItem(game.stateKey);
-      const reloadedParsed = JSON.parse(savedAgain!);
-
-      const ui = new MockUI(new GameClient(game));
-      const result = await stateManager.load(reloadedParsed, ui);
+      const result = await stateManager.load();
 
       // Existing values should be preserved
       expect(result.gameState.resigned).to.be.true;

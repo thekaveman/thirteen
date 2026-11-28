@@ -108,15 +108,29 @@ export class StateManager {
     log("Game saved to localStorage.");
   }
 
-  async load(parsedState: unknown, _ui: unknown): Promise<{
+  async load(): Promise<{
+    id: string;
+    stateKey: string;
     gameState: GameState;
     loadedPlayerTypes: string[];
     gameOver: boolean;
+    deck: { cards: { rank: string; suit: string }[] };
   }> {
-    const serializedState = parsedState as SerializedState;
-    const gameState = this.migrate(serializedState.gameState as Partial<GameState>);
+    const raw = localStorage.getItem(this.stateKey);
+    if (!raw) {
+      throw new Error("No saved state found");
+    }
+    const serialized = JSON.parse(raw) as SerializedState;
+    const gameState = this.migrate(serialized.gameState as Partial<GameState>);
     const loadedPlayerTypes = gameState.players.map((p: { type: string }) => p.type);
-    return { gameState, loadedPlayerTypes, gameOver: gameState.gameOver };
+    return {
+      id: serialized.id,
+      stateKey: serialized.stateKey,
+      gameState,
+      loadedPlayerTypes,
+      gameOver: gameState.gameOver,
+      deck: serialized.deck,
+    };
   }
 
   migrate(gameState: Partial<GameState>): GameState {

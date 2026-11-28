@@ -109,44 +109,41 @@ export class Game {
    * @returns True if a saved game was loaded, false otherwise.
    */
   async load(ui: unknown): Promise<LoadResult> {
-    const savedState = localStorage.getItem(this.stateKey);
-    const parsedState = savedState ? JSON.parse(savedState) : null;
-
-    if (parsedState && ui) {
-      // Delegate persistence and migration to StateManager
-      const { gameState, loadedPlayerTypes, gameOver } = await this.stateManager.load(parsedState, ui);
-
-      this.id = parsedState.id;
-      this.stateKey = parsedState.stateKey;
-
-      // Re-hydrate deck and object references
-      this.deck = new Deck(parsedState.deck.cards);
-      this.gameState = gameState;
-      this.gameState.playerHands = [...this.gameState.playerHands].map((h) => CardClass.objectsToList(h));
-      this.gameState.playPile = CardClass.objectsToList([...this.gameState.playPile]);
-      this.gameState.selectedCards = CardClass.objectsToList([...this.gameState.selectedCards]);
-
-      // Re-hydrate players (async due to dynamic AI persona loading)
-      const loadedPlayerIds = gameState.players.map((p) => p.id);
-      this.gameState.players = await Promise.all(
-        gameState.players.map(async (p: { id: string }, i: number) =>
-          createPlayer({
-            id: loadedPlayerIds[i],
-            gameClient: new GameClient(this),
-            type: loadedPlayerTypes[i],
-            number: i,
-            ui: ui as any,
-            persona: parsedState.gameState.players[i].type === PLAYER_TYPES.AI ? parsedState.gameState.players[i].persona : null,
-          })
-        )
-      );
-
-      // Assign the stored playerTypes back to gameState
-      this.gameState.playerTypes = loadedPlayerTypes;
-      log("Game loaded from localStorage.");
-      return { loaded: true, loadedPlayerTypes, gameOver: this.gameState.gameOver };
+    let saved: Awaited<ReturnType<typeof this.stateManager.load>>;
+    try {
+      saved = await this.stateManager.load();
+    } catch {
+      return { loaded: false };
     }
-    return { loaded: false };
+
+    if (!ui) return { loaded: false };
+
+    this.id = saved.id;
+    this.stateKey = saved.stateKey;
+
+    this.deck = new Deck(saved.deck.cards);
+    this.gameState = saved.gameState;
+    this.gameState.playerHands = [...this.gameState.playerHands].map((h) => CardClass.objectsToList(h));
+    this.gameState.playPile = CardClass.objectsToList([...this.gameState.playPile]);
+    this.gameState.selectedCards = CardClass.objectsToList([...this.gameState.selectedCards]);
+
+    const loadedPlayerIds = saved.gameState.players.map((p: { id: string }) => p.id);
+    this.gameState.players = await Promise.all(
+      saved.gameState.players.map(async (p: any, i: number) =>
+        createPlayer({
+          id: loadedPlayerIds[i],
+          gameClient: new GameClient(this),
+          type: saved.loadedPlayerTypes[i],
+          number: i,
+          ui: ui as any,
+          persona: p.type === PLAYER_TYPES.AI ? p.persona : undefined,
+        })
+      )
+    );
+
+    this.gameState.playerTypes = saved.loadedPlayerTypes;
+    log("Game loaded from localStorage.");
+    return { loaded: true, loadedPlayerTypes: saved.loadedPlayerTypes, gameOver: this.gameState.gameOver };
   }
 
   /**
@@ -363,6 +360,7 @@ export class Game {
       statsArray.length = targetLength;
     }
   }
+
   start(): void {
     if (!this.gameState.gameStarted) {
       this.deal();
