@@ -370,7 +370,196 @@ describe("Game", () => {
       expect(newGame.gameState.playerPassed).to.deep.equal([false, false, false]);
     });
 
-    it("load() should reset localStorage if version is outdated", async () => {
+    it("migrate() should fill in missing scalar and boolean fields with defaults", () => {
+      const partialState: Partial<GameState> = {
+        numPlayers: 2,
+      };
+      const migrated = game.migrate(partialState);
+
+      expect(migrated.resigned).to.be.false;
+      expect(migrated.resignedPlayer).to.equal(-1);
+      expect(migrated.resignConfirming).to.be.false;
+      expect(migrated.roundEnded).to.be.false;
+      expect(migrated.gameOver).to.be.false;
+      expect(migrated.gameStarted).to.be.false;
+      expect(migrated.lastPlayerToPlay).to.equal(-1);
+      expect(migrated.roundNumber).to.equal(1);
+      expect(migrated.currentPlayer).to.equal(0);
+      expect(migrated.currentTurn).to.equal(0);
+      expect(migrated.consecutivePasses).to.equal(0);
+      expect(migrated.version).to.equal(Game.VERSION);
+    });
+
+    it("migrate() should never overwrite existing values", () => {
+      const existingState: Partial<GameState> = {
+        numPlayers: 2,
+        resigned: true,
+        resignedPlayer: 1,
+        roundEnded: true,
+        consecutivePasses: 5,
+        gameOver: true,
+      };
+      const migrated = game.migrate(existingState);
+
+      expect(migrated.resigned).to.be.true;
+      expect(migrated.resignedPlayer).to.equal(1);
+      expect(migrated.roundEnded).to.be.true;
+      expect(migrated.consecutivePasses).to.equal(5);
+      expect(migrated.gameOver).to.be.true;
+    });
+
+    it("migrate() should initialize aiPersonas array to match numPlayers", () => {
+      const state: Partial<GameState> = { numPlayers: 3 };
+      const migrated = game.migrate(state);
+      expect((migrated.aiPersonas as (string | null)[]).length).to.equal(3);
+      expect(migrated.aiPersonas).to.deep.equal([null, null, null]);
+    });
+
+    it("migrate() should grow aiPersonas to match numPlayers when shorter", () => {
+      const state: Partial<GameState> = { numPlayers: 3, aiPersonas: ["random"] };
+      const migrated = game.migrate(state);
+      expect((migrated.aiPersonas as (string | null)[]).length).to.equal(3);
+      expect(migrated.aiPersonas).to.deep.equal(["random", null, null]);
+    });
+
+    it("migrate() should truncate aiPersonas when longer than numPlayers", () => {
+      const state: Partial<GameState> = { numPlayers: 1, aiPersonas: ["random", "aggressive"] };
+      const migrated = game.migrate(state);
+      expect((migrated.aiPersonas as (string | null)[]).length).to.equal(1);
+      expect(migrated.aiPersonas).to.deep.equal(["random"]);
+    });
+
+    it("migrate() should initialize playerTurns to match numPlayers", () => {
+      const state: Partial<GameState> = { numPlayers: 2 };
+      const migrated = game.migrate(state);
+      expect(migrated.playerTurns).to.deep.equal([0, 0]);
+    });
+
+    it("migrate() should resize playerTurns to match numPlayers", () => {
+      const state: Partial<GameState> = { numPlayers: 3, playerTurns: [1, 2] };
+      const migrated = game.migrate(state);
+      expect(migrated.playerTurns).to.deep.equal([1, 2, 0]);
+    });
+
+    it("migrate() should resize stats arrays to match numPlayers", () => {
+      const state: Partial<GameState> = {
+        numPlayers: 3,
+        gamesWon: [2],
+        gamesPlayed: [1, 1],
+        gamesResigned: [],
+        roundsWon: [0, 0, 0, 0, 0],
+      };
+      const migrated = game.migrate(state);
+      expect(migrated.gamesWon).to.deep.equal([2, 0, 0]);
+      expect(migrated.gamesPlayed).to.deep.equal([1, 1, 0]);
+      expect(migrated.gamesResigned).to.deep.equal([0, 0, 0]);
+      expect(migrated.roundsWon).to.deep.equal([0, 0, 0]);
+    });
+
+    it("migrate() should initialize playerPassed to match numPlayers", () => {
+      const state: Partial<GameState> = { numPlayers: 3 };
+      const migrated = game.migrate(state);
+      expect(migrated.playerPassed).to.deep.equal([false, false, false]);
+    });
+
+    it("load() should migrate state with missing resignation fields", async () => {
+      const state = {
+        id: "test-id",
+        deck: { cards: [] },
+        gameState: {
+          version: Game.VERSION,
+          numPlayers: 2,
+          numAIPlayers: 0,
+          players: [],
+          playerHands: [],
+          playerTurns: [],
+          playPile: [],
+          currentPlayer: 0,
+          currentTurn: 0,
+          selectedCards: [],
+          consecutivePasses: 0,
+          lastPlayerToPlay: -1,
+          roundNumber: 1,
+          roundsWon: [],
+          gamesWon: [],
+          gamesPlayed: [],
+          aiPersonas: [],
+          gameOver: false,
+          gameStarted: false,
+          playerTypes: [],
+          playerPassed: [],
+        },
+        stateKey: `${Game.STATE_KEY}-tests`,
+      };
+      localStorage.setItem(`${Game.STATE_KEY}-tests`, JSON.stringify(state));
+
+      const loadResult = await game.load(new MockUI());
+      expect(loadResult.loaded).to.be.true;
+      expect(game.gameState.resigned).to.be.false;
+      expect(game.gameState.resignedPlayer).to.equal(-1);
+      expect(game.gameState.resignConfirming).to.be.false;
+      expect(game.gameState.roundEnded).to.be.false;
+    });
+
+    it("load() should preserve existing values during migration", async () => {
+      const state = {
+        id: "test-id",
+        deck: { cards: [] },
+        gameState: {
+          version: "0.0.0",
+          numPlayers: 2,
+          numAIPlayers: 1,
+          players: [],
+          playerHands: [],
+          playerTurns: [],
+          playPile: [],
+          currentPlayer: 1,
+          currentTurn: 5,
+          selectedCards: [],
+          consecutivePasses: 2,
+          lastPlayerToPlay: 0,
+          roundNumber: 3,
+          roundsWon: [2, 1],
+          gamesWon: [3, 1],
+          gamesPlayed: [5, 3],
+          gamesResigned: [0, 1],
+          aiPersonas: ["random", "aggressive"],
+          gameOver: false,
+          gameStarted: true,
+          playerTypes: ["human", "ai"],
+          playerPassed: [false, true],
+          roundEnded: true,
+        },
+        stateKey: `${Game.STATE_KEY}-tests`,
+      };
+      localStorage.setItem(`${Game.STATE_KEY}-tests`, JSON.stringify(state));
+
+      const loadResult = await game.load(new MockUI());
+      expect(loadResult.loaded).to.be.true;
+
+      // All existing values preserved
+      expect(game.gameState.numAIPlayers).to.equal(1);
+      expect(game.gameState.currentPlayer).to.equal(1);
+      expect(game.gameState.currentTurn).to.equal(5);
+      expect(game.gameState.consecutivePasses).to.equal(2);
+      expect(game.gameState.lastPlayerToPlay).to.equal(0);
+      expect(game.gameState.roundNumber).to.equal(3);
+      expect(game.gameState.roundsWon).to.deep.equal([2, 1]);
+      expect(game.gameState.gamesWon).to.deep.equal([3, 1]);
+      expect(game.gameState.gamesPlayed).to.deep.equal([5, 3]);
+      expect(game.gameState.gamesResigned).to.deep.equal([0, 1]);
+      expect(game.gameState.aiPersonas).to.deep.equal(["random", "aggressive"]);
+      expect(game.gameState.gameStarted).to.be.true;
+      expect(game.gameState.playerPassed).to.deep.equal([false, true]);
+      expect(game.gameState.roundEnded).to.be.true;
+
+      // New fields added with defaults
+      expect(game.gameState.resigned).to.be.false;
+      expect(game.gameState.resignedPlayer).to.equal(-1);
+      expect(game.gameState.resignConfirming).to.be.false;
+    });
+
+    it("load() should migrate outdated version to current", async () => {
       // Save a state with an old version
       const oldState = {
         id: "test-id",
@@ -405,8 +594,8 @@ describe("Game", () => {
 
       const loadResult = await game.load(new MockUI());
 
-      expect(loadResult.loaded).to.be.false;
-      expect(localStorage.getItem(`${Game.STATE_KEY}-tests`)).to.be.null;
+      expect(loadResult.loaded).to.be.true;
+      expect(game.gameState.version).to.equal(Game.VERSION);
     });
 
     it("load() should succeed when version matches", async () => {
@@ -434,7 +623,7 @@ describe("Game", () => {
       expect(loadResult.loaded).to.be.true;
     });
 
-    it("load() should reset localStorage if no version field exists", async () => {
+    it("load() should migrate state without version field", async () => {
       // Save a state without a version field (completely old save)
       const oldState = {
         id: "test-id",
@@ -468,8 +657,8 @@ describe("Game", () => {
 
       const loadResult = await game.load(new MockUI());
 
-      expect(loadResult.loaded).to.be.false;
-      expect(localStorage.getItem(`${Game.STATE_KEY}-tests`)).to.be.null;
+      expect(loadResult.loaded).to.be.true;
+      expect(game.gameState.version).to.equal(Game.VERSION);
     });
   });
 
