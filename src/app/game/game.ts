@@ -2,39 +2,13 @@ import { GameClient } from "./client.js";
 import type { Card } from "./deck.js";
 import { Card as CardClass, Deck } from "./deck.js";
 import type { Player } from "../player/base.js";
-import { PLAYER_TYPES, createPlayer } from "../player/index.js";
+import { createPlayer, PLAYER_TYPES } from "../player/index.js";
 import { Rules } from "./rules.js";
+import { createDefaultGameState, type GameState } from "./state.js";
 import { log } from "../utils.js";
 import { VERSION } from "../version.js";
 
-export interface GameState {
-  version: string;
-  numPlayers: number;
-  numAIPlayers: number;
-  players: Player[];
-  playerHands: Card[][];
-  playerTurns: number[];
-  playPile: Card[];
-  currentPlayer: number;
-  currentTurn: number;
-  selectedCards: Card[];
-  consecutivePasses: number;
-  lastPlayerToPlay: number;
-  roundNumber: number;
-  roundsWon: number[];
-  gamesWon: number[];
-  gamesPlayed: number[];
-  gamesResigned: number[];
-  aiPersonas: (string | null)[];
-  gameOver: boolean;
-  gameStarted: boolean;
-  playerTypes: string[];
-  playerPassed: boolean[];
-  roundEnded: boolean;
-  resigned: boolean;
-  resignedPlayer: number;
-  resignConfirming: boolean;
-}
+export type { GameState } from "./state.js";
 
 export interface GameHooks {
   onGameInit: (_gameClient: GameClient) => void;
@@ -81,34 +55,7 @@ export class Game {
       onPlayerPassed: () => {},
       onRoundPlayed: () => {},
     };
-    this.gameState = {
-      version: Game.VERSION,
-      numPlayers: 0,
-      numAIPlayers: 0,
-      players: [],
-      playerHands: [],
-      playerTurns: [],
-      playPile: [],
-      currentPlayer: 0,
-      currentTurn: 0,
-      selectedCards: [],
-      consecutivePasses: 0,
-      lastPlayerToPlay: -1,
-      roundNumber: 1,
-      roundsWon: [],
-      gamesWon: [],
-      gamesPlayed: [],
-      gamesResigned: [],
-      aiPersonas: [],
-      gameOver: false,
-      gameStarted: false,
-      playerTypes: [],
-      playerPassed: [],
-      roundEnded: false,
-      resigned: false,
-      resignedPlayer: -1,
-      resignConfirming: false,
-    };
+    this.gameState = createDefaultGameState();
     this.id = crypto.randomUUID();
     this.rules = new Rules();
     this.stateKey = stateKey;
