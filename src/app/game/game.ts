@@ -4,7 +4,7 @@ import { Card as CardClass, Deck } from "./deck.js";
 import type { Player } from "../player/base.js";
 import { createPlayer, PLAYER_TYPES } from "../player/index.js";
 import { Rules } from "./rules.js";
-import { createDefaultGameState, type GameState, StateManager } from "./state.js";
+import { StateManager, type GameState } from "./state.js";
 import { log } from "../utils.js";
 import { VERSION } from "../version.js";
 
@@ -56,11 +56,11 @@ export class Game {
       onPlayerPassed: () => {},
       onRoundPlayed: () => {},
     };
-    this.gameState = createDefaultGameState();
+    this.stateManager = new StateManager(stateKey);
+    this.gameState = StateManager.createDefault();
     this.id = crypto.randomUUID();
     this.rules = new Rules();
     this.stateKey = stateKey;
-    this.stateManager = new StateManager(stateKey);
   }
 
   /**

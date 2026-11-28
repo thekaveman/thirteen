@@ -32,44 +32,6 @@ export interface GameState {
   resignConfirming: boolean;
 }
 
-/**
- * Creates a fresh GameState with all default values.
- */
-export function createDefaultGameState(): GameState {
-  return {
-    version: VERSION,
-    numPlayers: 0,
-    numAIPlayers: 0,
-    players: [],
-    playerHands: [],
-    playerTurns: [],
-    playPile: [],
-    currentPlayer: 0,
-    currentTurn: 0,
-    selectedCards: [],
-    consecutivePasses: 0,
-    lastPlayerToPlay: -1,
-    roundNumber: 1,
-    roundsWon: [],
-    gamesWon: [],
-    gamesPlayed: [],
-    gamesResigned: [],
-    aiPersonas: [],
-    gameOver: false,
-    gameStarted: false,
-    playerTypes: [],
-    playerPassed: [],
-    roundEnded: false,
-    resigned: false,
-    resignedPlayer: -1,
-    resignConfirming: false,
-  };
-}
-
-// ---------------------------------------------------------------------------
-// Persistence types
-// ---------------------------------------------------------------------------
-
 interface SerializableGameState {
   [key: string]: unknown;
   players: unknown[];
@@ -81,10 +43,6 @@ interface SerializedState {
   gameState: SerializableGameState;
   stateKey: string;
 }
-
-// ---------------------------------------------------------------------------
-// Migration
-// ---------------------------------------------------------------------------
 
 /**
  * Migrates a loaded (potentially outdated) gameState to the current schema.
@@ -169,10 +127,6 @@ export function migrateGameState(gameState: Partial<GameState>): GameState {
   return gameState as GameState;
 }
 
-// ---------------------------------------------------------------------------
-// StateManager
-// ---------------------------------------------------------------------------
-
 export interface LoadResult {
   loaded: boolean;
   loadedPlayerTypes?: string[];
@@ -187,6 +141,40 @@ export class StateManager {
 
   constructor(stateKey: string) {
     this.stateKey = stateKey;
+  }
+
+  /**
+   * Creates a fresh GameState with all default values.
+   */
+  static createDefault(): GameState {
+    return {
+      version: VERSION,
+      numPlayers: 0,
+      numAIPlayers: 0,
+      players: [],
+      playerHands: [],
+      playerTurns: [],
+      playPile: [],
+      currentPlayer: 0,
+      currentTurn: 0,
+      selectedCards: [],
+      consecutivePasses: 0,
+      lastPlayerToPlay: -1,
+      roundNumber: 1,
+      roundsWon: [],
+      gamesWon: [],
+      gamesPlayed: [],
+      gamesResigned: [],
+      aiPersonas: [],
+      gameOver: false,
+      gameStarted: false,
+      playerTypes: [],
+      playerPassed: [],
+      roundEnded: false,
+      resigned: false,
+      resignedPlayer: -1,
+      resignConfirming: false,
+    };
   }
 
   /**
