@@ -155,6 +155,91 @@ export class Game {
   }
 
   /**
+   * Migrates a loaded (potentially outdated) gameState to the current schema.
+   * Missing fields are filled in with sensible defaults; existing values are never overwritten.
+   * @param gameState The gameState loaded from localStorage.
+   * @returns The migrated gameState.
+   */
+  migrate(gameState: Partial<GameState>): GameState {
+    const defaults: Partial<GameState> = {
+      version: Game.VERSION,
+      numPlayers: gameState.numPlayers ?? 0,
+      numAIPlayers: gameState.numAIPlayers ?? 0,
+      players: [],
+      playerHands: [],
+      playerTurns: [],
+      playPile: [],
+      currentPlayer: 0,
+      currentTurn: 0,
+      selectedCards: [],
+      consecutivePasses: 0,
+      lastPlayerToPlay: -1,
+      roundNumber: 1,
+      roundsWon: [],
+      gamesWon: [],
+      gamesPlayed: [],
+      gamesResigned: [],
+      aiPersonas: [],
+      gameOver: false,
+      gameStarted: false,
+      playerTypes: [],
+      playerPassed: [],
+      roundEnded: false,
+      resigned: false,
+      resignedPlayer: -1,
+      resignConfirming: false,
+    };
+
+    // Fill in any missing scalar/boolean/object fields
+    for (const key of Object.keys(defaults) as (keyof GameState)[]) {
+      if (!(key in gameState) || gameState[key] === undefined) {
+        gameState[key] = defaults[key] as any;
+      }
+    }
+
+    // Special-casing for arrays that depend on numPlayers
+    const n = gameState.numPlayers ?? 0;
+
+    const arraysThatNeedPlayerSize = [
+      "playerTurns",
+      "playerPassed",
+      "roundsWon",
+      "gamesWon",
+      "gamesPlayed",
+      "gamesResigned",
+      "aiPersonas",
+    ] as const;
+
+    for (const arrName of arraysThatNeedPlayerSize) {
+      const arr = gameState[arrName];
+      if (!Array.isArray(arr)) {
+        if (arrName === "aiPersonas") {
+          gameState[arrName] = new Array(n).fill(null);
+        } else if (arrName === "playerPassed") {
+          gameState[arrName] = new Array(n).fill(false);
+        } else {
+          gameState[arrName] = new Array(n).fill(0);
+        }
+      } else if (arr.length < n) {
+        while (arr.length < n) {
+          if (arrName === "playerPassed") {
+            (arr as unknown[]).push(false);
+          } else if (arrName === "aiPersonas") {
+            (arr as unknown[]).push(null);
+          } else {
+            (arr as unknown[]).push(0);
+          }
+        }
+      } else if (arr.length > n) {
+        arr.length = n;
+      }
+    }
+
+    gameState.version = Game.VERSION;
+    return gameState as GameState;
+  }
+
+  /**
    * Loads the game state from localStorage.
    * @param ui An instance of the UI class.
    * @returns True if a saved game was loaded, false otherwise.
@@ -163,15 +248,6 @@ export class Game {
     const savedState = localStorage.getItem(this.stateKey);
     const parsedState = savedState ? JSON.parse(savedState) : null;
 
-    // Check version — must happen before we overwrite this.gameState
-    const isOutdated =
-      parsedState &&
-      (parsedState.gameState?.version === undefined || parsedState.gameState?.version !== Game.VERSION);
-    if (isOutdated) {
-      log("Outdated game state schema detected, resetting.");
-      localStorage.removeItem(this.stateKey);
-      return { loaded: false };
-    }
     if (parsedState && ui) {
       // Store data from the parsed state before overwriting this.gameState
       const loadedPlayerIds = parsedState.gameState.players.map((p: { id: string }) => p.id);
@@ -179,13 +255,16 @@ export class Game {
 
       this.id = parsedState.id;
       this.stateKey = parsedState.stateKey;
-      this.gameState = parsedState.gameState;
-      // Re-hydrate deck
+
+      // Migrate the loaded state to the current schema (fills in missing fields)
+      this.gameState = this.migrate(parsedState.gameState);
+
+      // Re-hydrate deck and object references
       this.deck = new Deck(parsedState.deck.cards);
-      // Re-hydrate cards
       this.gameState.playerHands = [...this.gameState.playerHands].map((h) => CardClass.objectsToList(h));
       this.gameState.playPile = CardClass.objectsToList([...this.gameState.playPile]);
       this.gameState.selectedCards = CardClass.objectsToList([...this.gameState.selectedCards]);
+
       // Re-hydrate players (async due to dynamic AI persona loading)
       this.gameState.players = await Promise.all(
         parsedState.gameState.players.map(async (p: { id: string }, i: number) =>
@@ -199,13 +278,9 @@ export class Game {
           })
         )
       );
+
       // Assign the stored playerTypes back to gameState
       this.gameState.playerTypes = loadedPlayerTypes;
-      // Initialize playerPassed if missing (backward compat with old saves)
-      const pp = this.gameState.playerPassed;
-      if (!pp || !Array.isArray(pp) || pp.length !== this.gameState.numPlayers) {
-        this.gameState.playerPassed = new Array(this.gameState.numPlayers).fill(false);
-      }
       log("Game loaded from localStorage.");
       return { loaded: true, loadedPlayerTypes, gameOver: this.gameState.gameOver };
     }
@@ -403,14 +478,16 @@ export class Game {
       this.gameState.numAIPlayers = players.length - 1;
       this.gameState.aiPersonas = players.slice(1).map((p) => p.persona);
 
+      // Always resize stats arrays to match current player count
+      this.#resizeStatsArray(this.gameState.gamesWon, players.length);
+      this.#resizeStatsArray(this.gameState.gamesPlayed, players.length);
+      this.#resizeStatsArray(this.gameState.gamesResigned, players.length);
+      this.#resizeStatsArray(this.gameState.roundsWon, players.length);
+
       const skipDeal = options?.skipDeal ?? false;
       if (!skipDeal) {
-        this.#resizeStatsArray(this.gameState.gamesWon, players.length);
-        this.#resizeStatsArray(this.gameState.gamesPlayed, players.length);
-        this.#resizeStatsArray(this.gameState.gamesResigned, players.length);
         this.#resetForNewGame();
         this.gameState.playerHands = players.map(() => []);
-        this.gameState.roundsWon = new Array(players.length).fill(0);
       }
       this.save();
     }
